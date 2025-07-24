@@ -1,36 +1,53 @@
-const Seller = require('../models/Seller');
+// server/controllers/authController.js
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
+const Seller = require('../models/Seller');
 
 exports.registerSeller = async (req, res) => {
-  const { name, email, password } = req.body;
   try {
-    const existingSeller = await Seller.findOne({ email });
-    if (existingSeller) return res.status(400).json({ message: 'Seller already exists' });
+    const { name, email, password, phone, address, shopCategory, whatsapp, location } = req.body;
+
+    const existing = await Seller.findOne({ email });
+    if (existing) return res.status(400).json({ message: 'Email already in use' });
 
     const hashedPassword = await bcrypt.hash(password, 10);
-    const seller = new Seller({ name, email, password: hashedPassword });
-    await seller.save();
 
-    res.status(201).json({ message: 'Seller registered successfully' });
-  } catch (error) {
-    res.status(500).json({ message: 'Registration failed', error });
+    const seller = await Seller.create({
+      name, email, password: hashedPassword, phone, address, shopCategory, whatsapp, location
+    });
+
+    res.status(201).json({ message: 'Seller registered successfully', sellerId: seller._id });
+  } catch (err) {
+    console.error('Register error:', err.message);
+    res.status(500).json({ message: 'Server error' });
   }
 };
 
 exports.loginSeller = async (req, res) => {
-  const { email, password } = req.body;
   try {
+    const { email, password } = req.body;
+
     const seller = await Seller.findOne({ email });
-    if (!seller) return res.status(404).json({ message: 'Seller not found' });
+    if (!seller) return res.status(400).json({ message: 'Invalid credentials' });
 
     const isMatch = await bcrypt.compare(password, seller.password);
-    if (!isMatch) return res.status(401).json({ message: 'Invalid credentials' });
+    if (!isMatch) return res.status(400).json({ message: 'Invalid credentials' });
 
-    const token = jwt.sign({ id: seller._id }, process.env.JWT_SECRET, { expiresIn: '1d' });
+    const token = jwt.sign({ id: seller._id }, process.env.JWT_SECRET, { expiresIn: '7d' });
 
-    res.status(200).json({ token, seller });
-  } catch (error) {
-    res.status(500).json({ message: 'Login failed', error });
+    res.json({
+      message: 'Login successful',
+      token,
+      seller: {
+        id: seller._id,
+        name: seller.name,
+        email: seller.email,
+        shopCategory: seller.shopCategory,
+        phone: seller.phone,
+      }
+    });
+  } catch (err) {
+    console.error('Login error:', err.message);
+    res.status(500).json({ message: 'Server error' });
   }
 };

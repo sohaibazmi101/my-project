@@ -1,70 +1,50 @@
+// server/controllers/productController.js
 const Product = require('../models/Product');
 
 exports.addProduct = async (req, res) => {
   try {
-    const { name, description, price, shop } = req.body;
-    const imageUrl = req.file.path;
+    const { name, category, price, description, availability, imageUrl } = req.body;
 
-    const newProduct = new Product({
+    const product = await Product.create({
+      sellerId: req.seller,
       name,
-      description,
+      category,
       price,
-      imageUrl,
-      shop,
+      description,
+      availability,
+      imageUrl
     });
 
-    await newProduct.save();
-    res.status(201).json({ message: 'Product added successfully', product: newProduct });
-  } catch (error) {
-    console.error('Error in addProduct:', error);
-    res.status(500).json({ message: 'Error adding product', error: error.message });
+    res.status(201).json({ message: 'Product added', product });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: 'Server error' });
   }
 };
 
-
-
-exports.getProductsByShop = async (req, res) => {
+exports.editProduct = async (req, res) => {
   try {
-    const products = await Product.find({ shop: req.params.shopId });
-    res.status(200).json(products);
-  } catch (error) {
-    res.status(500).json({ message: 'Error fetching products', error: error.message });
+    const product = await Product.findOneAndUpdate(
+      { _id: req.params.id, sellerId: req.seller },
+      req.body,
+      { new: true }
+    );
+
+    if (!product) return res.status(404).json({ message: 'Product not found or unauthorized' });
+
+    res.json({ message: 'Product updated', product });
+  } catch (err) {
+    res.status(500).json({ message: 'Server error' });
   }
 };
 
 exports.deleteProduct = async (req, res) => {
   try {
-    await Product.findByIdAndDelete(req.params.productId);
-    res.status(200).json({ message: 'Product deleted' });
-  } catch (error) {
-    res.status(500).json({ message: 'Delete failed', error: error.message });
-  }
-};
+    const result = await Product.findOneAndDelete({ _id: req.params.id, sellerId: req.seller });
+    if (!result) return res.status(404).json({ message: 'Product not found or unauthorized' });
 
-exports.updateProduct = async (req, res) => {
-  try {
-    const updatedProduct = await Product.findByIdAndUpdate(
-      req.params.productId,
-      req.body,
-      { new: true }
-    );
-    res.status(200).json({ message: 'Product updated', product: updatedProduct });
-  } catch (error) {
-    res.status(500).json({ message: 'Update failed', error: error.message });
-  }
-};
-
-// PUBLIC - Get all products with optional filters
-exports.getPublicProducts = async (req, res) => {
-  try {
-    const { category, shop } = req.query;
-    let filter = {};
-    if (category) filter.category = category;
-    if (shop) filter.shop = shop;
-
-    const products = await Product.find(filter).populate('shop', 'name address');
-    res.status(200).json(products);
-  } catch (error) {
-    res.status(500).json({ message: 'Error fetching products', error: error.message });
+    res.json({ message: 'Product deleted' });
+  } catch (err) {
+    res.status(500).json({ message: 'Server error' });
   }
 };

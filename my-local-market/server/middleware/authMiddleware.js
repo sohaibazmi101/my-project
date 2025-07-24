@@ -1,16 +1,18 @@
+// server/middleware/authMiddleware.js
 const jwt = require('jsonwebtoken');
 
-const verifyToken = (req, res, next) => {
-  const token = req.headers.authorization?.split(' ')[1]; // Bearer TOKEN
-  if (!token) return res.status(401).json({ message: 'Access Denied. No token provided.' });
+const authMiddleware = (req, res, next) => {
+  const token = req.header('Authorization')?.replace('Bearer ', '');
+
+  if (!token) return res.status(401).json({ message: 'No token, auth denied' });
 
   try {
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    req.seller = decoded;
+    req.seller = decoded.id;
     next();
-  } catch (error) {
-    res.status(400).json({ message: 'Invalid Token' });
+  } catch (err) {
+    res.status(401).json({ message: 'Invalid token' });
   }
 };
 
-module.exports = verifyToken;
+module.exports = authMiddleware;

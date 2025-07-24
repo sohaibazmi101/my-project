@@ -1,25 +1,25 @@
-const Shop = require('../models/Shop');
+// server/controllers/shopController.js
+const Seller = require('../models/Seller');
+const Product = require('../models/Product');
 
-exports.addShop = async (req, res) => {
-  try {
-    const { name, address, contact, category } = req.body;
-    const newShop = new Shop({ name, address, contact, category, seller: req.seller.id });
-    await newShop.save();
-    res.status(201).json({ message: "Shop added successfully", shop: newShop });
-  } catch (error) {
-    console.error("Error in addShop:", error);  // <== ADD THIS LINE
-    res.status(500).json({ message: "Error adding shop", error: error.message }); // <== BETTER ERROR
-  }
-};
-
-
-// Show only shops of the logged-in seller
 exports.getAllShops = async (req, res) => {
   try {
-    const shops = await Shop.find({ seller: req.seller.id });
-    res.status(200).json(shops);
-  } catch (error) {
-    res.status(500).json({ message: 'Error fetching shops', error });
+    const shops = await Seller.find().select('-password');
+    res.json(shops);
+  } catch (err) {
+    res.status(500).json({ message: 'Server error' });
   }
 };
 
+exports.getShopDetails = async (req, res) => {
+  try {
+    const shop = await Seller.findById(req.params.id).select('-password');
+    if (!shop) return res.status(404).json({ message: 'Shop not found' });
+
+    const products = await Product.find({ sellerId: req.params.id });
+
+    res.json({ shop, products });
+  } catch (err) {
+    res.status(500).json({ message: 'Server error' });
+  }
+};

@@ -1,9 +1,9 @@
+// server/routes/shopRoutes.js
 const express = require('express');
 const router = express.Router();
-const verifyToken = require('../middleware/authMiddleware');
-const { addShop, getAllShops } = require('../controllers/shopController');
+const { getAllShops, getShopDetails } = require('../controllers/shopController');
 
-router.post('/add', verifyToken, addShop);
-router.get('/all', getAllShops);
+router.get('/shops', getAllShops);
+router.get('/shops/:id', getShopDetails);
 
 module.exports = router;
