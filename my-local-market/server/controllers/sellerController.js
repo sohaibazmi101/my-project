@@ -12,8 +12,7 @@ exports.registerSeller = async (req, res) => {
 
     const seller = new Seller({
       name, email, password, phone, address,
-      shopCategory, whatsapp, location,
-      bannerImage: req.file ? `/uploads/${req.file.filename}` : null
+      shopCategory, whatsapp, location
     });
 
     await seller.save();

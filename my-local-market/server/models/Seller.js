@@ -10,7 +10,6 @@ const sellerSchema = new mongoose.Schema({
   shopCategory: { type: String, required: true },
   whatsapp: { type: String, required: true },
   location: { type: String },
-  bannerImage: { type: String },
 }, {
   timestamps: true
 });

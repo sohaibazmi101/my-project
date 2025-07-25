@@ -3,10 +3,6 @@ const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
 
-const bannerUploadPath = 'uploads/shopBanners/';
-if (!fs.existsSync(bannerUploadPath)) {
-  fs.mkdirSync(bannerUploadPath, { recursive: true });
-}
 
 const storage = multer.diskStorage({
   destination: function (req, file, cb) {

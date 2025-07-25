@@ -8,10 +8,6 @@ export default function Register() {
     phone: '', address: '', shopCategory: '',
     whatsapp: '', location: ''
   });
-
-  const [banner, setBanner] = useState(null);
-  const navigate = useNavigate();
-
   const handleChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value });
   };
@@ -23,11 +19,6 @@ export default function Register() {
     Object.entries(form).forEach(([key, value]) => {
       formData.append(key, value);
     });
-
-    if (banner) {
-      formData.append('bannerImage', banner);
-
-    }
 
     try {
       await api.post('/seller/register', formData, {
@@ -71,19 +62,6 @@ export default function Register() {
                 />
               </div>
             ))}
-
-            {/* 🖼️ Banner Image Upload */}
-            <div className="col-12">
-              <label className="form-label">Shop Banner Image</label>
-              <input
-                type="file"
-                accept="image/*"
-                className="form-control"
-                onChange={(e) => setBanner(e.target.files[0])}
-                required
-              />
-            </div>
-
             <div className="col-12 text-center">
               <button type="submit" className="btn btn-success w-100">
                 Register
