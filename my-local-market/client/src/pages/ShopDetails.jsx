@@ -21,6 +21,19 @@ export default function ShopDetails() {
 
   return (
     <div className="container mt-5 mb-5">
+
+      {/* Shop Banner */}
+      {shop.bannerImage && (
+        <div className="mb-4">
+          <img
+            src={shop.bannerImage}
+            alt={`${shop.name} banner`}
+            className="img-fluid rounded"
+            style={{ maxHeight: '300px', objectFit: 'cover', width: '100%' }}
+          />
+        </div>
+      )}
+
       <div className="text-center mb-4">
         <h2>{shop.name}</h2>
         <p className="text-muted">{shop.address} · 📞 {shop.phone}</p>

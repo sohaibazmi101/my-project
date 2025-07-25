@@ -4,6 +4,14 @@ export default function ShopCard({ shop }) {
   return (
     <div className="col-12 col-sm-6 col-md-4 mb-4">
       <div className="card h-100 shadow-sm">
+        {shop.bannerImage && (
+          <img
+            src={shop.bannerImage}
+            alt={`${shop.name} Banner`}
+            className="card-img-top"
+            style={{ height: '180px', objectFit: 'cover' }}
+          />
+        )}
         <div className="card-body d-flex flex-column">
           <h5 className="card-title">{shop.name}</h5>
           <p className="card-text text-muted">{shop.shopCategory}</p>
