@@ -9,17 +9,16 @@ export default function Dashboard() {
     category: '',
     price: '',
     description: '',
-    imageUrl: '',
+    images: ['', '', '', ''], // 4 images
     availability: true,
   });
   const [editId, setEditId] = useState(null);
   const [uploading, setUploading] = useState(false);
+  const [categories, setCategories] = useState([]);
 
   const navigate = useNavigate();
   const token = localStorage.getItem('token');
   const seller = JSON.parse(localStorage.getItem('seller'));
-  const [categories, setCategories] = useState([]);
-
 
   useEffect(() => {
     if (!token) return navigate('/login');
@@ -27,34 +26,12 @@ export default function Dashboard() {
     fetchCategories();
   }, []);
 
-
   const fetchProducts = async () => {
-    const res = await api.get(`/shops/${seller.id}`);
-    setProducts(res.data.products);
-  };
-
-  const handleChange = (e) => {
-    const { name, value, type, checked } = e.target;
-    setForm({ ...form, [name]: type === 'checkbox' ? checked : value });
-  };
-
-  const handleFileUpload = async (file) => {
-    setUploading(true);
-    const formData = new FormData();
-    formData.append('image', file);
     try {
-      const res = await api.post('/products/upload', formData, {
-        headers: {
-          'Content-Type': 'multipart/form-data',
-          Authorization: `Bearer ${token}`,
-        },
-      });
-      setForm((prev) => ({ ...prev, imageUrl: res.data.imageUrl }));
+      const res = await api.get(`/shops/${seller.id}`);
+      setProducts(res.data.products);
     } catch (err) {
-      alert('Upload failed');
-      console.error(err);
-    } finally {
-      setUploading(false);
+      console.error('Failed to fetch products:', err);
     }
   };
 
@@ -67,13 +44,42 @@ export default function Dashboard() {
     }
   };
 
+  const handleChange = (e) => {
+    const { name, value, type, checked } = e.target;
+    setForm({ ...form, [name]: type === 'checkbox' ? checked : value });
+  };
 
+  const handleFileUpload = async (file, index) => {
+    setUploading(true);
+    const formData = new FormData();
+    formData.append('image', file);
+    try {
+      const res = await api.post('/products/upload', formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      setForm((prev) => {
+        const updatedImages = [...prev.images];
+        updatedImages[index] = res.data.imageUrl;
+        return { ...prev, images: updatedImages };
+      });
+    } catch (err) {
+      alert('Image upload failed');
+      console.error(err);
+    } finally {
+      setUploading(false);
+    }
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    try {
-      if (!form.imageUrl) return alert('Please upload a product image.');
+    if (!form.images[0]) {
+      return alert('Please upload at least the first product image.');
+    }
 
+    try {
       if (editId) {
         await api.put(`/products/${editId}/edit`, form);
         alert('Product updated!');
@@ -87,7 +93,7 @@ export default function Dashboard() {
         category: '',
         price: '',
         description: '',
-        imageUrl: '',
+        images: ['', '', '', ''],
         availability: true,
       });
       setEditId(null);
@@ -98,7 +104,10 @@ export default function Dashboard() {
   };
 
   const handleEdit = (product) => {
-    setForm(product);
+    setForm({
+      ...product,
+      images: [...(product.images || []), '', '', '', ''].slice(0, 4),
+    });
     setEditId(product._id);
   };
 
@@ -127,7 +136,7 @@ export default function Dashboard() {
           />
         </div>
 
-        {/* Category - Select from admin categories */}
+        {/* Category */}
         <div className="mb-3">
           <label>Category</label>
           <select
@@ -150,10 +159,12 @@ export default function Dashboard() {
         <div className="mb-3">
           <label>Price</label>
           <input
+            type="number"
             className="form-control"
             name="price"
             value={form.price}
             onChange={handleChange}
+            min="0"
             required
           />
         </div>
@@ -170,27 +181,27 @@ export default function Dashboard() {
           />
         </div>
 
-        {/* Upload Image */}
+        {/* Image Uploads */}
         <div className="mb-3">
-          <label>Product Image</label>
-          <input
-            type="file"
-            className="form-control"
-            onChange={(e) => handleFileUpload(e.target.files[0])}
-          />
+          <label>Product Images</label>
+          {[0, 1, 2, 3].map((i) => (
+            <div key={i} className="mb-2">
+              <input
+                type="file"
+                className="form-control"
+                onChange={(e) => handleFileUpload(e.target.files[0], i)}
+              />
+              {form.images[i] && (
+                <img
+                  src={form.images[i]}
+                  alt={`Preview ${i + 1}`}
+                  className="img-thumbnail mt-2"
+                  style={{ maxHeight: '150px' }}
+                />
+              )}
+            </div>
+          ))}
         </div>
-
-        {/* Preview Image */}
-        {form.imageUrl && (
-          <div className="mb-3">
-            <img
-              src={form.imageUrl}
-              alt="Preview"
-              className="img-fluid rounded"
-              style={{ maxHeight: '200px' }}
-            />
-          </div>
-        )}
 
         {/* Availability */}
         <div className="form-check mb-3">
@@ -218,7 +229,7 @@ export default function Dashboard() {
             <div className="col-md-4 mb-3" key={product._id}>
               <div className="card h-100">
                 <img
-                  src={product.imageUrl}
+                  src={product.images?.[0] || ''}
                   className="card-img-top"
                   alt={product.name}
                   style={{ height: '200px', objectFit: 'cover' }}

@@ -3,7 +3,19 @@ const Product = require('../models/Product');
 
 exports.addProduct = async (req, res) => {
   try {
-    const { name, category, price, description, availability, imageUrl } = req.body;
+    const {
+      name,
+      category,
+      price,
+      description,
+      availability,
+      images, // <- updated from imageUrl
+    } = req.body;
+
+    // Require at least the first image
+    if (!images || !images[0]) {
+      return res.status(400).json({ message: 'At least one image is required' });
+    }
 
     const product = await Product.create({
       sellerId: req.seller,
@@ -12,7 +24,7 @@ exports.addProduct = async (req, res) => {
       price,
       description,
       availability,
-      imageUrl
+      images, // <- store as array
     });
 
     res.status(201).json({ message: 'Product added', product });
@@ -22,21 +34,28 @@ exports.addProduct = async (req, res) => {
   }
 };
 
+
 exports.editProduct = async (req, res) => {
   try {
+    // Optional: you can also validate here that `images` is valid if needed
     const product = await Product.findOneAndUpdate(
       { _id: req.params.id, sellerId: req.seller },
       req.body,
       { new: true }
     );
 
-    if (!product) return res.status(404).json({ message: 'Product not found or unauthorized' });
+    if (!product) {
+      return res.status(404).json({ message: 'Product not found or unauthorized' });
+    }
 
     res.json({ message: 'Product updated', product });
   } catch (err) {
+    console.error(err);
     res.status(500).json({ message: 'Server error' });
   }
 };
+
+
 
 exports.deleteProduct = async (req, res) => {
   try {

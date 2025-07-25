@@ -11,10 +11,14 @@ const productSchema = new mongoose.Schema({
   price: { type: Number, required: true },
   description: { type: String },
   availability: { type: Boolean, default: true },
-  imageUrl: { type: String },
-  featured: { type: Boolean, default: false },
 
-  // 🟢 ADD THIS FIELD
+  // 🟢 UPDATED FIELD: images array instead of imageUrl
+  images: {
+    type: [String], // array of 0–4 image URLs
+    validate: [arr => arr.length <= 4, '{PATH} exceeds the limit of 4 images']
+  },
+
+  featured: { type: Boolean, default: false },
   whatsapp: { type: String }, 
 }, {
   timestamps: true
