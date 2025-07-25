@@ -13,8 +13,19 @@ const {
 
 const { getBanners } = require('../controllers/bannerController');
 const { getCMSContent } = require('../controllers/cmsController');
-
 const upload = require('../middleware/uploadProductImage');
+
+router.post('/products/upload', auth, upload.single('image'), async (req, res) => {
+  try {
+    if (!req.file) throw new Error('No file received from client');
+    const imageUrl = req.file.path;
+    res.json({ imageUrl });
+  } catch (err) {
+    console.error('[Upload Error]:', err);
+    res.status(500).json({ message: 'Upload failed', error: err.message });
+  }
+});
+
 
 
 // 🔍 Search products
@@ -48,11 +59,6 @@ router.put('/products/:id/edit', auth, editProduct);
 
 // ❌ Delete product
 router.delete('/products/:id/delete', auth, deleteProduct);
-
-// Upload product image
-router.post('/products/upload', auth, upload.single('image'), (req, res) => {
-  res.status(200).json({ imageUrl: req.file.path }); // Cloudinary returns file.path as full URL
-});
 
 
 module.exports = router;
