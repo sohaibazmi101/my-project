@@ -1,15 +1,14 @@
-const multer = require('multer');
-const path = require('path');
+const express = require('express');
+const router = express.Router();
 
-const storage = multer.diskStorage({
-  destination: function (req, file, cb) {
-    cb(null, 'uploads/shopBanners/');
-  },
-  filename: function (req, file, cb) {
-    cb(null, Date.now() + path.extname(file.originalname));
-  }
-});
+const { registerSeller } = require('../controllers/sellerController');
+const upload = require('../middleware/uploadBanner'); // This should now export multer instance
 
-const upload = multer({ storage });
+// POST /api/seller/register (with shop banner image upload)
+router.post('/register', upload.single('bannerImage'), registerSeller);
 
-module.exports = upload.single('bannerImage');
+// You can add more routes here, like:
+// router.post('/login', loginSeller);
+// router.put('/update', authMiddleware, upload.single('bannerImage'), updateSeller);
+
+module.exports = router;

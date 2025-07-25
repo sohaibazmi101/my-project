@@ -25,7 +25,8 @@ export default function Register() {
     });
 
     if (banner) {
-      formData.append('banner', banner); // 👈 this must match the multer field name
+      formData.append('bannerImage', banner);
+
     }
 
     try {
