@@ -22,19 +22,40 @@ export default function Login() {
   };
 
   return (
-    <div className="container mt-4">
-      <h2>Seller Login</h2>
-      <form onSubmit={handleSubmit}>
-        <div className="mb-3">
-          <label>Email</label>
-          <input type="email" name="email" className="form-control" onChange={handleChange} required />
-        </div>
-        <div className="mb-3">
-          <label>Password</label>
-          <input type="password" name="password" className="form-control" onChange={handleChange} required />
-        </div>
-        <button className="btn btn-primary" type="submit">Login</button>
-      </form>
+    <div className="container d-flex justify-content-center align-items-center" style={{ minHeight: '80vh' }}>
+      <div className="w-100" style={{ maxWidth: 400 }}>
+        <h2 className="mb-4 text-center">Seller Login</h2>
+
+        <form onSubmit={handleSubmit}>
+          <div className="mb-3">
+            <label className="form-label">Email</label>
+            <input
+              type="email"
+              name="email"
+              className="form-control"
+              onChange={handleChange}
+              required
+              placeholder="you@example.com"
+            />
+          </div>
+
+          <div className="mb-3">
+            <label className="form-label">Password</label>
+            <input
+              type="password"
+              name="password"
+              className="form-control"
+              onChange={handleChange}
+              required
+              placeholder="Enter your password"
+            />
+          </div>
+
+          <button className="btn btn-primary w-100" type="submit">
+            Login
+          </button>
+        </form>
+      </div>
     </div>
   );
 }

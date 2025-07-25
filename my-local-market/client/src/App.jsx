@@ -11,9 +11,11 @@ import Footer from './components/Footer';
 import AdminLogin from './pages/admin/AdminLogin';
 import DashboardLayout from './pages/admin/DashboardLayout';
 import DashboardHome from './pages/admin/DashboardHome';
-import Categories from './pages/admin/Categories';         // placeholder
-import FeaturedProducts from './pages/admin/FeaturedProducts'; // placeholder
-import Banners from './pages/admin/Banners';               // optional placeholder
+import Categories from './pages/admin/Categories';
+import FeaturedProducts from './pages/admin/FeaturedProducts';
+import Banners from './pages/admin/Banners';
+import SearchResults from './pages/SearchResults';
+
 
 
 
@@ -30,14 +32,16 @@ function App() {
         <Route path="/product/:id" element={<ProductView />} />
         <Route path="/dashboard" element={<Dashboard />} />
         <Route path="/admin/login" element={<AdminLogin />} />
-      </Routes>
-      <Route path="/admin" element={<DashboardLayout />}>
-        <Route path="dashboard" element={<DashboardHome />} />
-        <Route path="categories" element={<Categories />} />
-        <Route path="featured" element={<FeaturedProducts />} />
-        <Route path="banners" element={<Banners />} />
-      </Route>
+        <Route path="/search" element={<SearchResults />} />
 
+        {/* Admin Dashboard nested routes */}
+        <Route path="/admin" element={<DashboardLayout />}>
+          <Route path="dashboard" element={<DashboardHome />} />
+          <Route path="categories" element={<Categories />} />
+          <Route path="featured" element={<FeaturedProducts />} />
+          <Route path="banners" element={<Banners />} />
+        </Route>
+      </Routes>
       <Footer />
     </>
   );

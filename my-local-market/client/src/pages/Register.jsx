@@ -27,24 +27,41 @@ export default function Register() {
   };
 
   return (
-    <div className="container mt-4">
-      <h2>Register as a Seller</h2>
-      <form onSubmit={handleSubmit}>
-        {['name','email','password','phone','address','shopCategory','whatsapp','location'].map(field => (
-          <div className="mb-3" key={field}>
-            <label className="form-label">{field.charAt(0).toUpperCase() + field.slice(1)}</label>
-            <input
-              type={field === 'password' ? 'password' : 'text'}
-              name={field}
-              className="form-control"
-              value={form[field]}
-              onChange={handleChange}
-              required
-            />
-          </div>
-        ))}
-        <button type="submit" className="btn btn-success">Register</button>
-      </form>
+    <div className="container mt-5 mb-5">
+      <h2 className="text-center mb-4">Register as a Seller</h2>
+
+      <div className="row justify-content-center">
+        <div className="col-12 col-md-8 col-lg-6">
+          <form onSubmit={handleSubmit} className="row g-3">
+            {[
+              { name: 'name', label: 'Full Name' },
+              { name: 'email', label: 'Email', type: 'email' },
+              { name: 'password', label: 'Password', type: 'password' },
+              { name: 'phone', label: 'Phone Number' },
+              { name: 'address', label: 'Shop Address' },
+              { name: 'shopCategory', label: 'Shop Category' },
+              { name: 'whatsapp', label: 'WhatsApp Number' },
+              { name: 'location', label: 'Location (City/Area)' }
+            ].map(({ name, label, type = 'text' }) => (
+              <div className="col-12" key={name}>
+                <label className="form-label">{label}</label>
+                <input
+                  type={type}
+                  name={name}
+                  className="form-control"
+                  value={form[name]}
+                  onChange={handleChange}
+                  required
+                />
+              </div>
+            ))}
+
+            <div className="col-12 text-center">
+              <button type="submit" className="btn btn-success w-100">Register</button>
+            </div>
+          </form>
+        </div>
+      </div>
     </div>
   );
 }

@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import api from '../services/api';
-import ShopCard from '../components/ShopCard'; // Make sure this exists
+import ShopCard from '../components/ShopCard';
 
 export default function ShopList() {
   const [shops, setShops] = useState([]);
@@ -8,7 +8,7 @@ export default function ShopList() {
   useEffect(() => {
     api.get('/shops')
       .then((res) => {
-        console.log('Fetched shops:', res.data); // log the response
+        console.log('Fetched shops:', res.data);
         setShops(res.data);
       })
       .catch((err) => {
@@ -17,17 +17,18 @@ export default function ShopList() {
   }, []);
 
   return (
-    <div className="container mt-4">
-      <h2>All Shops</h2>
-      <div className="row">
-        {shops.length === 0 ? (
-          <p>No shops found.</p>
-        ) : (
-          shops.map((shop) => (
+    <div className="container mt-5 mb-5">
+      <h2 className="text-center mb-4">All Shops Avilable Here.</h2>
+
+      {shops.length === 0 ? (
+        <div className="alert alert-info text-center">No shops found.</div>
+      ) : (
+        <div className="row row-cols-1 row-cols-sm-2 row-cols-md-3 g-4">
+          {shops.map((shop) => (
             <ShopCard key={shop._id} shop={shop} />
-          ))
-        )}
-      </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 }

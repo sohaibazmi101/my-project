@@ -21,30 +21,38 @@ export default function AdminLogin() {
   };
 
   return (
-    <div className="container mt-5" style={{ maxWidth: 400 }}>
-      <h3>Admin Login</h3>
-      <form onSubmit={handleSubmit}>
-        {error && <p className="text-danger">{error}</p>}
-        <input
-          type="email"
-          name="email"
-          placeholder="Admin Email"
-          className="form-control mb-3"
-          value={form.email}
-          onChange={handleChange}
-          required
-        />
-        <input
-          type="password"
-          name="password"
-          placeholder="Password"
-          className="form-control mb-3"
-          value={form.password}
-          onChange={handleChange}
-          required
-        />
-        <button className="btn btn-primary w-100">Login</button>
-      </form>
+    <div className="container d-flex justify-content-center align-items-center mt-5">
+      <div className="w-100" style={{ maxWidth: 400 }}>
+        <div className="card p-4 shadow-sm rounded">
+          <h3 className="text-center mb-4">Admin Login</h3>
+          <form onSubmit={handleSubmit}>
+            {error && <p className="text-danger text-center">{error}</p>}
+            <div className="mb-3">
+              <input
+                type="email"
+                name="email"
+                placeholder="Admin Email"
+                className="form-control"
+                value={form.email}
+                onChange={handleChange}
+                required
+              />
+            </div>
+            <div className="mb-3">
+              <input
+                type="password"
+                name="password"
+                placeholder="Password"
+                className="form-control"
+                value={form.password}
+                onChange={handleChange}
+                required
+              />
+            </div>
+            <button className="btn btn-primary w-100">Login</button>
+          </form>
+        </div>
+      </div>
     </div>
   );
 }

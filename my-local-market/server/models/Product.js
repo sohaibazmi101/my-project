@@ -13,6 +13,7 @@ const productSchema = new mongoose.Schema({
   description: { type: String },
   availability: { type: Boolean, default: true },
   imageUrl: { type: String },
+  featured: { type: Boolean, default: false },
 }, {
   timestamps: true
 });
