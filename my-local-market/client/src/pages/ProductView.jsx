@@ -1,4 +1,4 @@
-import { useParams } from 'react-router-dom';
+import { useParams, Link } from 'react-router-dom';
 import { useEffect, useState } from 'react';
 import api from '../services/api';
 
@@ -30,14 +30,29 @@ export default function ProductView() {
           <p className="text-muted">
             Availability: {product.availability ? "✅ In stock" : "❌ Out of stock"}
           </p>
-          <a
-            href={`https://wa.me/${product.whatsapp}`}
-            className="btn btn-success"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Contact via WhatsApp
-          </a>
+
+          {/* Visit Shop Button */}
+          {product.sellerId && (
+            <Link
+              to={`/shops/${typeof product.sellerId === 'object' ? product.sellerId._id : product.sellerId}`}
+              className="btn btn-outline-primary me-2"
+            >
+              Visit Seller’s Shop
+            </Link>
+          )}
+
+          {/* WhatsApp Button */}
+          {product?.sellerId?.whatsapp && (
+            <a
+              href={`https://wa.me/${product.sellerId.whatsapp}`}
+              className="btn btn-success w-100"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              Contact via WhatsApp
+            </a>
+          )}
+
         </div>
       </div>
     </div>

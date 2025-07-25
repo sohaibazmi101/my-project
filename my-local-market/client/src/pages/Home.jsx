@@ -36,6 +36,29 @@ export default function Home() {
 
   return (
     <div className="container mt-4">
+
+      {/* 🔍 Search Bar */}
+      <form onSubmit={handleSearch} className="input-group mb-5 px-2 px-md-0">
+        <input
+          type="text"
+          className="form-control"
+          placeholder="Search for shops, categories or products..."
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+        />
+        <button className="btn btn-outline-primary" type="submit">Search</button>
+      </form>
+
+      {/* 🎯 Hero Section */}
+      <div className="text-center mb-5 px-3">
+        <h1 className="fw-bold">🛍️ Welcome to Local Shop</h1>
+        <p className="lead">Discover and shop from verified local stores near you.</p>
+        <div className="d-flex flex-column flex-md-row justify-content-center gap-3 mt-4">
+          <Link to="/shops" className="btn btn-primary btn-lg">Browse Shops</Link>
+          <Link to="/register" className="btn btn-outline-secondary btn-lg">Become a Seller</Link>
+        </div>
+      </div>
+
       {/* 🔁 Banners Carousel */}
       {banners.length > 0 && (
         <div className="mb-5">
@@ -63,45 +86,6 @@ export default function Home() {
         </div>
       )}
 
-      {/* 🎯 Hero Section */}
-      <div className="text-center mb-5 px-3">
-        <h1 className="fw-bold">🛍️ Welcome to Local Shop</h1>
-        <p className="lead">Discover and shop from verified local stores near you.</p>
-        <div className="d-flex flex-column flex-md-row justify-content-center gap-3 mt-4">
-          <Link to="/shops" className="btn btn-primary btn-lg">Browse Shops</Link>
-          <Link to="/register" className="btn btn-outline-secondary btn-lg">Become a Seller</Link>
-        </div>
-      </div>
-
-      {/* 🔍 Search Bar */}
-      <form onSubmit={handleSearch} className="input-group mb-5 px-2 px-md-0">
-        <input
-          type="text"
-          className="form-control"
-          placeholder="Search for shops, categories or products..."
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-        />
-        <button className="btn btn-outline-primary" type="submit">Search</button>
-      </form>
-
-      {/* 📦 Categories */}
-      <h3 className="mb-3">Popular Categories</h3>
-      <div className="row row-cols-2 row-cols-sm-3 row-cols-md-4 g-3 mb-5">
-        {categories.length > 0 ? (
-          categories.map((cat) => (
-            <div key={cat._id} className="col">
-              <div className="card text-center p-3 h-100 shadow-sm">
-                <div style={{ fontSize: '2rem' }}>{cat.icon || '📦'}</div>
-                <h5 className="mt-2">{cat.name}</h5>
-              </div>
-            </div>
-          ))
-        ) : (
-          <p>No categories available</p>
-        )}
-      </div>
-
       {/* 🌟 Featured Products */}
       <h3 className="mb-3">🌟 Featured Products</h3>
       <div className="row row-cols-1 row-cols-sm-2 row-cols-md-3 g-4 mb-5">
@@ -127,6 +111,23 @@ export default function Home() {
           ))
         ) : (
           <p>No featured products yet</p>
+        )}
+      </div>
+
+      {/* 📦 Categories */}
+      <h3 className="mb-3">Popular Categories</h3>
+      <div className="row row-cols-2 row-cols-sm-3 row-cols-md-4 g-3 mb-5">
+        {categories.length > 0 ? (
+          categories.map((cat) => (
+            <div key={cat._id} className="col">
+              <div className="card text-center p-3 h-100 shadow-sm">
+                <div style={{ fontSize: '2rem' }}>{cat.icon || '📦'}</div>
+                <h5 className="mt-2">{cat.name}</h5>
+              </div>
+            </div>
+          ))
+        ) : (
+          <p>No categories available</p>
         )}
       </div>
     </div>

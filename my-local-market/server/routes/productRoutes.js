@@ -41,15 +41,21 @@ router.get('/products/banners', getBanners);
 router.get('/products/cms/:section', getCMSContent);
 
 // 📦 Single product by ID
+// 📦 Single product by ID with seller info (for WhatsApp button)
 router.get('/products/:id', async (req, res) => {
   try {
-    const product = await Product.findById(req.params.id);
+    const product = await Product.findById(req.params.id)
+      .populate('sellerId', 'name whatsapp'); // 👈 This populates WhatsApp number
+
     if (!product) return res.status(404).json({ message: 'Product not found' });
+
     res.json(product);
   } catch (err) {
+    console.error('[Product Fetch Error]:', err);
     res.status(500).json({ message: 'Error fetching product' });
   }
 });
+
 
 // ➕ Add product
 router.post('/products/add', auth, addProduct);

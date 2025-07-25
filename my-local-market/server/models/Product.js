@@ -1,4 +1,3 @@
-// server/models/Product.js
 const mongoose = require('mongoose');
 
 const productSchema = new mongoose.Schema({
@@ -14,6 +13,9 @@ const productSchema = new mongoose.Schema({
   availability: { type: Boolean, default: true },
   imageUrl: { type: String },
   featured: { type: Boolean, default: false },
+
+  // 🟢 ADD THIS FIELD
+  whatsapp: { type: String }, 
 }, {
   timestamps: true
 });

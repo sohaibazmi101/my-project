@@ -8,7 +8,7 @@ const sellerSchema = new mongoose.Schema({
   phone: { type: String, required: true },
   address: { type: String, required: true },
   shopCategory: { type: String, required: true },
-  whatsapp: { type: String },
+  whatsapp: { type: String, required: true },
   location: { type: String },
 }, {
   timestamps: true

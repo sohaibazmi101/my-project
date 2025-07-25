@@ -21,7 +21,16 @@ export default function AdminLogin() {
   };
 
   return (
-    <div className="container d-flex justify-content-center align-items-center mt-5">
+    <div
+      className="container"
+      style={{
+        display: 'grid',
+        placeItems: 'center',
+        minHeight: 'calc(100vh - 140px)', // Adjust if footer or navbar is taller
+        paddingTop: '1rem',
+        paddingBottom: '1rem',
+      }}
+    >
       <div className="w-100" style={{ maxWidth: 400 }}>
         <div className="card p-4 shadow-sm rounded">
           <h3 className="text-center mb-4">Admin Login</h3>
