@@ -29,7 +29,7 @@ export default function SearchResults() {
             <div key={p._id} className="col">
               <div className="card h-100">
                 <img
-                  src={p.imageUrl || 'https://via.placeholder.com/300x200'}
+                  src={p.images?.[0] || 'https://via.placeholder.com/300x200'}
                   className="card-img-top"
                   alt={p.name}
                   style={{ height: '200px', objectFit: 'cover' }}
