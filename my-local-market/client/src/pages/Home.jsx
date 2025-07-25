@@ -10,7 +10,7 @@ export default function Home() {
   const navigate = useNavigate();
 
   useEffect(() => {
-    api.get('/admin/categories')
+    api.get('/categories')
       .then((res) => setCategories(res.data))
       .catch((err) => console.error('Category error:', err));
   }, []);

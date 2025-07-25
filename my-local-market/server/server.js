@@ -24,6 +24,7 @@ app.use('/api', authRoutes);
 app.use('/api', productRoutes);
 app.use('/api', shopRoutes);
 app.use('/api/admin', adminRoutes);
+app.use('/api', require('./routes/productRoutes'));
 
 // Health Check Route
 app.get('/api/ping', (req, res) => {
