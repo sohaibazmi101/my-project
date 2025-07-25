@@ -24,6 +24,8 @@ app.use(express.json());
 app.use('/api', authRoutes);
 app.use('/api', productRoutes);
 app.use('/api', shopRoutes);
+app.use('/api/admin', require('./routes/adminRoutes'));
+
 
 // Test route
 app.get('/api/ping', (req, res) => {

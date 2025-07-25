@@ -1,23 +1,20 @@
-import { useEffect, useState } from 'react';
-import api from '../services/api';
-import ShopCard from '../components/ShopCard';
+import { Link } from 'react-router-dom';
 
 export default function Home() {
-  const [shops, setShops] = useState([]);
-
-  useEffect(() => {
-    api.get('/shops')
-      .then(res => setShops(res.data))
-      .catch(err => console.error(err));
-  }, []);
-
   return (
-    <div className="container mt-4">
-      <h2>Featured Shops</h2>
-      <div className="row">
-        {shops.map(shop => (
-          <ShopCard key={shop._id} shop={shop} />
-        ))}
+    <div className="container text-center mt-5">
+      <h1>🛍️ Welcome to Local Shop</h1>
+      <p className="lead">
+        Discover and shop from verified local stores near you.
+      </p>
+
+      <div className="mt-4">
+        <Link to="/shops" className="btn btn-primary btn-lg mx-2">
+          Browse Shops
+        </Link>
+        <Link to="/register" className="btn btn-outline-secondary btn-lg mx-2">
+          Become a Seller
+        </Link>
       </div>
     </div>
   );
