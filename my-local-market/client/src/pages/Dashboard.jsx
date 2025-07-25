@@ -60,16 +60,13 @@ export default function Dashboard() {
 
   const fetchCategories = async () => {
     try {
-      const res = await api.get('/admin/categories', {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
+      const res = await api.get('/categories');
       setCategories(res.data);
     } catch (err) {
       console.error('Failed to fetch categories:', err);
     }
   };
+
 
 
   const handleSubmit = async (e) => {
