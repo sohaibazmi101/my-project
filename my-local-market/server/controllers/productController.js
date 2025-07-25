@@ -102,16 +102,18 @@ exports.getFeaturedProducts = async (req, res) => {
   }
 };
 
+// In productController.js
 exports.getNewArrivals = async (req, res) => {
   try {
     const products = await Product.find()
       .sort({ createdAt: -1 })
-      .limit(8) // Fetch latest 8 products
-      .populate('sellerId', 'name');
+      .limit(10)
+      .populate('sellerId');
 
     res.json(products);
   } catch (err) {
-    res.status(500).json({ message: 'Server error' });
+    console.error('❌ Error in getNewArrivals:', err.message, err.stack);
+    res.status(500).json({ message: 'Error fetching product' });
   }
 };
 
