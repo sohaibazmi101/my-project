@@ -8,24 +8,25 @@ const {
   editProduct,
   deleteProduct,
   getFeaturedProducts,
-  searchProducts,
-  getBanners,
-  getCMSContent
+  searchProducts
 } = require('../controllers/productController');
 
-// 🔍 Search products (e.g. /products/search?q=milk)
+const { getBanners } = require('../controllers/bannerController');
+const { getCMSContent } = require('../controllers/cmsController');
+
+// 🔍 Search products
 router.get('/products/search', searchProducts);
 
-// 🌟 Get featured products
+// 🌟 Featured products
 router.get('/products/featured', getFeaturedProducts);
 
-// 🖼️ Get banners
+// 🖼️ Banners
 router.get('/products/banners', getBanners);
 
-// 📄 Get CMS content by section (e.g. /products/cms/home)
+// 📄 CMS content
 router.get('/products/cms/:section', getCMSContent);
 
-// 📦 Get single product by ID (e.g. /products/12345)
+// 📦 Single product by ID
 router.get('/products/:id', async (req, res) => {
   try {
     const product = await Product.findById(req.params.id);

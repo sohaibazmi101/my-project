@@ -49,8 +49,6 @@ exports.deleteProduct = async (req, res) => {
   }
 };
 
-const Product = require('../models/Product');
-
 // Get all products (admin only)
 exports.getAllProducts = async (req, res) => {
   try {
