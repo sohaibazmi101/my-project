@@ -102,6 +102,20 @@ exports.getFeaturedProducts = async (req, res) => {
   }
 };
 
+exports.getNewArrivals = async (req, res) => {
+  try {
+    const products = await Product.find()
+      .sort({ createdAt: -1 })
+      .limit(8) // Fetch latest 8 products
+      .populate('sellerId', 'name');
+
+    res.json(products);
+  } catch (err) {
+    res.status(500).json({ message: 'Server error' });
+  }
+};
+
+
 exports.searchProducts = async (req, res) => {
   const q = req.query.q;
   const regex = new RegExp(q, 'i');

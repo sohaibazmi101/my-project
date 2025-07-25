@@ -8,7 +8,8 @@ const {
   editProduct,
   deleteProduct,
   getFeaturedProducts,
-  searchProducts
+  searchProducts,
+  getNewArrivals
 } = require('../controllers/productController');
 
 const { getBanners } = require('../controllers/bannerController');
@@ -33,6 +34,9 @@ router.get('/products/search', searchProducts);
 
 // 🌟 Featured products
 router.get('/products/featured', getFeaturedProducts);
+
+router.get('/new-arrivals', getNewArrivals);
+
 
 // 🖼️ Banners
 router.get('/products/banners', getBanners);

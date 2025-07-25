@@ -2,12 +2,14 @@ import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import api from '../services/api';
 
+
 export default function Home() {
   const [categories, setCategories] = useState([]);
   const [featured, setFeatured] = useState([]);
   const [banners, setBanners] = useState([]);
   const [search, setSearch] = useState('');
   const navigate = useNavigate();
+  const [newArrivals, setNewArrivals] = useState([]);
 
   useEffect(() => {
     api.get('/categories')
@@ -25,6 +27,12 @@ export default function Home() {
     api.get('/products/featured')
       .then((res) => setFeatured(res.data))
       .catch((err) => console.error('Featured error:', err));
+  }, []);
+
+    useEffect(() => {
+    api.get('/products/new-arrivals')
+      .then(res => setNewArrivals(res.data))
+      .catch(err => console.error('Error loading new arrivals:', err));
   }, []);
 
   const handleSearch = (e) => {
@@ -94,7 +102,7 @@ export default function Home() {
             <div key={item._id} className="col">
               <div className="card h-100 shadow-sm">
                 <img
-                  src={item.imageUrl || 'https://via.placeholder.com/300x200'}
+                  src={(item.images && item.images[0]) || 'https://placehold.co/300x200?text=No+Image'}
                   className="card-img-top"
                   alt={item.name}
                   style={{ objectFit: 'cover', height: '200px' }}
@@ -114,22 +122,35 @@ export default function Home() {
         )}
       </div>
 
+
       {/* 📦 Categories */}
-      <h3 className="mb-3">Popular Categories</h3>
+      <h3 className="mb-3">🆕 New Arrivals</h3>
       <div className="row row-cols-2 row-cols-sm-3 row-cols-md-4 g-3 mb-5">
-        {categories.length > 0 ? (
-          categories.map((cat) => (
-            <div key={cat._id} className="col">
-              <div className="card text-center p-3 h-100 shadow-sm">
-                <div style={{ fontSize: '2rem' }}>{cat.icon || '📦'}</div>
-                <h5 className="mt-2">{cat.name}</h5>
+        {newArrivals.length > 0 ? (
+          newArrivals.map((product) => (
+            <div key={product._id} className="col">
+              <div className="card h-100 shadow-sm">
+                <img
+                  src={(product.images && product.images[0]) || 'https://placehold.co/300x200?text=No+Image'}
+                  className="card-img-top"
+                  alt={product.name}
+                  style={{ height: '200px', objectFit: 'cover' }}
+                />
+                <div className="card-body d-flex flex-column text-center">
+                  <h5 className="card-title">{product.name}</h5>
+                  <p className="card-text text-muted">₹{product.price}</p>
+                  <Link to={`/product/${product._id}`} className="btn btn-sm btn-outline-primary mt-auto">
+                    View
+                  </Link>
+                </div>
               </div>
             </div>
           ))
         ) : (
-          <p>No categories available</p>
+          <p>No new arrivals yet</p>
         )}
       </div>
+
     </div>
   );
 }
