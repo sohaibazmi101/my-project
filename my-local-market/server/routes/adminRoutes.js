@@ -1,7 +1,10 @@
 const express = require('express');
 const router = express.Router();
 const adminAuth = require('../middleware/adminAuth');
+const { loginAdmin } = require('../controllers/adminController'); // ← make sure this exists
 
+// Admin login route
+router.post('/login', loginAdmin);
 
 const {
   addCategory,
@@ -37,7 +40,5 @@ const { getCMSContent, updateCMSContent } = require('../controllers/cmsControlle
 
 router.get('/cms/:section', adminAuth, getCMSContent);
 router.post('/cms/:section', adminAuth, updateCMSContent);
-
-
 
 module.exports = router;
