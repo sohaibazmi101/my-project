@@ -1,6 +1,14 @@
+// server/middleware/uploadProduct.js
 const multer = require('multer');
-const { storage } = require('../utils/cloudinary');
+const { CloudinaryStorage } = require('multer-storage-cloudinary');
+const cloudinary = require('../config/cloudinary');
 
-const upload = multer({ storage });
+const storage = new CloudinaryStorage({
+  cloudinary,
+  params: {
+    folder: 'local-market/products',
+    allowed_formats: ['jpg', 'png', 'jpeg'],
+  },
+});
 
-module.exports = upload;
+module.exports = multer({ storage });

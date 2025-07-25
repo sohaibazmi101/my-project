@@ -14,6 +14,9 @@ const {
 const { getBanners } = require('../controllers/bannerController');
 const { getCMSContent } = require('../controllers/cmsController');
 
+const upload = require('../middleware/uploadProductImage');
+
+
 // 🔍 Search products
 router.get('/products/search', searchProducts);
 
@@ -45,5 +48,11 @@ router.put('/products/:id/edit', auth, editProduct);
 
 // ❌ Delete product
 router.delete('/products/:id/delete', auth, deleteProduct);
+
+// Upload product image
+router.post('/products/upload', auth, upload.single('image'), (req, res) => {
+  res.status(200).json({ imageUrl: req.file.path }); // Cloudinary returns file.path as full URL
+});
+
 
 module.exports = router;
