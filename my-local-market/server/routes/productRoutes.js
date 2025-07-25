@@ -1,3 +1,4 @@
+// server/routes/productRoutes.js
 const express = require('express');
 const router = express.Router();
 const auth = require('../middleware/authMiddleware');
@@ -16,6 +17,7 @@ const { getBanners } = require('../controllers/bannerController');
 const { getCMSContent } = require('../controllers/cmsController');
 const upload = require('../middleware/uploadProductImage');
 
+// 🖼️ Upload product image
 router.post('/products/upload', auth, upload.single('image'), async (req, res) => {
   try {
     if (!req.file) throw new Error('No file received from client');
@@ -27,16 +29,14 @@ router.post('/products/upload', auth, upload.single('image'), async (req, res) =
   }
 });
 
-
-
 // 🔍 Search products
 router.get('/products/search', searchProducts);
 
 // 🌟 Featured products
 router.get('/products/featured', getFeaturedProducts);
 
-router.get('/new-arrivals', getNewArrivals);
-
+// 🆕 New arrivals ✅ FIXED PATH
+router.get('/products/new-arrivals', getNewArrivals);
 
 // 🖼️ Banners
 router.get('/products/banners', getBanners);
@@ -44,12 +44,11 @@ router.get('/products/banners', getBanners);
 // 📄 CMS content
 router.get('/products/cms/:section', getCMSContent);
 
-// 📦 Single product by ID
 // 📦 Single product by ID with seller info (for WhatsApp button)
 router.get('/products/:id', async (req, res) => {
   try {
     const product = await Product.findById(req.params.id)
-      .populate('sellerId', 'name whatsapp'); // 👈 This populates WhatsApp number
+      .populate('sellerId', 'name whatsapp');
 
     if (!product) return res.status(404).json({ message: 'Product not found' });
 
@@ -60,7 +59,6 @@ router.get('/products/:id', async (req, res) => {
   }
 });
 
-
 // ➕ Add product
 router.post('/products/add', auth, addProduct);
 
@@ -69,6 +67,5 @@ router.put('/products/:id/edit', auth, editProduct);
 
 // ❌ Delete product
 router.delete('/products/:id/delete', auth, deleteProduct);
-
 
 module.exports = router;
