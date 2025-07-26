@@ -1,9 +1,16 @@
 const mongoose = require('mongoose');
 require('./Seller');
+require('./Shop'); // optional but good to include for completeness
+
 const productSchema = new mongoose.Schema({
   sellerId: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Seller',
+    required: true
+  },
+  shop: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Shop',
     required: true
   },
   name: { type: String, required: true },
@@ -12,12 +19,11 @@ const productSchema = new mongoose.Schema({
   description: { type: String },
   availability: { type: Boolean, default: true },
   images: {
-    type: [String], // array of 0–4 image URLs
+    type: [String],
     validate: [arr => arr.length <= 4, '{PATH} exceeds the limit of 4 images']
   },
-
   featured: { type: Boolean, default: false },
-  whatsapp: { type: String }, 
+  whatsapp: { type: String },
 }, {
   timestamps: true
 });
