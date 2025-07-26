@@ -67,7 +67,7 @@ exports.getShopById = async (req, res) => {
     }
 
     // ✅ Fetch all products belonging to this shop
-    const products = await Product.find({ shopId: id });
+    const products = await Product.find({ shop: id });
 
     // ✅ Return both shop and products
     res.json({ shop, products });
