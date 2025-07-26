@@ -1,8 +1,14 @@
 // server/routes/authRoutes.js
 const express = require('express');
 const router = express.Router();
-const { registerSeller, loginSeller } = require('../controllers/authController');
 
+// ✅ Use registerSeller from sellerController
+const { registerSeller } = require('../controllers/sellerController');
+
+// ✅ Keep loginSeller from authController
+const { loginSeller } = require('../controllers/authController');
+
+// Routes
 router.post('/seller/register', registerSeller);
 router.post('/seller/login', loginSeller);
 
