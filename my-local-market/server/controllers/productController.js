@@ -1,6 +1,8 @@
 // server/controllers/productController.js
 const Product = require('../models/Product');
 
+const Shop = require('../models/Shop');
+
 exports.addProduct = async (req, res) => {
   try {
     const {
@@ -9,22 +11,28 @@ exports.addProduct = async (req, res) => {
       price,
       description,
       availability,
-      images, // <- updated from imageUrl
+      images,
     } = req.body;
 
-    // Require at least the first image
     if (!images || !images[0]) {
       return res.status(400).json({ message: 'At least one image is required' });
     }
 
+    // ✅ Get seller's shop first
+    const shop = await Shop.findOne({ sellerId: req.seller });
+    if (!shop) {
+      return res.status(404).json({ message: 'Shop not found for this seller' });
+    }
+
     const product = await Product.create({
       sellerId: req.seller,
+      shop: shop._id, // ✅ link product to the shop
       name,
       category,
       price,
       description,
       availability,
-      images, // <- store as array
+      images,
     });
 
     res.status(201).json({ message: 'Product added', product });
