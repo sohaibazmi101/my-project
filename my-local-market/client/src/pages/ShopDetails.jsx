@@ -11,11 +11,12 @@ export default function ShopDetails() {
   useEffect(() => {
     api.get(`/shops/${id}`)
       .then(res => {
-        setShop(res.data.shop);
-        setProducts(res.data.products);
+        setShop(res.data);
+        setProducts([]); // No products coming from this endpoint
       })
       .catch(err => console.error(err));
   }, [id]);
+
 
   if (!shop) return <div className="text-center mt-5">Loading...</div>;
 

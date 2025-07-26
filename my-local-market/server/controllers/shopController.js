@@ -66,12 +66,17 @@ exports.getShopById = async (req, res) => {
       return res.status(404).json({ message: 'Shop not found' });
     }
 
-    res.json(shop);
+    // ✅ Fetch all products belonging to this shop
+    const products = await Product.find({ shopId: id });
+
+    // ✅ Return both shop and products
+    res.json({ shop, products });
   } catch (err) {
     console.error('❌ getShopById Error:', err.message);
     res.status(500).json({ message: 'Server error' });
   }
 };
+
 
 
 // Helper to toggle product in a shop's array field
