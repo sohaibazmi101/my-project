@@ -17,7 +17,7 @@ export default function ManageShop() {
 
   const fetchShop = async () => {
     try {
-      const res = await api.get('api/seller/shop', {
+      const res = await api.get('/seller/shop', {
         headers: {
           Authorization: `Bearer ${token}`,
         },

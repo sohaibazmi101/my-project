@@ -1,10 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const adminAuth = require('../middleware/adminAuth');
-const { loginAdmin } = require('../controllers/adminController'); // ← make sure this exists
-
-// Admin login route
-router.post('/login', loginAdmin);
+const { loginAdmin } = require('../controllers/adminController');
 
 const {
   addCategory,
@@ -12,32 +9,39 @@ const {
   deleteCategory
 } = require('../controllers/categoryController');
 
-// Admin-only category management
+const { getAllProducts, toggleFeatured } = require('../controllers/productController');
+const { getBanners, addBanner, deleteBanner } = require('../controllers/bannerController');
+const { getCMSContent, updateCMSContent } = require('../controllers/cmsController');
+
+// ✅ Use Cloudinary uploader middleware
+const uploadBanner = require('../middleware/uploadBanner');
+
+// Admin login
+router.post('/login', loginAdmin);
+
+// Category routes
 router.post('/categories', adminAuth, addCategory);
 router.get('/categories', adminAuth, getCategories);
 router.delete('/categories/:id', adminAuth, deleteCategory);
 
-const { getAllProducts, toggleFeatured } = require('../controllers/productController');
-
+// Product routes
 router.get('/products', adminAuth, getAllProducts);
 router.patch('/products/:id/featured', adminAuth, toggleFeatured);
 
-const { getBanners, addBanner, deleteBanner } = require('../controllers/bannerController');
-
-const upload = require('../middleware/uploadBanner');
-
-router.post('/banners/upload', adminAuth, upload.single('banner'), async (req, res) => {
-  const imageUrl = req.file.path; // Cloudinary gives back URL
-  res.status(200).json({ imageUrl });
+// ✅ Upload banner to Cloudinary
+router.post('/banners/upload', adminAuth, uploadBanner, (req, res) => {
+  if (!req.bannerUrl) {
+    return res.status(400).json({ message: 'Banner upload failed' });
+  }
+  res.status(200).json({ imageUrl: req.bannerUrl });
 });
 
-
+// Banner DB operations
 router.get('/banners', adminAuth, getBanners);
 router.post('/banners', adminAuth, addBanner);
 router.delete('/banners/:id', adminAuth, deleteBanner);
 
-const { getCMSContent, updateCMSContent } = require('../controllers/cmsController');
-
+// CMS
 router.get('/cms/:section', adminAuth, getCMSContent);
 router.post('/cms/:section', adminAuth, updateCMSContent);
 

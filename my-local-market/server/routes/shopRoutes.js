@@ -18,9 +18,12 @@ router.get('/', getAllShops);
 router.get('/seller/shop', auth, getMyShop);
 router.put('/shops/:id/update', auth, updateShopDetails);
 
-router.post('/shops/banner/upload', auth, uploadBanner.single('banner'), (req, res) => {
-  if (!req.file) return res.status(400).json({ message: 'No file uploaded' });
-  res.json({ imageUrl: `/uploads/banners/${req.file.filename}` });
+// ✅ Upload banner to Cloudinary
+router.post('/shops/banner/upload', auth, uploadBanner, (req, res) => {
+  if (!req.bannerUrl) {
+    return res.status(400).json({ message: 'Upload failed' });
+  }
+  res.json({ imageUrl: req.bannerUrl });
 });
 
 router.patch('/shops/:id/product/:productId/toggle-featured', auth, toggleFeaturedProduct);
