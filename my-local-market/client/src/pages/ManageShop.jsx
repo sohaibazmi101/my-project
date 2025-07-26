@@ -17,7 +17,7 @@ export default function ManageShop() {
 
   const fetchShop = async () => {
     try {
-      const res = await api.get('/seller/shop', {
+      const res = await api.get('api/seller/shop', {
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -29,7 +29,6 @@ export default function ManageShop() {
       console.error('Failed to fetch shop data:', err);
     }
   };
-
 
   const handleBannerUpload = async (file) => {
     setUploading(true);
@@ -45,15 +44,10 @@ export default function ManageShop() {
       });
       const imageUrl = res.data.imageUrl;
       setBanner(imageUrl);
-
-      await api.put('/myshop', { banner: imageUrl }, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-
-      alert('Banner updated!');
+      alert('Banner uploaded!');
     } catch (err) {
       console.error('Banner upload error:', err);
-      alert('Failed to update banner');
+      alert('Failed to upload banner');
     } finally {
       setUploading(false);
     }
@@ -66,7 +60,12 @@ export default function ManageShop() {
 
   const handleShopSave = async () => {
     try {
-      await api.put('/myshop', shop, {
+      await api.put(`/shops/${shop._id}/update`, {
+        name: shop.name,
+        description: shop.description,
+        location: shop.location,
+        banner
+      }, {
         headers: { Authorization: `Bearer ${token}` }
       });
       alert('Shop updated successfully');
@@ -78,7 +77,7 @@ export default function ManageShop() {
 
   const toggleProductFlag = async (productId, field) => {
     try {
-      await api.patch(`/myshop/${field}/${productId}`, null, {
+      await api.patch(`/shops/${shop._id}/product/${productId}/toggle-${field}`, null, {
         headers: { Authorization: `Bearer ${token}` }
       });
       fetchShop(); // Refresh
@@ -144,8 +143,8 @@ export default function ManageShop() {
         )}
       </div>
 
-      <button className="btn btn-success mb-5" onClick={handleShopSave}>
-        Save Shop Info
+      <button className="btn btn-success mb-5" onClick={handleShopSave} disabled={uploading}>
+        {uploading ? 'Uploading...' : 'Save Shop Info'}
       </button>
 
       <hr />
@@ -172,7 +171,7 @@ export default function ManageShop() {
                     <input
                       className="form-check-input"
                       type="checkbox"
-                      checked={product.featured}
+                      checked={shop.featuredProducts.includes(product._id)}
                       onChange={() => toggleProductFlag(product._id, 'featured')}
                     />
                     <label className="form-check-label">Mark as Featured</label>
@@ -182,7 +181,7 @@ export default function ManageShop() {
                     <input
                       className="form-check-input"
                       type="checkbox"
-                      checked={product.new}
+                      checked={shop.newProducts.includes(product._id)}
                       onChange={() => toggleProductFlag(product._id, 'new')}
                     />
                     <label className="form-check-label">Mark as New</label>

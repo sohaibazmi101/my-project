@@ -1,4 +1,5 @@
 const Seller = require('../models/Seller');
+const Shop = require('../models/Shop'); // ✅ add this line
 
 exports.registerSeller = async (req, res) => {
   try {
@@ -16,6 +17,18 @@ exports.registerSeller = async (req, res) => {
     });
 
     await seller.save();
+
+    // ✅ Automatically create a shop for the seller
+    await Shop.create({
+      sellerId: seller._id,
+      name: name || 'My Shop',
+      description: '',
+      address,
+      category: shopCategory,
+      whatsapp,
+      location,
+    });
+
     res.status(201).json({ message: 'Seller registered successfully' });
 
   } catch (err) {
