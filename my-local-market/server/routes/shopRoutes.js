@@ -9,16 +9,19 @@ const {
   updateShopDetails,
   toggleFeaturedProduct,
   toggleNewProduct,
+  getShopById,
 } = require('../controllers/shopController');
 
 // 🌐 Public route
 router.get('/', getAllShops);
 
+// 🆕 Add this public route
+router.get('/shops/:id', getShopById);
+
 // 🛡 Protected routes
 router.get('/seller/shop', auth, getMyShop);
 router.put('/shops/:id/update', auth, updateShopDetails);
 
-// ✅ Upload banner to Cloudinary
 router.post('/shops/banner/upload', auth, uploadBanner, (req, res) => {
   if (!req.bannerUrl) {
     return res.status(400).json({ message: 'Upload failed' });

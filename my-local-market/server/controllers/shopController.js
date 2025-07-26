@@ -48,6 +48,31 @@ exports.getAllShops = async (req, res) => {
   }
 };
 
+// Get a single shop by ID (for ShopDetails page)
+exports.getShopById = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    // Check if ID is a valid MongoDB ObjectId
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(400).json({ message: 'Invalid shop ID' });
+    }
+
+    const shop = await Shop.findById(id)
+      .populate('featuredProducts newProducts')
+      .lean();
+
+    if (!shop) {
+      return res.status(404).json({ message: 'Shop not found' });
+    }
+
+    res.json(shop);
+  } catch (err) {
+    console.error('❌ getShopById Error:', err.message);
+    res.status(500).json({ message: 'Server error' });
+  }
+};
+
 
 // Helper to toggle product in a shop's array field
 const toggleProductField = async (req, res, fieldName) => {
