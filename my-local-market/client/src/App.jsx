@@ -16,25 +16,31 @@ import FeaturedProducts from './pages/admin/FeaturedProducts';
 import Banners from './pages/admin/Banners';
 import SearchResults from './pages/SearchResults';
 
-
-
+// ✅ NEW IMPORTS for seller-specific pages
+import AddProduct from './pages/AddProduct';
+import ManageShop from './pages/ManageShop';
 
 function App() {
   return (
     <>
       <Navbar />
       <Routes>
+        {/* Public Routes */}
         <Route path="/" element={<Home />} />
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
         <Route path="/shops" element={<ShopList />} />
         <Route path="/shops/:id" element={<ShopDetails />} />
         <Route path="/product/:id" element={<ProductView />} />
-        <Route path="/dashboard" element={<Dashboard />} />
-        <Route path="/admin/login" element={<AdminLogin />} />
         <Route path="/search" element={<SearchResults />} />
 
-        {/* Admin Dashboard nested routes */}
+        {/* Seller Dashboard Routes */}
+        <Route path="/dashboard" element={<Dashboard />} />
+        <Route path="/dashboard/add-product" element={<AddProduct />} />
+        <Route path="/dashboard/manage-shop" element={<ManageShop />} />
+
+        {/* Admin Routes */}
+        <Route path="/admin/login" element={<AdminLogin />} />
         <Route path="/admin" element={<DashboardLayout />}>
           <Route path="dashboard" element={<DashboardHome />} />
           <Route path="categories" element={<Categories />} />

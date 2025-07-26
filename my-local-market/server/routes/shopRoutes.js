@@ -1,17 +1,25 @@
-// server/routes/shopRoutes.js
 const express = require('express');
 const router = express.Router();
-const { getAllShops, getShopDetails } = require('../controllers/shopController');
+const auth = require('../middleware/authMiddleware');
+const uploadBanner = require('../middleware/uploadBanner');
 
-const { getCategories } = require('../controllers/categoryController');
+const {
+  getMyShop,
+  updateShopDetails,
+  toggleFeaturedProduct,
+  toggleNewProduct,
+} = require('../controllers/shopController');
 
+// 🛡 Protected routes
+router.get('/seller/shop', auth, getMyShop);
+router.put('/shops/:id/update', auth, updateShopDetails);
 
+router.post('/shops/banner/upload', auth, uploadBanner.single('banner'), (req, res) => {
+  if (!req.file) return res.status(400).json({ message: 'No file uploaded' });
+  res.json({ imageUrl: `/uploads/banners/${req.file.filename}` });
+});
 
-module.exports = router;
-
-
-router.get('/categories', getCategories);
-router.get('/shops', getAllShops);
-router.get('/shops/:id', getShopDetails);
+router.patch('/shops/:id/product/:productId/toggle-featured', auth, toggleFeaturedProduct);
+router.patch('/shops/:id/product/:productId/toggle-new', auth, toggleNewProduct);
 
 module.exports = router;

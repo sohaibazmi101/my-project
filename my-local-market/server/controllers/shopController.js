@@ -1,25 +1,81 @@
-// server/controllers/shopController.js
-const Seller = require('../models/Seller');
+const Shop = require('../models/Shop');
 const Product = require('../models/Product');
+const mongoose = require('mongoose');
 
-exports.getAllShops = async (req, res) => {
+// Get current seller's shop details
+exports.getMyShop = async (req, res) => {
   try {
-    const shops = await Seller.find().select('-password');
-    res.json(shops);
+    const shop = await Shop.findOne({ sellerId: req.seller })
+      .populate('featuredProducts newProducts');
+
+    if (!shop) return res.status(404).json({ message: 'Shop not found' });
+
+    const products = await Product.find({ sellerId: req.seller });
+
+    res.json({ shop, products }); // ✅ frontend expects this format
   } catch (err) {
-    res.status(500).json({ message: 'Server error' });
+    console.error('❌ getMyShop Error:', err.message);
+    res.status(500).json({ message: 'Error getting shop' });
   }
 };
 
-exports.getShopDetails = async (req, res) => {
+// Update shop info (banner, description, name)
+exports.updateShopDetails = async (req, res) => {
   try {
-    const shop = await Seller.findById(req.params.id).select('-password');
+    const { description, banner, name } = req.body;
+
+    const updated = await Shop.findOneAndUpdate(
+      { sellerId: req.seller },
+      { $set: { description, banner, name } },
+      { new: true, upsert: true }
+    );
+
+    res.json(updated);
+  } catch (err) {
+    console.error('❌ updateShopDetails Error:', err.message);
+    res.status(500).json({ message: 'Error updating shop' });
+  }
+};
+
+// Helper to toggle product in a shop's array field
+const toggleProductField = async (req, res, fieldName) => {
+  try {
+    const { productId } = req.params;
+
+    // Validate ObjectId
+    if (!mongoose.Types.ObjectId.isValid(productId)) {
+      return res.status(400).json({ message: 'Invalid product ID' });
+    }
+
+    const shop = await Shop.findOne({ sellerId: req.seller });
     if (!shop) return res.status(404).json({ message: 'Shop not found' });
 
-    const products = await Product.find({ sellerId: req.params.id });
+    const exists = shop[fieldName].includes(productId);
+    if (exists) {
+      shop[fieldName].pull(productId);
+    } else {
+      shop[fieldName].push(productId);
+    }
 
-    res.json({ shop, products });
+    await shop.save();
+
+    res.json({
+      message: exists
+        ? `Removed from ${fieldName}`
+        : `Added to ${fieldName}`,
+    });
   } catch (err) {
-    res.status(500).json({ message: 'Server error' });
+    console.error(`❌ toggle ${fieldName} Error:`, err.message);
+    res.status(500).json({ message: `Error toggling ${fieldName}` });
   }
+};
+
+// Toggle featured product
+exports.toggleFeaturedProduct = (req, res) => {
+  toggleProductField(req, res, 'featuredProducts');
+};
+
+// Toggle new product
+exports.toggleNewProduct = (req, res) => {
+  toggleProductField(req, res, 'newProducts');
 };

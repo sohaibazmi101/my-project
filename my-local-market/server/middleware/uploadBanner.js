@@ -1,9 +1,17 @@
-// ✅ uploadBanner.js (middleware)
+// server/middleware/uploadBanner.js
 const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
 
+// Define upload path
+const bannerUploadPath = path.join(__dirname, '../uploads/banners');
 
+// Ensure directory exists
+if (!fs.existsSync(bannerUploadPath)) {
+  fs.mkdirSync(bannerUploadPath, { recursive: true });
+}
+
+// Configure multer storage
 const storage = multer.diskStorage({
   destination: function (req, file, cb) {
     cb(null, bannerUploadPath);
@@ -15,4 +23,4 @@ const storage = multer.diskStorage({
 
 const upload = multer({ storage });
 
-module.exports = upload; // ✅ export multer instance, NOT .single()
+module.exports = upload; // ✅ Export multer instance (not .single())
