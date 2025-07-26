@@ -37,6 +37,18 @@ exports.updateShopDetails = async (req, res) => {
   }
 };
 
+// Get all shops (for public view)
+exports.getAllShops = async (req, res) => {
+  try {
+    const shops = await Shop.find().select('-__v').lean(); // optional: clean response
+    res.json(shops);
+  } catch (err) {
+    console.error('❌ getAllShops Error:', err.message);
+    res.status(500).json({ message: 'Error fetching shops' });
+  }
+};
+
+
 // Helper to toggle product in a shop's array field
 const toggleProductField = async (req, res, fieldName) => {
   try {

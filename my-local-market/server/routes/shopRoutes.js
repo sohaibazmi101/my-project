@@ -4,11 +4,15 @@ const auth = require('../middleware/authMiddleware');
 const uploadBanner = require('../middleware/uploadBanner');
 
 const {
+  getAllShops,
   getMyShop,
   updateShopDetails,
   toggleFeaturedProduct,
   toggleNewProduct,
 } = require('../controllers/shopController');
+
+// 🌐 Public route
+router.get('/', getAllShops);
 
 // 🛡 Protected routes
 router.get('/seller/shop', auth, getMyShop);
