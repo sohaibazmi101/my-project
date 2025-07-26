@@ -12,9 +12,11 @@ const {
   getShopById,
 } = require('../controllers/shopController');
 
-// 🌐 Public routes
+// 🌐 Public route
 router.get('/', getAllShops);
-router.get('/:id', getShopById); // ✅ fixed this line
+
+// 🆕 Add this public route
+router.get('/shops/:id', getShopById);
 
 // 🛡 Protected routes
 router.get('/seller/shop', auth, getMyShop);
