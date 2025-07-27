@@ -20,7 +20,7 @@ export default function CustomerRegister() {
     try {
       const res = await api.post('/customers/register', form);
       alert('Registered successfully. Please log in.');
-      navigate('/customer/login'); // ✅ fixed path
+      navigate('/customer/login');
     } catch (err) {
       console.error(err);
       alert(err.response?.data?.error || 'Registration failed');

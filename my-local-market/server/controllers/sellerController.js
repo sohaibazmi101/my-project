@@ -30,7 +30,6 @@ exports.registerSeller = async (req, res) => {
 
     await seller.save();
 
-    //4. Create related shop with banner URL if available
     const shop = new Shop({
       sellerId: seller._id,
       name,

@@ -1,9 +1,11 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import api from '../../services/api';
+import { useCustomer } from '../../contexts/CustomerContext'; // ✅ IMPORT CONTEXT
 
 export default function CustomerLogin() {
   const navigate = useNavigate();
+  const { setCustomer } = useCustomer(); // ✅ GET setCustomer FROM CONTEXT
   const [form, setForm] = useState({ emailOrPhone: '', password: '' });
 
   const handleChange = (e) => {
@@ -15,8 +17,9 @@ export default function CustomerLogin() {
     try {
       const res = await api.post('/customers/login', form);
       localStorage.setItem('customerToken', res.data.token);
+      setCustomer(res.data.customer); // ✅ UPDATE CONTEXT RIGHT AFTER LOGIN
       alert('Logged in successfully!');
-      navigate('/'); // redirect to homepage or customer dashboard
+      navigate('/');
     } catch (err) {
       console.error(err);
       alert(err.response?.data?.error || 'Login failed');

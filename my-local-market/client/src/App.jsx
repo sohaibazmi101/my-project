@@ -68,7 +68,9 @@ function App() {
         <Route path="/cart" element={<CartPage />} />
         <Route path="/customer/update-profile" element={<UpdateCustomerProfile />} />
         <Route path="/customer-login" element={<CustomerLogin />} />
+        <Route path="/customer/login" element={<CustomerLogin />} />
         <Route path="/customer-register" element={<CustomerRegister />} />
+        <Route path='/customer/customer-profile' element={<CustomerProfile />} />
       </Routes>
       <Footer />
     </CustomerProvider>

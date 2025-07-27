@@ -1,9 +1,12 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import api from '../../services/api';
+import { useCustomer } from '../../contexts/CustomerContext';
 
 export default function CustomerProfile() {
-    const { customer, logout, token } = useContext(CustomerContext);
+    const { customer, logout } = useCustomer();
+    const token = localStorage.getItem('customerToken');
+
     const [orders, setOrders] = useState([]);
 
     useEffect(() => {
