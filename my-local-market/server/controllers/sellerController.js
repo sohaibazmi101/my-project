@@ -1,5 +1,6 @@
 const Seller = require('../models/Seller');
 const Shop = require('../models/Shop');
+const bcrypt = require('bcrypt');
 
 exports.registerSeller = async (req, res) => {
   try {
