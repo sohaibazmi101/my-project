@@ -7,7 +7,7 @@ import { FaUserCircle, FaSignInAlt, FaUserPlus, FaShoppingCart } from 'react-ico
 
 export default function Navbar() {
   const navigate = useNavigate();
-  const { customer, logout } = useCustomer();
+  const { customer, logout, loading } = useCustomer();
   const [isCollapsed, setIsCollapsed] = useState(true);
   const [showSearchModal, setShowSearchModal] = useState(false);
   const [search, setSearch] = useState('');
@@ -25,8 +25,6 @@ export default function Navbar() {
     <>
       <nav className="navbar navbar-expand-lg navbar-light bg-light shadow-sm">
         <div className="container-fluid px-3 px-md-4">
-
-          {/* Logo */}
           <Link className="navbar-brand" to="/">
             <img src={logo} alt="Local Shop" height="40" />
           </Link>
@@ -75,67 +73,66 @@ export default function Navbar() {
               </form>
 
               {/* Nav Items */}
-              <ul className="navbar-nav ms-lg-3 align-items-lg-center mt-2 mt-lg-0">
-                <li className="nav-item">
-                  <Link className="nav-link" to="/shops">Shops</Link>
-                </li>
+              {!loading && (
+                <ul className="navbar-nav ms-lg-3 align-items-lg-center mt-2 mt-lg-0">
+                  <li className="nav-item">
+                    <Link className="nav-link" to="/shops">Shops</Link>
+                  </li>
 
-                {customer ? (
-                  <>
-                    {/* Cart */}
-                    <li className="nav-item me-2">
-                      <Link className="nav-link" to="/cart">
-                        <FaShoppingCart size={20} /> Cart
-                      </Link>
-                    </li>
+                  {customer ? (
+                    <>
+                      <li className="nav-item me-2">
+                        <Link className="nav-link" to="/cart">
+                          <FaShoppingCart size={20} /> Cart
+                        </Link>
+                      </li>
 
-                    {/* Customer Dropdown */}
-                    <li className="nav-item dropdown">
-                      <a
-                        className="nav-link dropdown-toggle"
-                        href="#"
-                        role="button"
-                        data-bs-toggle="dropdown"
-                        aria-expanded="false"
-                      >
-                        <FaUserCircle size={20} className="me-1" />
-                        {customer.name?.split(' ')[0] || 'Customer'}
-                      </a>
-                      <ul className="dropdown-menu dropdown-menu-end">
-                        <li>
-                          <Link className="dropdown-item" to="/customer-profile">
-                            My Profile
-                          </Link>
-                        </li>
-                        <li>
-                          <button className="dropdown-item text-danger" onClick={logout}>
-                            Logout
-                          </button>
-                        </li>
-                      </ul>
-                    </li>
-                  </>
-                ) : (
-                  <>
-                    <li className="nav-item me-2">
-                      <Link className="nav-link" to="/customer-login">
-                        <FaSignInAlt className="me-1" /> Login
-                      </Link>
-                    </li>
-                    <li className="nav-item">
-                      <Link className="nav-link" to="/customer-register">
-                        <FaUserPlus className="me-1" /> Register
-                      </Link>
-                    </li>
-                  </>
-                )}
-              </ul>
+                      <li className="nav-item dropdown">
+                        <button
+                          className="nav-link dropdown-toggle btn btn-link"
+                          type="button"
+                          data-bs-toggle="dropdown"
+                          aria-expanded="false"
+                        >
+                          <FaUserCircle size={20} className="me-1" />
+                          {customer.name?.split(' ')[0] || 'Customer'}
+                        </button>
+                        <ul className="dropdown-menu dropdown-menu-end">
+                          <li>
+                            <Link className="dropdown-item" to="/customer/profile">
+                              My Profile
+                            </Link>
+                          </li>
+                          <li>
+                            <button className="dropdown-item text-danger" onClick={logout}>
+                              Logout
+                            </button>
+                          </li>
+                        </ul>
+                      </li>
+                    </>
+                  ) : (
+                    <>
+                      <li className="nav-item me-2">
+                        <Link className="nav-link" to="/customer/login">
+                          <FaSignInAlt className="me-1" /> Login
+                        </Link>
+                      </li>
+                      <li className="nav-item">
+                        <Link className="nav-link" to="/customer/register">
+                          <FaUserPlus className="me-1" /> Register
+                        </Link>
+                      </li>
+                    </>
+                  )}
+                </ul>
+              )}
             </div>
           </div>
         </div>
       </nav>
 
-      {/* Search Modal for Mobile */}
+      {/* Mobile Search Modal */}
       {showSearchModal && (
         <div className="modal show d-block" tabIndex="-1" onClick={() => setShowSearchModal(false)}>
           <div className="modal-dialog modal-fullscreen-sm-down" onClick={(e) => e.stopPropagation()}>

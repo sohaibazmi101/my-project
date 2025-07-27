@@ -45,7 +45,7 @@ export default function UpdateCustomerProfile() {
           pincode: form.pincode
         }
       }, {
-        headers: { Authorization: `Bearer ${token}` }
+        headers: { Authorization: `Bearer ${localStorage.getItem('customerToken')}` }
       });
       alert('Profile updated successfully!');
       navigate('/customer/profile'); // Go back after update

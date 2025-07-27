@@ -18,7 +18,8 @@ import SearchResults from './pages/SearchResults';
 import FeaturedProducts from './pages/FeaturedProducts';
 import AddProduct from './pages/AddProduct';
 import ManageShop from './pages/ManageShop';
-import { CustomerProvider } from './contexts/CustomerContext';
+
+import { CustomerProvider, useCustomer } from './contexts/CustomerContext';
 import CustomerProtectedRoute from './components/CustomerProtectedRoute';
 import CustomerProfile from './pages/customer/CustomerProfile';
 import CartPage from './pages/customer/CartPage';
@@ -26,10 +27,14 @@ import UpdateCustomerProfile from './pages/customer/UpdateCustomerProfile';
 import CustomerLogin from './pages/customer/CustomerLogin';
 import CustomerRegister from './pages/customer/CustomerRegister';
 
+// Component to handle loading state
+function AppContent() {
+  const { loading } = useCustomer();
 
-function App() {
+  if (loading) return <div className="text-center mt-5">Loading...</div>;
+
   return (
-    <CustomerProvider>
+    <>
       <Navbar />
       <Routes>
         {/* Public Routes */}
@@ -56,7 +61,9 @@ function App() {
           <Route path="banners" element={<Banners />} />
         </Route>
 
-        {/* customer Routes */}
+        {/* Customer Routes */}
+        <Route path="/customer/login" element={<CustomerLogin />} />
+        <Route path="/customer/register" element={<CustomerRegister />} />
         <Route
           path="/customer/profile"
           element={
@@ -65,14 +72,32 @@ function App() {
             </CustomerProtectedRoute>
           }
         />
-        <Route path="/cart" element={<CartPage />} />
-        <Route path="/customer/update-profile" element={<UpdateCustomerProfile />} />
-        <Route path="/customer-login" element={<CustomerLogin />} />
-        <Route path="/customer/login" element={<CustomerLogin />} />
-        <Route path="/customer-register" element={<CustomerRegister />} />
-        <Route path='/customer/customer-profile' element={<CustomerProfile />} />
+        <Route
+          path="/cart"
+          element={
+            <CustomerProtectedRoute>
+              <CartPage />
+            </CustomerProtectedRoute>
+          }
+        />
+        <Route
+          path="/customer/update-profile"
+          element={
+            <CustomerProtectedRoute>
+              <UpdateCustomerProfile />
+            </CustomerProtectedRoute>
+          }
+        />
       </Routes>
       <Footer />
+    </>
+  );
+}
+
+function App() {
+  return (
+    <CustomerProvider>
+      <AppContent />
     </CustomerProvider>
   );
 }

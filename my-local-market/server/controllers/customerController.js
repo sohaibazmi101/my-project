@@ -58,10 +58,10 @@ exports.loginCustomer = async (req, res) => {
   }
 };
 
+// @route PUT /api/customers/profile
 exports.updateProfile = async (req, res) => {
   try {
     const customerId = req.customer._id;
-
     const { name, email, phone, address } = req.body;
 
     const updated = await Customer.findByIdAndUpdate(
@@ -79,5 +79,19 @@ exports.updateProfile = async (req, res) => {
   } catch (err) {
     console.error('Profile update failed:', err);
     res.status(500).json({ error: 'Profile update failed' });
+  }
+};
+
+// ✅ @route GET /api/customers/profile
+exports.getCustomerProfile = async (req, res) => {
+  try {
+    const customer = await Customer.findById(req.customer._id).select('-password');
+    if (!customer) {
+      return res.status(404).json({ error: 'Customer not found' });
+    }
+    res.json(customer);
+  } catch (err) {
+    console.error('Error loading profile:', err);
+    res.status(500).json({ error: 'Failed to load profile' });
   }
 };

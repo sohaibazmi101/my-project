@@ -8,10 +8,16 @@ const {
 const { getCustomerOrders, placeOrder } = require('../controllers/orderController');
 const verifyCustomer = require('../middleware/verifyCustomer');
 
-router.put('/profile', verifyCustomer, updateProfile);
-router.post('/orders', verifyCustomer, placeOrder);
 router.post('/register', registerCustomer);
 router.post('/login', loginCustomer);
+
+// ✅ Add profile route
+router.get('/profile', verifyCustomer, (req, res) => {
+  res.json(req.customer);
+});
+
+router.put('/profile', verifyCustomer, updateProfile);
+router.post('/orders', verifyCustomer, placeOrder);
 router.get('/orders', verifyCustomer, getCustomerOrders);
 
 module.exports = router;
