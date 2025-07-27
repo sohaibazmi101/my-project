@@ -41,3 +41,18 @@
   color: #888;
 }
 
+.responsive-banner-img {
+  width: 100%;
+  object-fit: cover;
+  height: 300px; /* default for mobile */
+
+  /* Tablet */
+  @media (min-width: 768px) {
+    height: 400px;
+  }
+
+  /* Desktop */
+  @media (min-width: 1024px) {
+    height: 500px;
+  }
+}

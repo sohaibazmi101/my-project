@@ -2,19 +2,15 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useState } from 'react';
 import logo from '../assets/logo.png';
 import searchIcon from '../assets/search.png';
+import { useCustomer } from '../contexts/CustomerContext';
+import { FaUserCircle, FaSignInAlt, FaUserPlus, FaShoppingCart } from 'react-icons/fa';
 
 export default function Navbar() {
   const navigate = useNavigate();
-  const isLoggedIn = localStorage.getItem('token');
-  const seller = JSON.parse(localStorage.getItem('seller') || '{}');
+  const { customer, logout } = useCustomer();
   const [isCollapsed, setIsCollapsed] = useState(true);
   const [showSearchModal, setShowSearchModal] = useState(false);
   const [search, setSearch] = useState('');
-
-  const handleLogout = () => {
-    localStorage.clear();
-    navigate('/');
-  };
 
   const handleSearch = (e) => {
     e.preventDefault();
@@ -43,7 +39,6 @@ export default function Navbar() {
           >
             <img src={searchIcon} alt="Search" height="24" width="24" />
           </button>
-
 
           {/* Toggler */}
           <button
@@ -85,32 +80,52 @@ export default function Navbar() {
                   <Link className="nav-link" to="/shops">Shops</Link>
                 </li>
 
-                {isLoggedIn ? (
+                {customer ? (
                   <>
-                    <li className="nav-item">
-                      <Link className="nav-link" to="/dashboard">Dashboard</Link>
+                    {/* Cart */}
+                    <li className="nav-item me-2">
+                      <Link className="nav-link" to="/cart">
+                        <FaShoppingCart size={20} /> Cart
+                      </Link>
                     </li>
-                    <li className="nav-item">
-                      <span className="nav-link text-muted">
-                        Welcome, {seller.name?.split(' ')[0] || 'Seller'}
-                      </span>
-                    </li>
-                    <li className="nav-item">
-                      <button
-                        className="btn btn-sm btn-outline-danger ms-lg-2 mt-2 mt-lg-0"
-                        onClick={handleLogout}
+
+                    {/* Customer Dropdown */}
+                    <li className="nav-item dropdown">
+                      <a
+                        className="nav-link dropdown-toggle"
+                        href="#"
+                        role="button"
+                        data-bs-toggle="dropdown"
+                        aria-expanded="false"
                       >
-                        Logout
-                      </button>
+                        <FaUserCircle size={20} className="me-1" />
+                        {customer.name?.split(' ')[0] || 'Customer'}
+                      </a>
+                      <ul className="dropdown-menu dropdown-menu-end">
+                        <li>
+                          <Link className="dropdown-item" to="/customer-profile">
+                            My Profile
+                          </Link>
+                        </li>
+                        <li>
+                          <button className="dropdown-item text-danger" onClick={logout}>
+                            Logout
+                          </button>
+                        </li>
+                      </ul>
                     </li>
                   </>
                 ) : (
                   <>
-                    <li className="nav-item">
-                      <Link className="nav-link" to="/login">Login</Link>
+                    <li className="nav-item me-2">
+                      <Link className="nav-link" to="/customer-login">
+                        <FaSignInAlt className="me-1" /> Login
+                      </Link>
                     </li>
                     <li className="nav-item">
-                      <Link className="nav-link" to="/register">Register</Link>
+                      <Link className="nav-link" to="/customer-register">
+                        <FaUserPlus className="me-1" /> Register
+                      </Link>
                     </li>
                   </>
                 )}

@@ -76,16 +76,29 @@ export default function ManageShop() {
   };
 
   const toggleProductFlag = async (productId, field) => {
+    const fieldKey = field === 'featured' ? 'featuredProducts' : 'newProducts';
+    const updatedShop = { ...shop };
+
+    // Toggle in local state
+    if (updatedShop[fieldKey].includes(productId)) {
+      updatedShop[fieldKey] = updatedShop[fieldKey].filter(id => id !== productId);
+    } else {
+      updatedShop[fieldKey] = [...updatedShop[fieldKey], productId];
+    }
+    setShop(updatedShop); // Instant UI feedback
+
     try {
       await api.patch(`/shops/${shop._id}/product/${productId}/toggle-${field}`, null, {
         headers: { Authorization: `Bearer ${token}` }
       });
-      fetchShop(); // Refresh
     } catch (err) {
-      console.error(`Failed to toggle ${field}:`, err);
       alert(`Failed to toggle ${field}`);
+      console.error(`Failed to toggle ${field}:`, err);
+      // Optional: rollback UI state if needed
+      fetchShop();
     }
   };
+
 
   if (!shop) return <div className="text-center mt-5">Loading shop...</div>;
 

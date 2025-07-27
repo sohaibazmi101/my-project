@@ -27,8 +27,9 @@ const productRoutes = require('./routes/productRoutes');
 const shopRoutes = require('./routes/shopRoutes');
 const adminRoutes = require('./routes/adminRoutes');
 const publicRoutes = require('./routes/publicRoutes');     // If used
+const customerRoutes = require('./routes/customerRoutes');
 
-// ✅ Mount Routes
+app.use('/api/customers', customerRoutes);
 app.use('/api', authRoutes);
 app.use('/api/seller', sellerRoutes);                      // ✅ Newly added
 app.use('/api', productRoutes);
