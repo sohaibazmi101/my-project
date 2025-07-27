@@ -31,7 +31,7 @@ const customerRoutes = require('./routes/customerRoutes');
 
 app.use('/api/customers', customerRoutes);
 app.use('/api', authRoutes);
-app.use('/api/seller', sellerRoutes);                      // ✅ Newly added
+app.use('/api/seller', sellerRoutes);
 app.use('/api', productRoutes);
 app.use('/api', shopRoutes);
 app.use('/api/admin', adminRoutes);
