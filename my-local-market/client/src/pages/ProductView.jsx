@@ -70,15 +70,16 @@ export default function ProductView() {
             Availability: {product.availability ? "✅ In stock" : "❌ Out of stock"}
           </p>
 
-          {/* Visit Seller Shop */}
-          {product.sellerId && (
+          {/* View Shop Button */}
+          {product.shop && (
             <Link
-              to={`/shops/${typeof product.sellerId === 'object' ? product.sellerId._id : product.sellerId}`}
-              className="btn btn-outline-primary me-2"
+              to={`/shops/${typeof product.shop === 'object' ? product.shop._id : product.shop}`}
+              className="btn btn-outline-primary mt-3"
             >
               Visit Seller’s Shop
             </Link>
           )}
+
 
           {/* WhatsApp Contact */}
           {product?.sellerId?.whatsapp && (

@@ -1,3 +1,6 @@
+const Seller = require('../models/Seller');
+const Shop = require('../models/Shop');
+
 exports.registerSeller = async (req, res) => {
   try {
     const {
@@ -26,7 +29,7 @@ exports.registerSeller = async (req, res) => {
 
     await seller.save();
 
-    // ✅ 4. Create related shop with banner URL if available
+    //4. Create related shop with banner URL if available
     const shop = new Shop({
       sellerId: seller._id,
       name,
@@ -35,7 +38,7 @@ exports.registerSeller = async (req, res) => {
       category: shopCategory,
       whatsapp,
       location,
-      banner: req.bannerUrl || '', // ✅ Use uploaded banner URL
+      banner: req.bannerUrl || '', //Use uploaded banner URL
       featuredProducts: [],
       newProducts: [],
     });

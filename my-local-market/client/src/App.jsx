@@ -16,6 +16,7 @@ import FeaturedProducts from './pages/admin/FeaturedProducts';
 import Banners from './pages/admin/Banners';
 import SearchResults from './pages/SearchResults';
 
+
 // ✅ NEW IMPORTS for seller-specific pages
 import AddProduct from './pages/AddProduct';
 import ManageShop from './pages/ManageShop';

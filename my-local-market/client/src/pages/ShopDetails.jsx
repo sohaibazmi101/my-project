@@ -41,7 +41,7 @@ export default function ShopDetails() {
       <div className="text-center mb-4">
         <h2>{shop.name}</h2>
         {shop.category && <p className="text-muted mb-1">{shop.category}</p>}
-        {shop.location && <p className="text-muted mb-1">📍 {shop.location}</p>}
+        {shop.location && <p className="text-muted mb-1">📍 {shop.address}</p>}
         {shop.description && <p className="text-muted">{shop.description}</p>}
 
         {shop.whatsapp && (
@@ -51,7 +51,7 @@ export default function ShopDetails() {
             rel="noopener noreferrer"
             className="btn btn-success btn-sm mt-2"
           >
-            💬 Chat with Seller on WhatsApp
+            Chat with Seller on WhatsApp
           </a>
         )}
       </div>
@@ -59,7 +59,7 @@ export default function ShopDetails() {
       {/* Featured Products */}
       {featured.length > 0 && (
         <>
-          <h4 className="mt-5 mb-3">🌟 Featured Products</h4>
+          <h4 className="mt-5 mb-3">Our Featured Products</h4>
           <div className="row row-cols-1 row-cols-sm-2 row-cols-md-3 g-4">
             {featured.map(p => (
               <ProductCard key={p._id} product={p} />
