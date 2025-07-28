@@ -1,5 +1,5 @@
 import { createContext, useContext, useEffect, useState } from 'react';
-import { data, useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import api from '../services/api';
 import { useCustomer } from './CustomerContext';
 
@@ -11,29 +11,32 @@ const SellerProvider = ({ children }) => {
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
 
-  const customerContext = useCustomer();
-  const customerLogout = customerContext?.logout;
+  const { logout: customerLogout } = useCustomer(); // Clean extraction
 
   const fetchSeller = async () => {
-    try {
-      const token = localStorage.getItem('token');
-      if (!token) return setLoading(false);
+    const token = localStorage.getItem('token'); // Token must be named 'token' as per your login
+    if (!token) {
+      setLoading(false);
+      return;
+    }
 
-      const { data } = await api.get('/sellers/me', {
+    try {
+      const res = await api.get('/sellers/me', {
         headers: { Authorization: `Bearer ${token}` },
       });
-      setSeller(data);
+      setSeller(res.data);
     } catch (err) {
       console.error('Error fetching seller:', err);
+      localStorage.removeItem('token'); // Remove invalid token
     } finally {
       setLoading(false);
     }
   };
 
   const login = (sellerData, token) => {
-    localStorage.setItem('token', token);
+    localStorage.setItem('token', token); // Save under 'token'
     setSeller(sellerData);
-    if (customerLogout) customerLogout();
+    if (customerLogout) customerLogout(); // Mutual exclusivity
   };
 
   const logout = () => {

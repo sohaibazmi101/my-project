@@ -2,13 +2,19 @@ const express = require('express');
 const router = express.Router();
 
 const uploadBanner = require('../middleware/uploadBanner');
-const { registerSeller, getSellerProfile } = require('../controllers/sellerController');
 const authMiddleware = require('../middleware/authMiddleware');
 
-// ✅ Register Seller
+// Controllers
+const { registerSeller, getSellerProfile } = require('../controllers/sellerController');
+const { loginSeller } = require('../controllers/authController');
+
+// ✅ Register seller with optional banner
 router.post('/register', uploadBanner, registerSeller);
 
-// ✅ Fetch logged-in seller profile
+// ✅ Login seller
+router.post('/login', loginSeller);
+
+// ✅ Get logged-in seller's profile
 router.get('/me', authMiddleware, getSellerProfile);
 
 module.exports = router;

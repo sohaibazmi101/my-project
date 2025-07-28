@@ -21,17 +21,15 @@ app.use(express.json());
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 // ✅ Route Imports
-const authRoutes = require('./routes/authRoutes');
-const sellerRoutes = require('./routes/sellerRoutes');     // ✅ Added
+const sellerRoutes = require('./routes/sellerRoutes');
 const productRoutes = require('./routes/productRoutes');
 const shopRoutes = require('./routes/shopRoutes');
 const adminRoutes = require('./routes/adminRoutes');
-const publicRoutes = require('./routes/publicRoutes');     // If used
+const publicRoutes = require('./routes/publicRoutes');
 const customerRoutes = require('./routes/customerRoutes');
 
 app.use('/api/customers', customerRoutes);
-app.use('/api', authRoutes);
-app.use('/api/seller', sellerRoutes);
+app.use('/api/sellers', sellerRoutes);
 app.use('/api', productRoutes);
 app.use('/api', shopRoutes);
 app.use('/api/admin', adminRoutes);
