@@ -40,9 +40,9 @@ const SellerProvider = ({ children }) => {
   };
 
   const logout = () => {
-    localStorage.removeItem('token');
     setSeller(null);
     navigate('/');
+    localStorage.removeItem('token');
   };
 
   useEffect(() => {

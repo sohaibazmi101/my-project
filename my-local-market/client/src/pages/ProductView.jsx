@@ -1,10 +1,12 @@
-import { useParams, Link } from 'react-router-dom';
+import { useParams, Link, useNavigate } from 'react-router-dom';
 import { useEffect, useState } from 'react';
 import api from '../services/api';
 
 export default function ProductView() {
   const { id } = useParams();
+  const navigate = useNavigate();
   const [product, setProduct] = useState(null);
+  const token = localStorage.getItem('customerToken');
 
   useEffect(() => {
     api.get(`/products/${id}`)
@@ -16,11 +18,43 @@ export default function ProductView() {
 
   const images = product.images?.filter(Boolean) || [];
 
+  // 🔹 Add to Cart Handler
+  const handleAddToCart = async () => {
+    if (!token) return navigate('/customer/login');
+    try {
+      await api.post('/cart/add', {
+        productId: product._id,
+        quantity: 1,
+      }, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      alert('Product added to cart!');
+    } catch (err) {
+      console.error('Add to cart failed', err);
+      alert('Failed to add to cart');
+    }
+  };
+
+  // 🔹 Buy Now Handler
+  const handleBuyNow = async () => {
+    if (!token) return navigate('/customer/login');
+    try {
+      await api.post('/customers/orders', { productId: product._id }, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+
+      alert('Order placed successfully!');
+      navigate('/customer/profile'); // or '/orders'
+    } catch (err) {
+      console.error('Buy Now failed', err);
+      alert('Failed to place order');
+    }
+  };
+
   return (
     <div className="container mt-5">
       <div className="card mx-auto shadow-sm" style={{ maxWidth: '800px' }}>
-
-        {/* Bootstrap Carousel for Images */}
+        {/* Carousel */}
         {images.length > 0 && (
           <div id={`product-carousel-${product._id}`} className="carousel slide" data-bs-ride="carousel">
             <div className="carousel-inner">
@@ -35,24 +69,13 @@ export default function ProductView() {
                 </div>
               ))}
             </div>
-
             {images.length > 1 && (
               <>
-                <button
-                  className="carousel-control-prev"
-                  type="button"
-                  data-bs-target={`#product-carousel-${product._id}`}
-                  data-bs-slide="prev"
-                >
+                <button className="carousel-control-prev" type="button" data-bs-target={`#product-carousel-${product._id}`} data-bs-slide="prev">
                   <span className="carousel-control-prev-icon" aria-hidden="true"></span>
                   <span className="visually-hidden">Previous</span>
                 </button>
-                <button
-                  className="carousel-control-next"
-                  type="button"
-                  data-bs-target={`#product-carousel-${product._id}`}
-                  data-bs-slide="next"
-                >
+                <button className="carousel-control-next" type="button" data-bs-target={`#product-carousel-${product._id}`} data-bs-slide="next">
                   <span className="carousel-control-next-icon" aria-hidden="true"></span>
                   <span className="visually-hidden">Next</span>
                 </button>
@@ -70,6 +93,12 @@ export default function ProductView() {
             Availability: {product.availability ? "✅ In stock" : "❌ Out of stock"}
           </p>
 
+          {/* Buttons */}
+          <div className="d-flex gap-3 mt-3">
+            <button onClick={handleBuyNow} className="btn btn-primary">Buy Now</button>
+            <button onClick={handleAddToCart} className="btn btn-warning">Add to Cart</button>
+          </div>
+
           {/* View Shop Button */}
           {product.shop && (
             <Link
@@ -79,7 +108,6 @@ export default function ProductView() {
               Visit Seller’s Shop
             </Link>
           )}
-
 
           {/* WhatsApp Contact */}
           {product?.sellerId?.whatsapp && (

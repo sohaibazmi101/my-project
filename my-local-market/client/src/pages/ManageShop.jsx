@@ -22,16 +22,30 @@ export default function ManageShop() {
         },
       });
 
-      console.log('Data From server : ',res.data)
+      const shop = res.data.shop;
+      const products = res.data.products;
 
-      setShop(res.data);
-      setProducts(res.data.products || []);
-      setBanner(res.data.banner || '');
+      // Normalize ID types for comparison
+      shop.featuredProducts = (shop.featuredProducts || []).map(id => id.toString());
+      shop.newProducts = (shop.newProducts || []).map(id => id.toString());
+      const normalizedProducts = (products || []).map(p => ({
+        ...p,
+        _id: p._id.toString()
+      }));
+
+      setShop(shop);
+      setProducts(normalizedProducts);
+      setBanner(shop.banner || '');
+
+      console.log('Loaded shop:', shop);
 
     } catch (err) {
       console.error('Failed to fetch shop data:', err);
     }
   };
+
+
+
 
 
   const handleBannerUpload = async (file) => {
@@ -80,28 +94,30 @@ export default function ManageShop() {
   };
 
   const toggleProductFlag = async (productId, field) => {
+    const idStr = productId.toString();
     const fieldKey = field === 'featured' ? 'featuredProducts' : 'newProducts';
     const updatedShop = { ...shop };
 
-    // Toggle in local state
-    if (updatedShop[fieldKey].includes(productId)) {
-      updatedShop[fieldKey] = updatedShop[fieldKey].filter(id => id !== productId);
+    if (updatedShop[fieldKey].includes(idStr)) {
+      updatedShop[fieldKey] = updatedShop[fieldKey].filter(id => id !== idStr);
     } else {
-      updatedShop[fieldKey] = [...updatedShop[fieldKey], productId];
+      updatedShop[fieldKey] = [...updatedShop[fieldKey], idStr];
     }
-    setShop(updatedShop); // Instant UI feedback
+
+    setShop(updatedShop);
 
     try {
-      await api.patch(`/shops/${shop._id}/product/${productId}/toggle-${field}`, null, {
+      await api.patch(`/shops/${shop._id}/product/${idStr}/toggle-${field}`, null, {
         headers: { Authorization: `Bearer ${token}` }
       });
     } catch (err) {
       alert(`Failed to toggle ${field}`);
       console.error(`Failed to toggle ${field}:`, err);
-      // Optional: rollback UI state if needed
-      fetchShop();
+      fetchShop(); // fallback in case toggle fails
     }
   };
+
+
 
 
   if (!shop) return <div className="text-center mt-5">Loading shop...</div>;
@@ -184,25 +200,40 @@ export default function ManageShop() {
                   <h5>{product.name}</h5>
                   <p>₹{product.price}</p>
 
-                  <div className="form-check form-switch mb-2">
-                    <input
-                      className="form-check-input"
-                      type="checkbox"
-                      checked={shop.featuredProducts.includes(product._id)}
-                      onChange={() => toggleProductFlag(product._id, 'featured')}
-                    />
-                    <label className="form-check-label">Mark as Featured</label>
-                  </div>
+                  {/* Featured Button */}
+                  {shop.featuredProducts.includes(product._id.toString()) ? (
+                    <button
+                      className="btn btn-warning btn-sm me-2"
+                      onClick={() => toggleProductFlag(product._id, 'featured')}
+                    >
+                      Unmark Featured
+                    </button>
+                  ) : (
+                    <button
+                      className="btn btn-outline-warning btn-sm me-2"
+                      onClick={() => toggleProductFlag(product._id, 'featured')}
+                    >
+                      Mark as Featured
+                    </button>
+                  )}
 
-                  <div className="form-check form-switch">
-                    <input
-                      className="form-check-input"
-                      type="checkbox"
-                      checked={shop.newProducts.includes(product._id)}
-                      onChange={() => toggleProductFlag(product._id, 'new')}
-                    />
-                    <label className="form-check-label">Mark as New</label>
-                  </div>
+                  {/* New Button */}
+                  {shop.newProducts.includes(product._id.toString()) ? (
+                    <button
+                      className="btn btn-info btn-sm"
+                      onClick={() => toggleProductFlag(product._id, 'new')}
+                    >
+                      Unmark New
+                    </button>
+                  ) : (
+                    <button
+                      className="btn btn-outline-info btn-sm"
+                      onClick={() => toggleProductFlag(product._id, 'new')}
+                    >
+                      Mark as New
+                    </button>
+                  )}
+
                 </div>
               </div>
             </div>

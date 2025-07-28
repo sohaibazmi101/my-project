@@ -20,6 +20,5 @@ router.get('/profile', verifyCustomer, (req, res) => {
 router.put('/profile', verifyCustomer, updateProfile);
 router.post('/orders', verifyCustomer, placeOrder);
 router.get('/orders', verifyCustomer, getCustomerOrders);
-router.get('/orders', verifyCustomer, getCustomerProfile);
 
 module.exports = router;

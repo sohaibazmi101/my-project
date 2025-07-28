@@ -8,8 +8,13 @@ export default function CartPage() {
   const navigate = useNavigate();
 
   useEffect(() => {
-    setCartItems(getCart());
-  }, []);
+    const token = localStorage.getItem('customerToken');
+    if (!token) {
+      navigate('/customer/login'); // Redirect if not logged in
+    } else {
+      setCartItems(getCart());
+    }
+  }, [navigate]);
 
   const updateQuantity = (index, qty) => {
     const updated = [...cartItems];
@@ -47,8 +52,7 @@ export default function CartPage() {
       const grouped = Object.values(groupByShop());
       for (const group of grouped) {
         await api.post('/orders', {
-          shop: group.shop._id,
-          products: group.items.map(({ product, quantity }) => ({
+          cart: group.items.map(({ product, quantity }) => ({
             product: product._id,
             quantity,
           })),
