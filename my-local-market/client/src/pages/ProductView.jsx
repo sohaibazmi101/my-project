@@ -20,20 +20,30 @@ export default function ProductView() {
 
   // 🔹 Add to Cart Handler
   const handleAddToCart = async () => {
-    if (!token) return navigate('/customer/login');
+    if (!token) {
+      alert('Please login as customer to add items to cart.');
+      return;
+    }
+
     try {
-      await api.post('/cart/add', {
+      const res = await api.post('/cart/add', {
         productId: product._id,
         quantity: 1,
       }, {
-        headers: { Authorization: `Bearer ${token}` }
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
       });
+
+      console.log('Added to cart:', res.data);
       alert('Product added to cart!');
     } catch (err) {
       console.error('Add to cart failed', err);
-      alert('Failed to add to cart');
+      alert('Add to cart failed');
     }
   };
+
+
 
   // 🔹 Buy Now Handler
   const handleBuyNow = async () => {

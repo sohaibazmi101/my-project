@@ -12,7 +12,6 @@ const verifyCustomer = require('../middleware/verifyCustomer');
 router.post('/register', registerCustomer);
 router.post('/login', loginCustomer);
 
-// ✅ Add profile route
 router.get('/profile', verifyCustomer, (req, res) => {
   res.json(req.customer);
 });

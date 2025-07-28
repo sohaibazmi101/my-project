@@ -30,13 +30,27 @@ const customerSchema = new mongoose.Schema({
     state: String,
     pincode: String
   },
+  cart: [
+    {
+      product: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Product',
+        required: true
+      },
+      quantity: {
+        type: Number,
+        required: true,
+        min: 1,
+        default: 1
+      }
+    }
+  ],
   createdAt: {
     type: Date,
     default: Date.now
   }
 });
 
-// 🔒 Hash password before saving
 customerSchema.pre('save', async function (next) {
   if (!this.isModified('password')) return next();
   try {
@@ -48,7 +62,6 @@ customerSchema.pre('save', async function (next) {
   }
 });
 
-// 🔐 Method to compare password
 customerSchema.methods.comparePassword = async function (password) {
   return bcrypt.compare(password, this.password);
 };
