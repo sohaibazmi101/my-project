@@ -208,7 +208,7 @@ export default function Home() {
       {/* Hero Section */}
       <div className="text-center mb-5 px-3">
         <div className="d-flex flex-column flex-md-row justify-content-center gap-3 mt-4">
-          <Link to="/shops" className="btn btn-primary btn-lg">Browse Shops</Link>
+          <Link to="/login" className="btn btn-primary btn-lg">Browse Shops</Link>
           <Link to="/register" className="btn btn-outline-secondary btn-lg">Become a Seller</Link>
         </div>
       </div>

@@ -20,6 +20,7 @@ import AddProduct from './pages/AddProduct';
 import ManageShop from './pages/ManageShop';
 
 import { CustomerProvider, useCustomer } from './contexts/CustomerContext';
+import { SellerProvider } from './contexts/SellerContext';
 import CustomerProtectedRoute from './components/CustomerProtectedRoute';
 import CustomerProfile from './pages/customer/CustomerProfile';
 import CartPage from './pages/customer/CartPage';
@@ -29,7 +30,7 @@ import CustomerRegister from './pages/customer/CustomerRegister';
 
 // Component to handle loading state
 function AppContent() {
-  const { loading } = useCustomer();
+  const { loading } = useCustomer(); // Must be inside CustomerProvider
 
   if (loading) return <div className="text-center mt-5">Loading...</div>;
 
@@ -97,7 +98,9 @@ function AppContent() {
 function App() {
   return (
     <CustomerProvider>
-      <AppContent />
+      <SellerProvider>
+        <AppContent />
+      </SellerProvider>
     </CustomerProvider>
   );
 }

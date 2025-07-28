@@ -29,6 +29,7 @@ export const CustomerProvider = ({ children }) => {
 
   const logout = () => {
     localStorage.removeItem('customerToken');
+    localStorage.removeItem('sellerToken'); // ✅ Ensure seller is also logged out
     setCustomer(null);
   };
 
@@ -42,4 +43,5 @@ export const CustomerProvider = ({ children }) => {
     </CustomerContext.Provider>
   );
 };
+
 export { CustomerContext };

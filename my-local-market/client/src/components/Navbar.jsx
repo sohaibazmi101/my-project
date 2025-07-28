@@ -3,11 +3,20 @@ import { useState } from 'react';
 import logo from '../assets/logo.png';
 import searchIcon from '../assets/search.png';
 import { useCustomer } from '../contexts/CustomerContext';
-import { FaUserCircle, FaSignInAlt, FaUserPlus, FaShoppingCart } from 'react-icons/fa';
+import { useSeller } from '../contexts/SellerContext';
+import {
+  FaUserCircle,
+  FaSignInAlt,
+  FaUserPlus,
+  FaShoppingCart,
+  FaStore,
+  FaSignOutAlt
+} from 'react-icons/fa';
 
 export default function Navbar() {
   const navigate = useNavigate();
-  const { customer, logout, loading } = useCustomer();
+  const { customer, logout: customerLogout, loading: customerLoading } = useCustomer();
+  const { seller, logout: logout, loading: sellerLoading } = useSeller();
   const [isCollapsed, setIsCollapsed] = useState(true);
   const [showSearchModal, setShowSearchModal] = useState(false);
   const [search, setSearch] = useState('');
@@ -20,6 +29,15 @@ export default function Navbar() {
       setShowSearchModal(false);
     }
   };
+
+  const handleLogout = () => {
+    logout();
+    navigate('/');
+  };
+
+
+  const isLoggedIn = !!customer || !!seller;
+  const loading = customerLoading || sellerLoading;
 
   return (
     <>
@@ -104,24 +122,77 @@ export default function Navbar() {
                             </Link>
                           </li>
                           <li>
-                            <button className="dropdown-item text-danger" onClick={logout}>
+                            <button className="dropdown-item text-danger" onClick={customerLogout}>
                               Logout
                             </button>
                           </li>
                         </ul>
                       </li>
                     </>
-                  ) : (
+                  ) : seller ? (
                     <>
                       <li className="nav-item me-2">
-                        <Link className="nav-link" to="/customer/login">
-                          <FaSignInAlt className="me-1" /> Login
+                        <Link className="nav-link d-flex align-items-center" to="/dashboard">
+                          <FaStore className="me-1" /> <span>Dashboard</span>
                         </Link>
                       </li>
+
                       <li className="nav-item">
-                        <Link className="nav-link" to="/customer/register">
-                          <FaUserPlus className="me-1" /> Register
-                        </Link>
+                        <button className="nav-link btn btn-link text-danger d-flex align-items-center" onClick={handleLogout}>
+                          <FaSignOutAlt className="me-1" /> <span>Logout</span>
+                        </button>
+                      </li>
+
+                    </>
+                  ) : (
+                    // No one is logged in: show dropdowns
+                    <>
+                      {/* Customer Dropdown */}
+                      <li className="nav-item dropdown me-2">
+                        <button
+                          className="nav-link dropdown-toggle btn btn-link"
+                          type="button"
+                          data-bs-toggle="dropdown"
+                          aria-expanded="false"
+                        >
+                          <FaUserCircle className="me-1" /> Customer
+                        </button>
+                        <ul className="dropdown-menu dropdown-menu-end">
+                          <li>
+                            <Link className="dropdown-item" to="/customer/login">
+                              <FaSignInAlt className="me-1" /> Login
+                            </Link>
+                          </li>
+                          <li>
+                            <Link className="dropdown-item" to="/customer/register">
+                              <FaUserPlus className="me-1" /> Register
+                            </Link>
+                          </li>
+                        </ul>
+                      </li>
+
+                      {/* Seller Dropdown */}
+                      <li className="nav-item dropdown">
+                        <button
+                          className="nav-link dropdown-toggle btn btn-link"
+                          type="button"
+                          data-bs-toggle="dropdown"
+                          aria-expanded="false"
+                        >
+                          <FaStore className="me-1" /> Seller
+                        </button>
+                        <ul className="dropdown-menu dropdown-menu-end">
+                          <li>
+                            <Link className="dropdown-item" to="/login">
+                              <FaSignInAlt className="me-1" /> Login
+                            </Link>
+                          </li>
+                          <li>
+                            <Link className="dropdown-item" to="/register">
+                              <FaUserPlus className="me-1" /> Register
+                            </Link>
+                          </li>
+                        </ul>
                       </li>
                     </>
                   )}
