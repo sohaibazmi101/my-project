@@ -25,21 +25,29 @@ export default function ProductView() {
       return;
     }
 
-    try {
-      const res = await api.post('/cart/add', {
-        productId: product._id,
-        quantity: 1,
-      }, {
-        headers: {
-          Authorization: `Bearer ${token}`
-        }
-      });
+    if (!product || !product._id) {
+      console.error('No product found when trying to add to cart');
+      return;
+    }
 
+    const body = {
+      product: product._id,
+      quantity: 1,
+    };
+
+    console.log('Sending add-to-cart:', body);
+
+    try {
+      const res = await api.post('/cart/add', body, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
       console.log('Added to cart:', res.data);
       alert('Product added to cart!');
     } catch (err) {
-      console.error('Add to cart failed', err);
-      alert('Add to cart failed');
+      console.error('Add to cart failed', err?.response?.data || err);
+      alert(err?.response?.data?.message || 'Add to cart failed');
     }
   };
 
