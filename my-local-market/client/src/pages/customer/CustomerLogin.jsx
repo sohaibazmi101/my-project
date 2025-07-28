@@ -17,7 +17,9 @@ export default function CustomerLogin() {
     try {
       const res = await api.post('/customers/login', form);
       localStorage.setItem('customerToken', res.data.token);
-      setCustomer(res.data.customer); // ✅ UPDATE CONTEXT RIGHT AFTER LOGIN
+      setCustomer(res.data.customer);
+      localStorage.removeItem('token')
+      localStorage.removeItem('seller')
       alert('Logged in successfully!');
       navigate('/');
     } catch (err) {

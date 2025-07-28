@@ -15,8 +15,8 @@ export default function Login() {
     try {
       const res = await api.post('/seller/login', form);
       const { seller, token } = res.data;
-
       login(seller, token);
+
 
       alert('Login successful!');
       navigate('/dashboard');

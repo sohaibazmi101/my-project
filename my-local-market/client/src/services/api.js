@@ -1,3 +1,4 @@
+// src/services/api.js
 import axios from 'axios';
 
 const api = axios.create({
@@ -6,8 +7,16 @@ const api = axios.create({
 
 api.interceptors.request.use(config => {
   const token = localStorage.getItem('token');
-  if (token) config.headers.Authorization = `Bearer ${token}`;
+  const customerToken = localStorage.getItem('customerToken');
+
+  if (token) {
+    config.headers.Authorization = `Bearer ${token}`;
+  } else if (customerToken) {
+    config.headers.Authorization = `Bearer ${customerToken}`;
+  }
+
   return config;
 });
+
 
 export default api;

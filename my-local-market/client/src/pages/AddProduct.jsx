@@ -20,7 +20,6 @@ export default function AddProduct() {
   const seller = JSON.parse(localStorage.getItem('seller'));
 
   useEffect(() => {
-    if (!token) return navigate('/login');
     fetchCategories();
 
     if (id) {

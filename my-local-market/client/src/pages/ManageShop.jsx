@@ -11,13 +11,12 @@ export default function ManageShop() {
   const navigate = useNavigate();
 
   useEffect(() => {
-    if (!token) return navigate('/login');
     fetchShop();
   }, []);
 
   const fetchShop = async () => {
     try {
-      const res = await api.get('/seller/shop', {
+      const res = await api.get('dashboard/manage-shop', {
         headers: {
           Authorization: `Bearer ${token}`,
         },

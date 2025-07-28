@@ -1,20 +1,22 @@
-import { createContext, useContext, useState, useEffect } from 'react';
+import { createContext, useContext, useEffect, useState } from 'react';
+import { data, useNavigate } from 'react-router-dom';
 import api from '../services/api';
 import { useCustomer } from './CustomerContext';
 
 const SellerContext = createContext();
+const useSeller = () => useContext(SellerContext);
 
-export const SellerProvider = ({ children }) => {
+const SellerProvider = ({ children }) => {
   const [seller, setSeller] = useState(null);
   const [loading, setLoading] = useState(true);
+  const navigate = useNavigate();
 
-  // 🛠️ Safely access logout from useCustomer (may be undefined)
   const customerContext = useCustomer();
   const customerLogout = customerContext?.logout;
 
   const fetchSeller = async () => {
     try {
-      const token = localStorage.getItem('sellerToken');
+      const token = localStorage.getItem('token');
       if (!token) return setLoading(false);
 
       const { data } = await api.get('/sellers/me', {
@@ -29,16 +31,15 @@ export const SellerProvider = ({ children }) => {
   };
 
   const login = (sellerData, token) => {
-    localStorage.setItem('sellerToken', token);
+    localStorage.setItem('token', token);
     setSeller(sellerData);
-
-    // 🔐 If customer is logged in, log them out
     if (customerLogout) customerLogout();
   };
 
   const logout = () => {
-    localStorage.removeItem('sellerToken');
+    localStorage.removeItem('token');
     setSeller(null);
+    navigate('/');
   };
 
   useEffect(() => {
@@ -52,4 +53,4 @@ export const SellerProvider = ({ children }) => {
   );
 };
 
-export const useSeller = () => useContext(SellerContext);
+export { SellerContext, SellerProvider, useSeller };

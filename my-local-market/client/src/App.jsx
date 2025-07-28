@@ -1,3 +1,5 @@
+// src/App.jsx
+
 import { Routes, Route } from 'react-router-dom';
 import Home from './pages/Home';
 import Login from './pages/Login';
@@ -27,6 +29,7 @@ import CartPage from './pages/customer/CartPage';
 import UpdateCustomerProfile from './pages/customer/UpdateCustomerProfile';
 import CustomerLogin from './pages/customer/CustomerLogin';
 import CustomerRegister from './pages/customer/CustomerRegister';
+import SellerProtectedRoute from './components/SellerProtectedRoute';
 
 // Component to handle loading state
 function AppContent() {
@@ -48,10 +51,31 @@ function AppContent() {
         <Route path="/search" element={<SearchResults />} />
         <Route path="/featured" element={<FeaturedProducts />} />
 
-        {/* Seller Dashboard Routes */}
-        <Route path="/dashboard" element={<Dashboard />} />
-        <Route path="/dashboard/add-product" element={<AddProduct />} />
-        <Route path="/dashboard/manage-shop" element={<ManageShop />} />
+        {/* Seller Dashboard Routes (protected) */}
+        <Route
+          path="/dashboard"
+          element={
+            <SellerProtectedRoute>
+              <Dashboard />
+            </SellerProtectedRoute>
+          }
+        />
+        <Route
+          path="/dashboard/add-product"
+          element={
+            <SellerProtectedRoute>
+              <AddProduct />
+            </SellerProtectedRoute>
+          }
+        />
+        <Route
+          path="/dashboard/manage-shop"
+          element={
+            <SellerProtectedRoute>
+              <ManageShop />
+            </SellerProtectedRoute>
+          }
+        />
 
         {/* Admin Routes */}
         <Route path="/admin/login" element={<AdminLogin />} />
@@ -62,7 +86,7 @@ function AppContent() {
           <Route path="banners" element={<Banners />} />
         </Route>
 
-        {/* Customer Routes */}
+        {/* Customer Routes (protected) */}
         <Route path="/customer/login" element={<CustomerLogin />} />
         <Route path="/customer/register" element={<CustomerRegister />} />
         <Route

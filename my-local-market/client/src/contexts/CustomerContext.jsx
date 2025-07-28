@@ -1,4 +1,5 @@
 import { createContext, useContext, useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import api from '../services/api';
 
 const CustomerContext = createContext();
@@ -8,6 +9,7 @@ export const useCustomer = () => useContext(CustomerContext);
 export const CustomerProvider = ({ children }) => {
   const [customer, setCustomer] = useState(null);
   const [loading, setLoading] = useState(true);
+  const navigate = useNavigate();
 
   const loadCustomer = async () => {
     const token = localStorage.getItem('customerToken');
@@ -29,8 +31,8 @@ export const CustomerProvider = ({ children }) => {
 
   const logout = () => {
     localStorage.removeItem('customerToken');
-    localStorage.removeItem('sellerToken'); // ✅ Ensure seller is also logged out
     setCustomer(null);
+    navigate('/');
   };
 
   useEffect(() => {
