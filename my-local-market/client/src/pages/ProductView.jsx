@@ -37,19 +37,34 @@ export default function ProductView() {
 
   // 🔹 Buy Now Handler
   const handleBuyNow = async () => {
-    if (!token) return navigate('/customer/login');
     try {
-      await api.post('/customers/orders', { productId: product._id }, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      const token = localStorage.getItem('customerToken');
+      if (!token) return alert('Please login to place an order');
+
+      const cart = [
+        {
+          product: product._id,
+          quantity: 1, // or dynamic quantity
+        },
+      ];
+
+      await api.post(
+        '/customers/orders',
+        { cart },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
 
       alert('Order placed successfully!');
-      navigate('/customer/profile'); // or '/orders'
     } catch (err) {
       console.error('Buy Now failed', err);
       alert('Failed to place order');
     }
   };
+
 
   return (
     <div className="container mt-5">

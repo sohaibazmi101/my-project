@@ -16,7 +16,7 @@ export default function CustomerProfile() {
       return;
     }
 
-    api.get('/customer/orders', {
+    api.get('/customers/orders', {
       headers: { Authorization: `Bearer ${token}` },
     })
       .then(res => setOrders(res.data))
