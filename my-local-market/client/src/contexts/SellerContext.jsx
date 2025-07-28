@@ -11,10 +11,10 @@ const SellerProvider = ({ children }) => {
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
 
-  const { logout: customerLogout } = useCustomer(); // Clean extraction
+  const { logout: customerLogout } = useCustomer(); 
 
   const fetchSeller = async () => {
-    const token = localStorage.getItem('token'); // Token must be named 'token' as per your login
+    const token = localStorage.getItem('token'); 
     if (!token) {
       setLoading(false);
       return;

@@ -32,7 +32,7 @@ export default function Dashboard() {
               </p>
               <button
                 className="btn btn-success mt-auto"
-                onClick={() => navigate('/dashboard/manage-shop')}
+                onClick={() => navigate('/sellers/me')}
               >
                 Go to Shop Settings
               </button>

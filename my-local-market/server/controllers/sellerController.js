@@ -52,14 +52,26 @@ exports.registerSeller = async (req, res) => {
   }
 };
 
+const Product = require('../models/Product');
+
 exports.getSellerProfile = async (req, res) => {
   try {
     const seller = await Seller.findById(req.seller).select('-password');
     if (!seller) return res.status(404).json({ message: 'Seller not found' });
 
-    res.json(seller);
+    const shop = await Shop.findOne({ sellerId: seller._id });
+    if (!shop) return res.status(404).json({ message: 'Shop not found' });
+
+    const products = await Product.find({ shop: shop._id });
+
+    res.json({
+      seller,
+      shop,
+      products
+    });
   } catch (err) {
     console.error('Error fetching seller profile:', err);
     res.status(500).json({ message: 'Server error' });
   }
 };
+

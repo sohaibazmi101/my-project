@@ -13,7 +13,7 @@ export default function Login() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      const res = await api.post('/seller/login', form);
+      const res = await api.post('/sellers/login', form);
       const { seller, token } = res.data;
       login(seller, token);
 
@@ -21,7 +21,7 @@ export default function Login() {
       alert('Login successful!');
       navigate('/dashboard');
     } catch (err) {
-      console.error('Login error full:', err); // ✅ Full error log
+      console.error('Login error full:', err);
       if (err.response) {
         console.error('Response error:', err.response.data);
       } else if (err.request) {

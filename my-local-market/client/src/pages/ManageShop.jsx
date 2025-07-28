@@ -16,18 +16,23 @@ export default function ManageShop() {
 
   const fetchShop = async () => {
     try {
-      const res = await api.get('dashboard/manage-shop', {
+      const res = await api.get('/sellers/me', {
         headers: {
           Authorization: `Bearer ${token}`,
         },
       });
-      setShop(res.data.shop);
-      setProducts(res.data.products);
-      setBanner(res.data.shop.banner);
+
+      console.log('Data From server : ',res.data)
+
+      setShop(res.data);
+      setProducts(res.data.products || []);
+      setBanner(res.data.banner || '');
+
     } catch (err) {
       console.error('Failed to fetch shop data:', err);
     }
   };
+
 
   const handleBannerUpload = async (file) => {
     setUploading(true);

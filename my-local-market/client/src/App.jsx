@@ -69,7 +69,7 @@ function AppContent() {
           }
         />
         <Route
-          path="/dashboard/manage-shop"
+          path="/sellers/me"
           element={
             <SellerProtectedRoute>
               <ManageShop />

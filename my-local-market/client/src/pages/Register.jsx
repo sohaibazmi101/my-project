@@ -18,7 +18,7 @@ export default function Register() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      const res = await api.post('/seller/register', form); // Send as JSON
+      const res = await api.post('/sellers/register', form); // Send as JSON
       alert('Registered successfully!');
       navigate('/login');
     } catch (err) {
