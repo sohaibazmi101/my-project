@@ -1,7 +1,7 @@
 const Customer = require('../models/Customer');
 const Product = require('../models/Product');
 
-// In-memory cart per customer stored in DB (you can enhance later)
+// Add to cart and save in DB
 exports.addToCart = async (req, res) => {
   const customerId = req.customer._id;
   const { productId, quantity } = req.body;
@@ -33,10 +33,7 @@ exports.addToCart = async (req, res) => {
       customer.cart.push({ product: productId, quantity: parsedQty });
     }
 
-    console.log('Before saving cart:', customer.cart);
-await customer.save();
-console.log('Cart saved successfully');
-
+    await customer.save();
     res.status(200).json({ message: 'Item added to cart', cart: customer.cart });
   } catch (err) {
     console.error('Add to cart error:', err);
@@ -44,3 +41,36 @@ console.log('Cart saved successfully');
   }
 };
 
+// Get cart
+exports.getCart = async (req, res) => {
+  try {
+    const customer = await Customer.findById(req.customer._id).populate('cart.product');
+    if (!customer) {
+      return res.status(404).json({ message: 'Customer not found' });
+    }
+    res.json({ cart: customer.cart });
+  } catch (err) {
+    console.error('Get cart error:', err);
+    res.status(500).json({ message: 'Server error' });
+  }
+};
+
+// Remove item from cart
+exports.removeFromCart = async (req, res) => {
+  const { productId } = req.params;
+
+  try {
+    const customer = await Customer.findById(req.customer._id);
+    if (!customer) {
+      return res.status(404).json({ message: 'Customer not found' });
+    }
+
+    customer.cart = customer.cart.filter(item => item.product.toString() !== productId);
+    await customer.save();
+
+    res.json({ message: 'Item removed from cart', cart: customer.cart });
+  } catch (err) {
+    console.error('Remove cart item error:', err);
+    res.status(500).json({ message: 'Server error' });
+  }
+};

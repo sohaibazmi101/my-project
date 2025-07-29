@@ -1,7 +1,6 @@
 const Customer = require('../models/Customer');
 const jwt = require('jsonwebtoken');
 
-// Helper: create token
 const createToken = (customer) => {
   return jwt.sign(
     { id: customer._id, role: 'customer' },
@@ -10,12 +9,10 @@ const createToken = (customer) => {
   );
 };
 
-// @route   POST /api/customers/register
 exports.registerCustomer = async (req, res) => {
   try {
     const { name, email, phone, password, address } = req.body;
 
-    // Check if email or phone already exists
     const existingEmail = await Customer.findOne({ email });
     if (existingEmail) return res.status(400).json({ error: 'Email already in use' });
 
@@ -34,7 +31,6 @@ exports.registerCustomer = async (req, res) => {
   }
 };
 
-// @route   POST /api/customers/login
 exports.loginCustomer = async (req, res) => {
   try {
     const { emailOrPhone, password } = req.body;
@@ -58,7 +54,6 @@ exports.loginCustomer = async (req, res) => {
   }
 };
 
-// @route PUT /api/customers/profile
 exports.updateProfile = async (req, res) => {
   try {
     const customerId = req.customer._id;
@@ -82,7 +77,6 @@ exports.updateProfile = async (req, res) => {
   }
 };
 
-// ✅ @route GET /api/customers/profile
 exports.getCustomerProfile = async (req, res) => {
   try {
     const customer = await Customer.findById(req.customer._id).select('-password');
