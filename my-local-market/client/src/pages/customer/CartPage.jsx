@@ -21,7 +21,6 @@ export default function CartPage() {
       const res = await api.get('/cart', {
         headers: { Authorization: `Bearer ${token}` },
       });
-      console.log('From DB : ',res.data.cart)
       setCartItems(res.data.cart || []);
     } catch (err) {
       console.error('Failed to load cart:', err);
