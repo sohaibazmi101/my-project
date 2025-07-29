@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import api from '../../services/api';
 import { useCustomer } from '../../contexts/CustomerContext';
+import ProductCard from '../../components/ProductCard';
 
 export default function CustomerProfile() {
   const { customer, logout } = useCustomer();
@@ -43,24 +44,36 @@ export default function CustomerProfile() {
         <div className="alert alert-info">You have not placed any orders yet.</div>
       ) : (
         <div className="list-group">
-          {orders.map(order => (
-            <div key={order._id} className="list-group-item mb-3 border rounded shadow-sm">
-              <div><strong>Order ID:</strong> {order._id}</div>
-              <div><strong>Date:</strong> {new Date(order.createdAt).toLocaleString()}</div>
-              <div><strong>Shop:</strong> {order.shop?.name}</div>
-              <div><strong>Total:</strong> ₹{order.totalAmount}</div>
-              <div><strong>Status:</strong> {order.status}</div>
-              <ul className="mt-2">
+          {[...orders].reverse().map(order => (
+            <div key={order._id} className="list-group-item mb-4 border rounded shadow-sm p-3">
+
+              {/* Product Cards */}
+              <div className="row">
                 {order.products.map(item => (
-                  <li key={item.product?._id || item._id}>
-                    {item.product?.name || 'Product Removed'} × {item.quantity}
-                  </li>
+                  <div key={item.product?._id || item._id} className="col-md-4 mb-3">
+                    {item.product ? (
+                      <ProductCard product={item.product} quantity={item.quantity} showQuantity />
+                    ) : (
+                      <div className="text-muted small">Product Removed</div>
+                    )}
+                  </div>
                 ))}
-              </ul>
+              </div>
+
+              {/* Order Details */}
+              <div className="mt-3">
+                <div><strong>Order ID:</strong> {order._id}</div>
+                <div><strong>Date:</strong> {new Date(order.createdAt).toLocaleString()}</div>
+                <div><strong>Shop:</strong> {order.shop?.name || 'Unknown'}</div>
+                <div><strong>Total:</strong> ₹{order.totalAmount}</div>
+                <div><strong>Status:</strong> {order.status}</div>
+              </div>
+
             </div>
           ))}
         </div>
       )}
+
     </div>
   );
 }

@@ -1,7 +1,8 @@
 import { Link } from 'react-router-dom';
 
-export default function ProductCard({ product }) {
+export default function ProductCard({ product, quantity, showQuantity }) {
   const images = product.images?.filter(Boolean) || [];
+  const total = product.price * quantity;
 
   return (
     <div className="card h-100 shadow-sm">
@@ -51,6 +52,14 @@ export default function ProductCard({ product }) {
         <Link to={`/product/${product._id}`} className="btn btn-sm btn-outline-primary mt-auto">
           View
         </Link>
+        {showQuantity && (
+  <div>
+    <strong>Quantity:</strong> {quantity}
+    <span className="mx-3"></span>
+    <strong>Total:</strong> ₹{total}
+  </div>
+)}
+
       </div>
     </div>
   );

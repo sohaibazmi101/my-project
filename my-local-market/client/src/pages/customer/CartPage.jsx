@@ -42,7 +42,7 @@ export default function CartPage() {
 
   const handleRemove = async (productId) => {
     try {
-      await api.delete(`/cart/remove/${productId}`, {
+      await api.delete(`/cart/${productId}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       fetchCart();
@@ -71,7 +71,7 @@ export default function CartPage() {
       const grouped = Object.values(groupByShop());
       for (const group of grouped) {
         await api.post(
-          '/orders',
+          '/customers/orders',
           {
             cart: group.items.map(({ product, quantity }) => ({
               product: product._id,
@@ -83,7 +83,6 @@ export default function CartPage() {
           }
         );
       }
-
       setCartItems([]);
       alert('Order placed successfully!');
       navigate('/customer/profile');

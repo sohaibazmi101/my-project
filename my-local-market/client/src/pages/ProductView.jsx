@@ -8,6 +8,7 @@ export default function ProductView() {
   const [product, setProduct] = useState(null);
   const [isInCart, setIsInCart] = useState(false);
   const token = localStorage.getItem('customerToken');
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     fetchProduct();
@@ -25,43 +26,57 @@ export default function ProductView() {
     }
   };
 
-  const checkIfInCart = async () => {
-    try {
-      const res = await api.get('/cart', {
+const checkIfInCart = async () => {
+  try {
+    const res = await api.get('/cart', {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+
+    const cartItems = res.data?.cart || [];
+
+    const found = cartItems.find((item) => {
+      const cartProductId = item?.product?._id?.toString?.();
+      return cartProductId === id;
+    });
+
+    setIsInCart(!!found);
+  } catch (err) {
+    console.error('Failed to check cart', err);
+  }
+};
+
+
+
+const handleAddToCart = async () => {
+  if (!token) {
+    alert('Please login as customer to add items to cart.');
+    return;
+  }
+
+  try {
+    setLoading(true);
+    await api.post(
+      '/cart/add',
+      {
+        productId: product._id,
+        quantity: 1,
+      },
+      {
         headers: { Authorization: `Bearer ${token}` },
-      });
-      const cartItems = res.data?.items || [];
-      const found = cartItems.find((item) => item.product._id === id);
-      if (found) setIsInCart(true);
-    } catch (err) {
-      console.error('Failed to check cart', err);
-    }
-  };
+      }
+    );
 
-  const handleAddToCart = async () => {
-    if (!token) {
-      alert('Please login as customer to add items to cart.');
-      return;
-    }
+    alert('Product added to cart!');
+    checkIfInCart();
+  } catch (err) {
+    console.error('Add to cart failed', err?.response?.data || err);
+    alert(err?.response?.data?.message || 'Add to cart failed');
+  } finally {
+    setLoading(false);
+  }
+};
 
-    try {
-      await api.post(
-        '/cart/add',
-        {
-          productId: product._id,
-          quantity: 1,
-        },
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        }
-      );
-      alert('Product added to cart!');
-      setIsInCart(true); // update state immediately
-    } catch (err) {
-      console.error('Add to cart failed', err?.response?.data || err);
-      alert(err?.response?.data?.message || 'Add to cart failed');
-    }
-  };
+
 
   const handleBuyNow = async () => {
     try {
@@ -134,10 +149,11 @@ export default function ProductView() {
             <button
               onClick={handleAddToCart}
               className="btn btn-warning"
-              disabled={isInCart}
+              disabled={isInCart || loading}
             >
-              {isInCart ? 'Added to Cart' : 'Add to Cart'}
+              {loading ? 'Adding...' : isInCart ? 'Added to Cart' : 'Add to Cart'}
             </button>
+
           </div>
 
           {/* View Shop Button */}

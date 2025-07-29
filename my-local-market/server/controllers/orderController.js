@@ -15,25 +15,29 @@ exports.getCustomerOrders = async (req, res) => {
 exports.placeOrder = async (req, res) => {
   try {
     const customerId = req.customer._id;
-    const cart = req.body.cart; // Expected: [{ product: id, quantity: n }]
+    const cart = req.body.cart;
 
     if (!cart || !Array.isArray(cart) || cart.length === 0) {
       return res.status(400).json({ message: 'Cart is empty or invalid' });
     }
 
-    // Group products by shop
+    const customer = await Customer.findById(customerId);
+    if (!customer) return res.status(404).json({ message: 'Customer not found' });
+
     const shopGroups = {};
+    const allProducts = [];
+
     for (const item of cart) {
       const product = await Product.findById(item.product).populate('shop');
       if (!product) continue;
 
+      allProducts.push(product); // collect for cart cleanup
+
       const shopId = product.shop._id.toString();
       if (!shopGroups[shopId]) shopGroups[shopId] = { shop: product.shop, items: [] };
-
       shopGroups[shopId].items.push({ product, quantity: item.quantity });
     }
 
-    // Create orders per shop
     const createdOrders = [];
 
     for (const shopId in shopGroups) {
@@ -55,7 +59,15 @@ exports.placeOrder = async (req, res) => {
 
       await order.save();
       createdOrders.push(order);
+
+      // 🧹 Remove ordered items from this shop in the cart
+      customer.cart = customer.cart.filter(item => {
+        const matching = items.find(i => i.product._id.toString() === item.product.toString());
+        return !matching; // keep only non-matching items
+      });
     }
+
+    await customer.save();
 
     res.status(201).json(createdOrders);
   } catch (err) {

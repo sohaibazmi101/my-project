@@ -74,3 +74,37 @@ exports.removeFromCart = async (req, res) => {
     res.status(500).json({ message: 'Server error' });
   }
 };
+
+exports.updateCartQty = async (req, res) => {
+  const customerId = req.customer._id;
+  const { productId, quantity } = req.body;
+
+  if (!productId || quantity == null) {
+    return res.status(400).json({ message: 'Product ID and quantity are required' });
+  }
+
+  const parsedQty = parseInt(quantity);
+  if (isNaN(parsedQty) || parsedQty < 1) {
+    return res.status(400).json({ message: 'Invalid quantity' });
+  }
+
+  try {
+    const customer = await Customer.findById(customerId);
+    if (!customer) {
+      return res.status(404).json({ message: 'Customer not found' });
+    }
+
+    const itemIndex = customer.cart.findIndex(item => item.product.toString() === productId);
+    if (itemIndex === -1) {
+      return res.status(404).json({ message: 'Product not found in cart' });
+    }
+
+    customer.cart[itemIndex].quantity = parsedQty;
+    await customer.save();
+
+    res.status(200).json({ message: 'Cart quantity updated', cart: customer.cart });
+  } catch (err) {
+    console.error('Update cart error:', err);
+    res.status(500).json({ message: 'Server error' });
+  }
+};
