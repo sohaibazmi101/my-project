@@ -6,76 +6,75 @@ export default function ProductView() {
   const { id } = useParams();
   const navigate = useNavigate();
   const [product, setProduct] = useState(null);
+  const [isInCart, setIsInCart] = useState(false);
   const token = localStorage.getItem('customerToken');
 
   useEffect(() => {
-    api.get(`/products/${id}`)
-      .then(res => setProduct(res.data))
-      .catch(err => console.error(err));
+    fetchProduct();
+    if (token) {
+      checkIfInCart();
+    }
   }, [id]);
 
-  if (!product) return <div className="text-center mt-5">Loading...</div>;
+  const fetchProduct = async () => {
+    try {
+      const res = await api.get(`/products/${id}`);
+      setProduct(res.data);
+    } catch (err) {
+      console.error(err);
+    }
+  };
 
-  const images = product.images?.filter(Boolean) || [];
+  const checkIfInCart = async () => {
+    try {
+      const res = await api.get('/cart', {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      const cartItems = res.data?.items || [];
+      const found = cartItems.find((item) => item.product._id === id);
+      if (found) setIsInCart(true);
+    } catch (err) {
+      console.error('Failed to check cart', err);
+    }
+  };
 
-  // 🔹 Add to Cart Handler
   const handleAddToCart = async () => {
     if (!token) {
       alert('Please login as customer to add items to cart.');
       return;
     }
 
-    if (!product || !product._id) {
-      console.error('No product found when trying to add to cart');
-      return;
-    }
-
-    const body = {
-      product: product._id,
-      quantity: 1,
-    };
-
-    console.log('Sending add-to-cart:', body);
-
     try {
-      const res = await api.post('/cart/add', body, {
-        headers: {
-          Authorization: `Bearer ${token}`,
+      await api.post(
+        '/cart/add',
+        {
+          productId: product._id,
+          quantity: 1,
         },
-      });
-      console.log('Added to cart:', res.data);
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
       alert('Product added to cart!');
+      setIsInCart(true); // update state immediately
     } catch (err) {
       console.error('Add to cart failed', err?.response?.data || err);
       alert(err?.response?.data?.message || 'Add to cart failed');
     }
   };
 
-
-
-  // 🔹 Buy Now Handler
   const handleBuyNow = async () => {
     try {
-      const token = localStorage.getItem('customerToken');
       if (!token) return alert('Please login to place an order');
 
-      const cart = [
-        {
-          product: product._id,
-          quantity: 1, // or dynamic quantity
-        },
-      ];
-
+      const cart = [{ product: product._id, quantity: 1 }];
       await api.post(
         '/customers/orders',
         { cart },
         {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
+          headers: { Authorization: `Bearer ${token}` },
         }
       );
-
       alert('Order placed successfully!');
     } catch (err) {
       console.error('Buy Now failed', err);
@@ -83,6 +82,9 @@ export default function ProductView() {
     }
   };
 
+  if (!product) return <div className="text-center mt-5">Loading...</div>;
+
+  const images = product.images?.filter(Boolean) || [];
 
   return (
     <div className="container mt-5">
@@ -123,13 +125,19 @@ export default function ProductView() {
           <p className="card-text">{product.description}</p>
           <h5 className="text-primary">₹{product.price}</h5>
           <p className="text-muted">
-            Availability: {product.availability ? "✅ In stock" : "❌ Out of stock"}
+            Availability: {product.availability ? "✅ In stock" : "Out of stock"}
           </p>
 
           {/* Buttons */}
           <div className="d-flex gap-3 mt-3">
             <button onClick={handleBuyNow} className="btn btn-primary">Buy Now</button>
-            <button onClick={handleAddToCart} className="btn btn-warning">Add to Cart</button>
+            <button
+              onClick={handleAddToCart}
+              className="btn btn-warning"
+              disabled={isInCart}
+            >
+              {isInCart ? 'Added to Cart' : 'Add to Cart'}
+            </button>
           </div>
 
           {/* View Shop Button */}

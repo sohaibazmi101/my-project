@@ -33,7 +33,10 @@ exports.addToCart = async (req, res) => {
       customer.cart.push({ product: productId, quantity: parsedQty });
     }
 
-    await customer.save();
+    console.log('Before saving cart:', customer.cart);
+await customer.save();
+console.log('Cart saved successfully');
+
     res.status(200).json({ message: 'Item added to cart', cart: customer.cart });
   } catch (err) {
     console.error('Add to cart error:', err);

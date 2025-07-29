@@ -47,6 +47,7 @@ router.get('/', verifyCustomer, (req, res) => {
   const customerId = req.customer._id;
   const cart = cartStore[customerId] || [];
   res.json({ cart });
+  console.log('From Route : ',customerId, cart)
 });
 
 module.exports = router;
