@@ -1,5 +1,6 @@
 const Order = require('../models/Order');
 const Product = require('../models/Product');
+const Customer = require('../models/Customer');
 
 exports.getCustomerOrders = async (req, res) => {
   try {
@@ -12,34 +13,36 @@ exports.getCustomerOrders = async (req, res) => {
   }
 };
 
+
 exports.placeOrder = async (req, res) => {
   try {
     const customerId = req.customer._id;
-    const cart = req.body.cart;
+    const cart = req.body.cart; // Expected: [{ product: id, quantity: n }]
 
     if (!cart || !Array.isArray(cart) || cart.length === 0) {
       return res.status(400).json({ message: 'Cart is empty or invalid' });
     }
 
     const customer = await Customer.findById(customerId);
-    if (!customer) return res.status(404).json({ message: 'Customer not found' });
+    if (!customer) {
+      return res.status(404).json({ message: 'Customer not found' });
+    }
 
+    // Group products by shop
     const shopGroups = {};
-    const allProducts = [];
-
     for (const item of cart) {
       const product = await Product.findById(item.product).populate('shop');
       if (!product) continue;
 
-      allProducts.push(product); // collect for cart cleanup
-
       const shopId = product.shop._id.toString();
       if (!shopGroups[shopId]) shopGroups[shopId] = { shop: product.shop, items: [] };
+
       shopGroups[shopId].items.push({ product, quantity: item.quantity });
     }
 
     const createdOrders = [];
 
+    // Create orders per shop and update customer's cart
     for (const shopId in shopGroups) {
       const { shop, items } = shopGroups[shopId];
 
@@ -60,11 +63,10 @@ exports.placeOrder = async (req, res) => {
       await order.save();
       createdOrders.push(order);
 
-      // 🧹 Remove ordered items from this shop in the cart
-      customer.cart = customer.cart.filter(item => {
-        const matching = items.find(i => i.product._id.toString() === item.product.toString());
-        return !matching; // keep only non-matching items
-      });
+      // Remove items from customer's cart that belong to this shop
+      customer.cart = customer.cart.filter(item =>
+        !items.some(i => i.product._id.toString() === item.product.toString())
+      );
     }
 
     await customer.save();
