@@ -9,6 +9,12 @@ export default function Home() {
   const [currentBanner, setCurrentBanner] = useState(0);
   const [newArrivals, setNewArrivals] = useState([]);
   const navigate = useNavigate();
+  const [showNotice, setShowNotice] = useState(true);
+
+  useEffect(() => {
+    // Automatically show modal on load
+    setShowNotice(true);
+  }, []);
 
   useEffect(() => {
     api.get('/categories')
@@ -212,6 +218,32 @@ export default function Home() {
           <Link to="/register" className="btn btn-outline-secondary btn-lg">Become a Seller</Link>
         </div>
       </div>
+
+      {/* Bootstrap Modal for Test Warning */}
+      {showNotice && (
+        <div className="modal fade show d-block" tabIndex="-1" style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}>
+          <div className="modal-dialog modal-dialog-centered">
+            <div className="modal-content">
+              <div className="modal-header">
+                <h5 className="modal-title text-danger">🧪 Test Deployment</h5>
+                <button type="button" className="btn-close" onClick={() => setShowNotice(false)}></button>
+              </div>
+              <div className="modal-body">
+                <p>
+                  This site is deployed for <strong>testing purposes</strong> only.<br />
+                  Any accounts or orders you create may be deleted at any time.
+                </p>
+              </div>
+              <div className="modal-footer">
+                <button type="button" className="btn btn-warning" onClick={() => setShowNotice(false)}>
+                  I Understand
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
 
       {/* Inline styles for progress dots */}
       <style>{`
