@@ -17,20 +17,22 @@ const customerSchema = new mongoose.Schema({
   googleId: {
     type: String,
     unique: true,
-    sparse: true // Allows null unless filled
+    sparse: true 
   },
   profileImage: {
-    type: String // URL from Google
+    type: String 
   },
   phone: {
     type: String,
     unique: true,
-    sparse: true // Optional, so sparse needed
+    sparse: true
   },
   password: {
     type: String,
     minlength: 6,
-    select: false
+    required: function () {
+      return !this.googleId;
+    }
   },
   address: {
     street: String,
