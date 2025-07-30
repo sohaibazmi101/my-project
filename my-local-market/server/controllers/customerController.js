@@ -108,7 +108,6 @@ exports.googleLoginCustomer = async (req, res) => {
         name,
         email,
         phone: '',
-        password: undefined,
         address: {},
         profileImage: picture || '',
         googleId: googleId || ''
