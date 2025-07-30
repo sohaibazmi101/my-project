@@ -1,21 +1,22 @@
 const express = require('express');
 const router = express.Router();
+
 const {
-  registerCustomer,
-  loginCustomer,
+  googleLoginCustomer,
   updateProfile,
   getCustomerProfile,
 } = require('../controllers/customerController');
-const { getCustomerOrders, placeOrder } = require('../controllers/orderController');
+
+const {
+  getCustomerOrders,
+  placeOrder,
+} = require('../controllers/orderController');
+
 const verifyCustomer = require('../middleware/verifyCustomer');
 
-router.post('/register', registerCustomer);
-router.post('/login', loginCustomer);
+router.post('/google-login', googleLoginCustomer);
 
-router.get('/profile', verifyCustomer, (req, res) => {
-  res.json(req.customer);
-});
-
+router.get('/profile', verifyCustomer, getCustomerProfile);
 router.put('/profile', verifyCustomer, updateProfile);
 router.post('/orders', verifyCustomer, placeOrder);
 router.get('/orders', verifyCustomer, getCustomerOrders);

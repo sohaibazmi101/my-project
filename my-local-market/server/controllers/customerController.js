@@ -89,3 +89,37 @@ exports.getCustomerProfile = async (req, res) => {
     res.status(500).json({ error: 'Failed to load profile' });
   }
 };
+
+
+exports.googleLoginCustomer = async (req, res) => {
+  try {
+    const { name, email, picture, googleId } = req.body;
+
+    if (!email || !name) {
+      return res.status(400).json({ error: 'Name and email are required' });
+    }
+
+    let customer = await Customer.findOne({ email });
+
+    if (!customer) {
+      customer = new Customer({
+        name,
+        email,
+        phone: '',
+        password: '',
+        address: {},
+        profileImage: picture || '',
+        googleId: googleId || ''
+      });
+      await customer.save();
+    }
+
+    const token = createToken(customer);
+    res.status(200).json({ customer, token });
+
+  } catch (err) {
+    console.error('Google login failed:', err);
+    res.status(500).json({ error: 'Google login failed' });
+  }
+};
+

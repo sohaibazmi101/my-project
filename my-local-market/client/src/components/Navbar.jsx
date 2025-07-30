@@ -7,7 +7,6 @@ import { useSeller } from '../contexts/SellerContext';
 import {
   FaUserCircle,
   FaSignInAlt,
-  FaUserPlus,
   FaShoppingCart,
   FaStore,
   FaSignOutAlt
@@ -34,7 +33,6 @@ export default function Navbar() {
     logout();
     navigate('/');
   };
-
 
   const isLoggedIn = !!customer || !!seller;
   const loading = customerLoading || sellerLoading;
@@ -142,33 +140,14 @@ export default function Navbar() {
                           <FaSignOutAlt className="me-1" /> <span>Logout</span>
                         </button>
                       </li>
-
                     </>
                   ) : (
-                    // No one is logged in: show dropdowns
                     <>
-                      {/* Customer Dropdown */}
-                      <li className="nav-item dropdown me-2">
-                        <button
-                          className="nav-link dropdown-toggle btn btn-link"
-                          type="button"
-                          data-bs-toggle="dropdown"
-                          aria-expanded="false"
-                        >
-                          <FaUserCircle className="me-1" /> Customer
-                        </button>
-                        <ul className="dropdown-menu dropdown-menu-end">
-                          <li>
-                            <Link className="dropdown-item" to="/customer/login">
-                              <FaSignInAlt className="me-1" /> Login
-                            </Link>
-                          </li>
-                          <li>
-                            <Link className="dropdown-item" to="/customer/register">
-                              <FaUserPlus className="me-1" /> Register
-                            </Link>
-                          </li>
-                        </ul>
+                      {/* Customer Login */}
+                      <li className="nav-item me-2">
+                        <Link className="nav-link d-flex align-items-center" to="/customer/login">
+                          <FaSignInAlt className="me-1" /> <span>Customer Login</span>
+                        </Link>
                       </li>
 
                       {/* Seller Dropdown */}
@@ -189,7 +168,7 @@ export default function Navbar() {
                           </li>
                           <li>
                             <Link className="dropdown-item" to="/register">
-                              <FaUserPlus className="me-1" /> Register
+                              <FaSignInAlt className="me-1" /> Register
                             </Link>
                           </li>
                         </ul>

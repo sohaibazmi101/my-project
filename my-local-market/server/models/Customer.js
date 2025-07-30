@@ -14,14 +14,21 @@ const customerSchema = new mongoose.Schema({
     lowercase: true,
     trim: true
   },
+  googleId: {
+    type: String,
+    unique: true,
+    sparse: true // Allows null unless filled
+  },
+  profileImage: {
+  type: String // URL from Google
+},
   phone: {
     type: String,
-    required: [true, 'Phone number is required'],
-    unique: true
+    unique: true,
+    sparse: true // Optional, so sparse needed
   },
   password: {
     type: String,
-    required: [true, 'Password is required'],
     minlength: 6
   },
   address: {
@@ -52,7 +59,7 @@ const customerSchema = new mongoose.Schema({
 });
 
 customerSchema.pre('save', async function (next) {
-  if (!this.isModified('password')) return next();
+  if (!this.isModified('password') || !this.password) return next();
   try {
     const salt = await bcrypt.genSalt(10);
     this.password = await bcrypt.hash(this.password, salt);

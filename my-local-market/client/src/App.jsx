@@ -1,5 +1,3 @@
-// src/App.jsx
-
 import { Routes, Route } from 'react-router-dom';
 import Home from './pages/Home';
 import Login from './pages/Login';
@@ -20,7 +18,6 @@ import SearchResults from './pages/SearchResults';
 import FeaturedProducts from './pages/FeaturedProducts';
 import AddProduct from './pages/AddProduct';
 import ManageShop from './pages/ManageShop';
-
 import { CustomerProvider, useCustomer } from './contexts/CustomerContext';
 import { SellerProvider } from './contexts/SellerContext';
 import CustomerProtectedRoute from './components/CustomerProtectedRoute';
@@ -28,8 +25,8 @@ import CustomerProfile from './pages/customer/CustomerProfile';
 import CartPage from './pages/customer/CartPage';
 import UpdateCustomerProfile from './pages/customer/UpdateCustomerProfile';
 import CustomerLogin from './pages/customer/CustomerLogin';
-import CustomerRegister from './pages/customer/CustomerRegister';
 import SellerProtectedRoute from './components/SellerProtectedRoute';
+import { GoogleOAuthProvider } from '@react-oauth/google';
 
 // Component to handle loading state
 function AppContent() {
@@ -88,7 +85,6 @@ function AppContent() {
 
         {/* Customer Routes (protected) */}
         <Route path="/customer/login" element={<CustomerLogin />} />
-        <Route path="/customer/register" element={<CustomerRegister />} />
         <Route
           path="/customer/profile"
           element={
@@ -121,11 +117,13 @@ function AppContent() {
 
 function App() {
   return (
-    <CustomerProvider>
-      <SellerProvider>
-        <AppContent />
-      </SellerProvider>
-    </CustomerProvider>
+    <GoogleOAuthProvider clientId={import.meta.env.VITE_GOOGLE_CLIENT_ID}>
+      <CustomerProvider>
+        <SellerProvider>
+          <AppContent />
+        </SellerProvider>
+      </CustomerProvider>
+    </GoogleOAuthProvider>
   );
 }
 

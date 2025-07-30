@@ -1,61 +1,43 @@
-import { useState } from 'react';
+import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { GoogleLogin, googleLogout } from '@react-oauth/google';
+import { jwtDecode } from 'jwt-decode';
 import api from '../../services/api';
-import { useCustomer } from '../../contexts/CustomerContext'; // ✅ IMPORT CONTEXT
+import { useCustomer } from '../../contexts/CustomerContext';
 
 export default function CustomerLogin() {
   const navigate = useNavigate();
-  const { setCustomer } = useCustomer(); // ✅ GET setCustomer FROM CONTEXT
-  const [form, setForm] = useState({ emailOrPhone: '', password: '' });
+  const { setCustomer } = useCustomer();
 
-  const handleChange = (e) => {
-    setForm({ ...form, [e.target.name]: e.target.value });
-  };
-
-  const handleSubmit = async (e) => {
-    e.preventDefault();
+  const handleGoogleSuccess = async (credentialResponse) => {
     try {
-      const res = await api.post('/customers/login', form);
+      const decoded = jwtDecode(credentialResponse.credential);
+      const { email, name, picture } = decoded;
+
+      // Send token or user info to backend
+      const res = await api.post('/customers/google-login', {
+        email,
+        name,
+        picture,
+      });
+
       localStorage.setItem('customerToken', res.data.token);
       setCustomer(res.data.customer);
-      localStorage.removeItem('token')
-      localStorage.removeItem('seller')
-      alert('Logged in successfully!');
+      localStorage.removeItem('token');
+      localStorage.removeItem('seller');
+
+      alert('Logged in with Google!');
       navigate('/');
     } catch (err) {
-      console.error(err);
-      alert(err.response?.data?.error || 'Login failed');
+      console.error('Google login failed:', err);
+      alert('Google login failed');
     }
   };
 
   return (
     <div className="container mt-5" style={{ maxWidth: '500px' }}>
-      <h3 className="mb-4">Customer Login</h3>
-      <form onSubmit={handleSubmit}>
-        <div className="mb-3">
-          <label>Email or Phone</label>
-          <input
-            type="text"
-            name="emailOrPhone"
-            value={form.emailOrPhone}
-            onChange={handleChange}
-            required
-            className="form-control"
-          />
-        </div>
-        <div className="mb-3">
-          <label>Password</label>
-          <input
-            type="password"
-            name="password"
-            value={form.password}
-            onChange={handleChange}
-            required
-            className="form-control"
-          />
-        </div>
-        <button type="submit" className="btn btn-success w-100">Login</button>
-      </form>
+      <h3 className="mb-4">Customer Login with Google</h3>
+      <GoogleLogin onSuccess={handleGoogleSuccess} onError={() => alert('Login Failed')} />
     </div>
   );
 }
