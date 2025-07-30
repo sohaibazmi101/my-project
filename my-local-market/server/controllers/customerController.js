@@ -95,6 +95,8 @@ exports.googleLoginCustomer = async (req, res) => {
   try {
     const { name, email, picture, googleId } = req.body;
 
+    console.log("Incoming Google login:", req.body); // Add this line
+
     if (!email || !name) {
       return res.status(400).json({ error: 'Name and email are required' });
     }
@@ -118,8 +120,7 @@ exports.googleLoginCustomer = async (req, res) => {
     res.status(200).json({ customer, token });
 
   } catch (err) {
-    console.error('Google login failed:', err);
+    console.error('Google login failed (backend error):', err); // Improved logging
     res.status(500).json({ error: 'Google login failed' });
   }
 };
-

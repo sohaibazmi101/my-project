@@ -20,8 +20,8 @@ const customerSchema = new mongoose.Schema({
     sparse: true // Allows null unless filled
   },
   profileImage: {
-  type: String // URL from Google
-},
+    type: String // URL from Google
+  },
   phone: {
     type: String,
     unique: true,
@@ -29,7 +29,8 @@ const customerSchema = new mongoose.Schema({
   },
   password: {
     type: String,
-    minlength: 6
+    minlength: 6,
+    select: false
   },
   address: {
     street: String,
