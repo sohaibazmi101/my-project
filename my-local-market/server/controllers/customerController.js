@@ -125,7 +125,7 @@ exports.getCustomerProfile = async (req, res) => {
 };
 
 exports.addRecentlyViewed = async (req, res) => {
-  const customerId = req.customerId;
+  const customerId = req.customer._id;
   const { productId } = req.body;
 
   try {
@@ -147,7 +147,7 @@ exports.addRecentlyViewed = async (req, res) => {
 };
 
 exports.getRecentlyViewed = async (req, res) => {
-  const customerId = req.customerId;
+  const customerId = req.customer._id;
 
   try {
     const customer = await Customer.findById(customerId).populate('recentlyViewed');
@@ -158,3 +158,4 @@ exports.getRecentlyViewed = async (req, res) => {
     res.status(500).json({ message: 'Server error', error: err.message });
   }
 };
+
