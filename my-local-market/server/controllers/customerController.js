@@ -1,4 +1,5 @@
 const Customer = require('../models/Customer');
+const Product = require('../models/Product')
 const jwt = require('jsonwebtoken');
 
 const createToken = (customer) => {
@@ -54,6 +55,39 @@ exports.loginCustomer = async (req, res) => {
   }
 };
 
+exports.googleLoginCustomer = async (req, res) => {
+  try {
+    const { name, email, picture, googleId } = req.body;
+
+    console.log("Incoming Google login:", req.body); // Add this line
+
+    if (!email || !name) {
+      return res.status(400).json({ error: 'Name and email are required' });
+    }
+
+    let customer = await Customer.findOne({ email });
+
+    if (!customer) {
+      customer = new Customer({
+        name,
+        email,
+        phone: '',
+        address: {},
+        profileImage: picture || '',
+        googleId: googleId || ''
+      });
+      await customer.save();
+    }
+
+    const token = createToken(customer);
+    res.status(200).json({ customer, token });
+
+  } catch (err) {
+    console.error('Google login failed (backend error):', err); // Improved logging
+    res.status(500).json({ error: 'Google login failed' });
+  }
+};
+
 exports.updateProfile = async (req, res) => {
   try {
     const customerId = req.customer._id;
@@ -90,36 +124,37 @@ exports.getCustomerProfile = async (req, res) => {
   }
 };
 
+exports.addRecentlyViewed = async (req, res) => {
+  const customerId = req.customerId;
+  const { productId } = req.body;
 
-exports.googleLoginCustomer = async (req, res) => {
   try {
-    const { name, email, picture, googleId } = req.body;
+    const customer = await Customer.findById(customerId);
+    if (!customer) return res.status(404).json({ message: 'Customer not found' });
 
-    console.log("Incoming Google login:", req.body); // Add this line
+    customer.recentlyViewed = customer.recentlyViewed.filter(id => id.toString() !== productId);
+    customer.recentlyViewed.unshift(productId);
 
-    if (!email || !name) {
-      return res.status(400).json({ error: 'Name and email are required' });
+    if (customer.recentlyViewed.length > 10) {
+      customer.recentlyViewed = customer.recentlyViewed.slice(0, 10);
     }
 
-    let customer = await Customer.findOne({ email });
-
-    if (!customer) {
-      customer = new Customer({
-        name,
-        email,
-        phone: '',
-        address: {},
-        profileImage: picture || '',
-        googleId: googleId || ''
-      });
-      await customer.save();
-    }
-
-    const token = createToken(customer);
-    res.status(200).json({ customer, token });
-
+    await customer.save();
+    res.status(200).json({ message: 'Added to recently viewed' });
   } catch (err) {
-    console.error('Google login failed (backend error):', err); // Improved logging
-    res.status(500).json({ error: 'Google login failed' });
+    res.status(500).json({ message: 'Server error', error: err.message });
+  }
+};
+
+exports.getRecentlyViewed = async (req, res) => {
+  const customerId = req.customerId;
+
+  try {
+    const customer = await Customer.findById(customerId).populate('recentlyViewed');
+    if (!customer) return res.status(404).json({ message: 'Customer not found' });
+
+    res.status(200).json({ recentlyViewed: customer.recentlyViewed });
+  } catch (err) {
+    res.status(500).json({ message: 'Server error', error: err.message });
   }
 };

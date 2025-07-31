@@ -17,10 +17,10 @@ const customerSchema = new mongoose.Schema({
   googleId: {
     type: String,
     unique: true,
-    sparse: true 
+    sparse: true
   },
   profileImage: {
-    type: String 
+    type: String
   },
   phone: {
     type: String,
@@ -55,6 +55,10 @@ const customerSchema = new mongoose.Schema({
       }
     }
   ],
+  recentlyViewed: [{
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Product'
+  }],
   createdAt: {
     type: Date,
     default: Date.now
