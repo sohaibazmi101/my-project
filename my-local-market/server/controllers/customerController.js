@@ -150,7 +150,11 @@ exports.getRecentlyViewed = async (req, res) => {
   const customerId = req.customer._id;
 
   try {
-    const customer = await Customer.findById(customerId).populate('recentlyViewed');
+    const customer = await Customer.findById(customerId).populate({
+      path: 'recentlyViewed',
+      model: Product,
+    });
+
     if (!customer) return res.status(404).json({ message: 'Customer not found' });
 
     res.status(200).json({ recentlyViewed: customer.recentlyViewed });
@@ -158,4 +162,3 @@ exports.getRecentlyViewed = async (req, res) => {
     res.status(500).json({ message: 'Server error', error: err.message });
   }
 };
-
