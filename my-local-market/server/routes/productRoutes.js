@@ -1,4 +1,3 @@
-// server/routes/productRoutes.js
 const express = require('express');
 const router = express.Router();
 const auth = require('../middleware/authMiddleware');
@@ -10,14 +9,14 @@ const {
   deleteProduct,
   getFeaturedProducts,
   searchProducts,
-  getNewArrivals
+  getNewArrivals,
+  getProductsByCategory,
 } = require('../controllers/productController');
 
 const { getBanners } = require('../controllers/bannerController');
 const { getCMSContent } = require('../controllers/cmsController');
 const upload = require('../middleware/uploadProductImage');
 
-// 🖼️ Upload product image
 router.post('/products/upload', auth, upload.single('image'), async (req, res) => {
   try {
     if (!req.file) throw new Error('No file received from client');
@@ -29,22 +28,16 @@ router.post('/products/upload', auth, upload.single('image'), async (req, res) =
   }
 });
 
-// 🔍 Search products
 router.get('/products/search', searchProducts);
 
-// 🌟 Featured products
 router.get('/products/featured', getFeaturedProducts);
 
-// 🆕 New arrivals ✅ FIXED PATH
 router.get('/products/new-arrivals', getNewArrivals);
 
-// 🖼️ Banners
 router.get('/products/banners', getBanners);
 
-// 📄 CMS content
 router.get('/products/cms/:section', getCMSContent);
 
-// 📦 Single product by ID with seller info (for WhatsApp button)
 router.get('/products/:id', async (req, res) => {
   try {
     const product = await Product.findById(req.params.id)
@@ -59,13 +52,10 @@ router.get('/products/:id', async (req, res) => {
   }
 });
 
-// ➕ Add product
+router.get('/products/category/:name', getProductsByCategory);
+
 router.post('/products/add', auth, addProduct);
-
-// ✏️ Edit product
 router.put('/products/:id/edit', auth, editProduct);
-
-// ❌ Delete product
 router.delete('/products/:id/delete', auth, deleteProduct);
 
 module.exports = router;

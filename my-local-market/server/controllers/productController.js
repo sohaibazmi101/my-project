@@ -136,3 +136,13 @@ exports.searchProducts = async (req, res) => {
     res.status(500).json({ message: 'Search failed' });
   }
 };
+
+exports.getProductsByCategory = async (req, res) => {
+  try {
+    const categoryName = decodeURIComponent(req.params.name); // In case of spaces
+    const products = await Product.find({ category: categoryName });
+    res.json(products);
+  } catch (err) {
+    res.status(500).json({ message: 'Error fetching category products' });
+  }
+};
