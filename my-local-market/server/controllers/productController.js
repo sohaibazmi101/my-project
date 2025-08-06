@@ -139,8 +139,11 @@ exports.searchProducts = async (req, res) => {
 
 exports.getProductsByCategory = async (req, res) => {
   try {
-    const categoryName = decodeURIComponent(req.params.name); // In case of spaces
-    const products = await Product.find({ category: categoryName });
+    const categoryName = decodeURIComponent(req.params.name);
+    const products = await Product.find({
+      category: { $regex: new RegExp(`^${categoryName}$`, 'i') }
+    });
+
     res.json(products);
   } catch (err) {
     res.status(500).json({ message: 'Error fetching category products' });
