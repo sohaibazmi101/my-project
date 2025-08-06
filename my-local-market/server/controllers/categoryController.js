@@ -8,14 +8,17 @@ exports.addCategory = async (req, res) => {
     if (!name || !icon) {
       return res.status(400).json({ message: 'Name and image required' });
     }
+    const categoryCount = await Category.countDocuments();
+    const rank = categoryCount + 1;
 
-    const category = await Category.create({ name, icon });
+    const category = await Category.create({ name, icon, rank });
     res.status(201).json(category);
   } catch (err) {
-    console.error(err);
+    console.error('Add Category Error:', err);
     res.status(500).json({ message: 'Server error' });
   }
 };
+
 
 
 exports.getCategories = async (req, res) => {
