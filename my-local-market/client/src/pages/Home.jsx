@@ -116,7 +116,18 @@ export default function Home() {
         </div>
       )}
 
-      {/* // Featured Section  */}
+      {/* Category Cards Section */}
+      {categories.length > 0 && (
+        <div className="d-flex overflow-auto mb-4 pb-2" style={{ gap: '0.5rem' }}>
+          {categories.map((cat) => (
+            <div key={cat._id} style={{ flex: '0 0 auto' }}>
+              <CategoryCard category={cat} />
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* Featured Section */}
       <div className="d-flex justify-content-between align-items-center">
         <h5 className="mb-2 mb-md-0">Top Featured</h5>
         <Link
@@ -139,6 +150,7 @@ export default function Home() {
           <p>No Featured</p>
         )}
       </div>
+
 
       {/* New Arrivals */}
       <h5 className="mb-2">New Arrivals</h5>

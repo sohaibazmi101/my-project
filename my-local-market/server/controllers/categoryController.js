@@ -2,13 +2,21 @@ const Category = require('../models/Category');
 
 exports.addCategory = async (req, res) => {
   try {
-    const { name, icon } = req.body;
+    const { name } = req.body;
+    const icon = req.categoryImageUrl;
+
+    if (!name || !icon) {
+      return res.status(400).json({ message: 'Name and image required' });
+    }
+
     const category = await Category.create({ name, icon });
     res.status(201).json(category);
   } catch (err) {
+    console.error(err);
     res.status(500).json({ message: 'Server error' });
   }
 };
+
 
 exports.getCategories = async (req, res) => {
   try {
