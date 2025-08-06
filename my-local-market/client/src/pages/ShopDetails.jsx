@@ -24,7 +24,7 @@ export default function ShopDetails() {
   const recent = shop.newProducts || [];
 
   return (
-    <div className="container mt-5 mb-5">
+    <div className="container pt-5 mt-5 mb-5">
       {/* Shop Banner */}
       {shop.banner && (
         <div className="mb-4">

@@ -5,6 +5,25 @@
   text-align: center;
 }
 
+body {
+  padding-top: 700px; /* Adjust based on actual navbar height */
+}
+
+body.dark {
+  background-color: #121212;
+  color: #f1f1f1;
+}
+
+body.dark .navbar {
+  background-color: #1e1e1e;
+}
+
+body.dark .dropdown-menu {
+  background-color: #2a2a2a;
+  color: white;
+}
+
+
 .logo {
   height: 6em;
   padding: 1.5em;
@@ -41,18 +60,21 @@
   color: #888;
 }
 
+/* ✅ Responsive banner image: Corrected media queries */
 .responsive-banner-img {
   width: 100%;
   object-fit: cover;
   height: 300px; /* default for mobile */
+}
 
-  /* Tablet */
-  @media (min-width: 768px) {
+@media (min-width: 768px) {
+  .responsive-banner-img {
     height: 400px;
   }
+}
 
-  /* Desktop */
-  @media (min-width: 1024px) {
+@media (min-width: 1024px) {
+  .responsive-banner-img {
     height: 500px;
   }
 }

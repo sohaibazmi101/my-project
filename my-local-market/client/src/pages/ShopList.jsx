@@ -17,7 +17,7 @@ export default function ShopList() {
   }, []);
 
   return (
-    <div className="container mt-5 mb-5">
+    <div className="container pt-5 mt-5 mb-5">
       <h2 className="text-center mb-4">Har Cheez Now Available Here.</h2>
 
       {shops.length === 0 ? (

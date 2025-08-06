@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import api from '../services/api';
+import api from '../../services/api';
 
 export default function ManageShop() {
   const [shop, setShop] = useState(null);
@@ -24,15 +24,12 @@ export default function ManageShop() {
 
       const shop = res.data.shop;
       const products = res.data.products;
-
-      // Normalize ID types for comparison
       shop.featuredProducts = (shop.featuredProducts || []).map(id => id.toString());
       shop.newProducts = (shop.newProducts || []).map(id => id.toString());
       const normalizedProducts = (products || []).map(p => ({
         ...p,
         _id: p._id.toString()
       }));
-
       setShop(shop);
       setProducts(normalizedProducts);
       setBanner(shop.banner || '');
@@ -43,10 +40,6 @@ export default function ManageShop() {
       console.error('Failed to fetch shop data:', err);
     }
   };
-
-
-
-
 
   const handleBannerUpload = async (file) => {
     setUploading(true);
@@ -97,15 +90,12 @@ export default function ManageShop() {
     const idStr = productId.toString();
     const fieldKey = field === 'featured' ? 'featuredProducts' : 'newProducts';
     const updatedShop = { ...shop };
-
     if (updatedShop[fieldKey].includes(idStr)) {
       updatedShop[fieldKey] = updatedShop[fieldKey].filter(id => id !== idStr);
     } else {
       updatedShop[fieldKey] = [...updatedShop[fieldKey], idStr];
     }
-
     setShop(updatedShop);
-
     try {
       await api.patch(`/shops/${shop._id}/product/${idStr}/toggle-${field}`, null, {
         headers: { Authorization: `Bearer ${token}` }
@@ -116,14 +106,9 @@ export default function ManageShop() {
       fetchShop(); // fallback in case toggle fails
     }
   };
-
-
-
-
   if (!shop) return <div className="text-center mt-5">Loading shop...</div>;
-
   return (
-    <div className="container mt-5">
+    <div className="container pt-5 mt-5">
       <h2>Manage Your Shop</h2>
 
       <div className="mb-4">
@@ -136,7 +121,6 @@ export default function ManageShop() {
           onChange={handleInputChange}
         />
       </div>
-
       <div className="mb-4">
         <label>About Shop</label>
         <textarea
@@ -147,7 +131,6 @@ export default function ManageShop() {
           rows="3"
         />
       </div>
-
       <div className="mb-4">
         <label>Shop Location</label>
         <input
@@ -158,7 +141,6 @@ export default function ManageShop() {
           onChange={handleInputChange}
         />
       </div>
-
       <div className="mb-4">
         <label>Shop Banner</label>
         <input
@@ -175,13 +157,10 @@ export default function ManageShop() {
           />
         )}
       </div>
-
       <button className="btn btn-success mb-5" onClick={handleShopSave} disabled={uploading}>
         {uploading ? 'Uploading...' : 'Save Shop Info'}
       </button>
-
       <hr />
-
       <h4>Your Products</h4>
       {products.length === 0 ? (
         <p>No products found</p>
@@ -216,7 +195,6 @@ export default function ManageShop() {
                       Mark as Featured
                     </button>
                   )}
-
                   {/* New Button */}
                   {shop.newProducts.includes(product._id.toString()) ? (
                     <button
@@ -233,7 +211,6 @@ export default function ManageShop() {
                       Mark as New
                     </button>
                   )}
-
                 </div>
               </div>
             </div>

@@ -1,8 +1,9 @@
 import { Link, Outlet, useNavigate } from 'react-router-dom';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 
 export default function DashboardLayout() {
   const navigate = useNavigate();
+  const [sidebarOpen, setSidebarOpen] = useState(false);
 
   useEffect(() => {
     const token = localStorage.getItem('adminToken');
@@ -16,21 +17,37 @@ export default function DashboardLayout() {
 
   return (
     <div className="d-flex flex-column flex-lg-row min-vh-100">
+      {/* Mobile Header */}
+      <div className="d-flex d-lg-none justify-content-between align-items-center bg-dark text-white p-3">
+        <h4 className="mb-0">🛠 Admin Panel</h4>
+        <button
+          className="btn btn-outline-light btn-sm"
+          onClick={() => setSidebarOpen(!sidebarOpen)}
+        >
+          ☰
+        </button>
+      </div>
+
       {/* Sidebar */}
-      <div className="bg-dark text-white p-3" style={{ width: '100%', maxWidth: '250px' }}>
-        <h4 className="text-center text-lg-start">🛠 Admin Panel</h4>
-        <ul className="nav flex-lg-column flex-row justify-content-around mt-3 mt-lg-4 text-center text-lg-start">
+      <div
+        className={`bg-dark text-white p-3 ${
+          sidebarOpen ? 'd-block' : 'd-none'
+        } d-lg-block`}
+        style={{ width: '100%', maxWidth: '250px' }}
+      >
+        <h4 className="text-center text-lg-start d-none d-lg-block">🛠 Admin Panel</h4>
+        <ul className="nav flex-column mt-3 mt-lg-4 text-center text-lg-start">
           <li className="nav-item mb-2">
-            <Link className="nav-link text-white" to="/admin/dashboard">🏠 Dashboard</Link>
+            <Link className="nav-link text-white" to="/admin/dashboard" onClick={() => setSidebarOpen(false)}>🏠 Dashboard</Link>
           </li>
           <li className="nav-item mb-2">
-            <Link className="nav-link text-white" to="/admin/categories">📦 Categories</Link>
+            <Link className="nav-link text-white" to="/admin/categories" onClick={() => setSidebarOpen(false)}>📦 Categories</Link>
           </li>
           <li className="nav-item mb-2">
-            <Link className="nav-link text-white" to="/admin/featured">🌟 Featured Products</Link>
+            <Link className="nav-link text-white" to="/admin/featured" onClick={() => setSidebarOpen(false)}>🌟 Featured Products</Link>
           </li>
           <li className="nav-item mb-2">
-            <Link className="nav-link text-white" to="/admin/banners">🖼️ Banners</Link>
+            <Link className="nav-link text-white" to="/admin/banners" onClick={() => setSidebarOpen(false)}>🖼️ Banners</Link>
           </li>
           <li className="nav-item mt-3">
             <button className="btn btn-sm btn-danger w-100" onClick={logout}>Logout</button>

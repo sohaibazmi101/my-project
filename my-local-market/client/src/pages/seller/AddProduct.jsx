@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import api from '../services/api';
+import api from '../../services/api';
 
 export default function AddProduct() {
   const [form, setForm] = useState({
@@ -11,19 +11,18 @@ export default function AddProduct() {
     images: ['', '', '', ''],
     availability: true,
   });
+
   const [categories, setCategories] = useState([]);
   const [uploading, setUploading] = useState(false);
 
-  const { id } = useParams(); // optional product ID for editing
+  const { id } = useParams(); // product ID for editing (optional)
   const navigate = useNavigate();
   const token = localStorage.getItem('token');
-  const seller = JSON.parse(localStorage.getItem('seller'));
 
   useEffect(() => {
     fetchCategories();
 
     if (id) {
-      // Editing existing product
       api.get(`/products/${id}`)
         .then(res => {
           const product = res.data;
@@ -37,13 +36,13 @@ export default function AddProduct() {
   }, [id]);
 
   const fetchCategories = async () => {
-    try {
-      const res = await api.get('/categories');
-      setCategories(res.data);
-    } catch (err) {
-      console.error('Failed to fetch categories:', err);
-    }
-  };
+  try {
+    const res = await api.get('/categories');
+    setCategories(res.data);
+  } catch (err) {
+    console.error('Failed to fetch categories:', err);
+  }
+};
 
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;

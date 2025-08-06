@@ -4,7 +4,7 @@ export default function Dashboard() {
   const navigate = useNavigate();
 
   return (
-    <div className="container mt-5">
+    <div className="container pt-5 mt-5">
       <h2 className="mb-4">Seller Dashboard</h2>
 
       <div className="row g-4">
@@ -15,7 +15,7 @@ export default function Dashboard() {
               <p className="card-text">Upload new products or update existing ones.</p>
               <button
                 className="btn btn-primary mt-auto"
-                onClick={() => navigate('/dashboard/add-product')}
+                onClick={() => navigate('/seller/dashboard/add-product')}
               >
                 Go to Add Product
               </button>

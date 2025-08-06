@@ -16,7 +16,7 @@ export default function SearchResults() {
   }, [query]);
 
   return (
-    <div className="container mt-5 mb-5">
+    <div className="container pt-5 mt-5 mb-5">
       <h3 className="mb-4">
         Search Results for: <strong>{query}</strong>
       </h3>

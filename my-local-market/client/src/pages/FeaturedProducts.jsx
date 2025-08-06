@@ -18,7 +18,7 @@ export default function FeaturedProducts() {
   }, []);
 
   return (
-    <div className="container py-4">
+    <div className="conatiner pt-5">
       <h2 className="mb-4">All Featured Products</h2>
       <div className="row row-cols-1 row-cols-sm-2 row-cols-md-3 g-4">
         {featured.length > 0 ? (

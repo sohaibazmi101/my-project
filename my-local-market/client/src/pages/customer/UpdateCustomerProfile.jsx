@@ -35,7 +35,7 @@ export default function UpdateCustomerProfile() {
   const handleUpdate = async (e) => {
     e.preventDefault();
     try {
-      await api.put('/customers/profile', {
+      await api.put('/customers', {
         name: form.name,
         phone: form.phone,
         address: {
@@ -57,7 +57,7 @@ export default function UpdateCustomerProfile() {
 
   return (
     <div className="container mt-5 mb-5">
-      <h2 className="mb-4">✏️ Update Profile</h2>
+      <h2 className="mb-4">Edit Profile</h2>
       <form onSubmit={handleUpdate} className="card p-4 shadow">
         <div className="mb-3">
           <label>Name</label>
@@ -68,7 +68,7 @@ export default function UpdateCustomerProfile() {
           <input name="phone" value={form.phone} onChange={handleChange} className="form-control" required />
         </div>
         <div className="mb-3">
-          <label>Street</label>
+          <label>Full Address</label>
           <input name="street" value={form.street} onChange={handleChange} className="form-control" />
         </div>
         <div className="mb-3">

@@ -1,79 +1,79 @@
 import { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import api from '../../services/api';
 import { useCustomer } from '../../contexts/CustomerContext';
-import ProductCard from '../../components/ProductCard';
+import SmallProductCard from '../../components/SmallProductCard';
+import api from '../../services/api';
 
 export default function CustomerProfile() {
   const { customer, logout } = useCustomer();
   const token = localStorage.getItem('customerToken');
   const navigate = useNavigate();
-
-  const [orders, setOrders] = useState([]);
+  const [recentProducts, setRecentProducts] = useState([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     if (!token) {
       navigate('/customer/login');
-      return;
+    } else {
+      api
+        .get('/customers/recently-viewed')
+        .then((res) => {
+          setRecentProducts(res.data.recentlyViewed || []);
+          setLoading(false);
+        })
+        .catch((err) => {
+          console.error('Failed to load recently viewed:', err?.response?.data || err.message);
+          setRecentProducts([]); // fallback
+          setLoading(false);
+        });
     }
-
-    api.get('/customers/orders', {
-      headers: { Authorization: `Bearer ${token}` },
-    })
-      .then(res => setOrders(res.data))
-      .catch(err => console.error('Failed to load orders', err));
   }, [token, navigate]);
 
   return (
-    <div className="container mt-5 mb-5">
-      {/* Profile Section */}
-      <h2 className="mb-4">👤 My Profile</h2>
+    <div className="container-fluid pt-5 mb-5">
       <div className="card shadow p-4 mb-4">
+        <div className="d-flex align-items-center mb-4">
+        <img
+          src={customer?.profileImage || '/default-profile.png'}
+          alt="Profile"
+          className="rounded-circle me-3"
+          style={{ width: '40px', height: '40px', objectFit: 'cover' }}
+        />
+        <h2 className="mb-0">My Profile</h2>
+      </div>
+        <h5>Details</h5>
         <p><strong>Name:</strong> {customer?.name}</p>
         <p><strong>Email:</strong> {customer?.email}</p>
         <p><strong>Phone:</strong> {customer?.phone}</p>
-        <button onClick={logout} className="btn btn-danger mt-3">Logout</button>
-        <Link to="/customer/update-profile" className="btn btn-outline-primary mt-2">
-          Edit Profile
-        </Link>
+        <p><strong>Address:</strong> {customer?.address?.street}</p>
+        <p><strong>City:</strong> {customer?.address?.city}</p>
+        <p><strong>Pincode:</strong> {customer?.address?.pincode}</p>
+        <p><strong>State:</strong> {customer?.address?.state}</p>
+        <Link to="/customer/update-profile" className="small text-primary mt-2">Edit Profile</Link>
       </div>
-
-      {/* Order History Section */}
-      <h4 className="mb-3">📦 My Orders</h4>
-      {orders.length === 0 ? (
-        <div className="alert alert-info">You have not placed any orders yet.</div>
-      ) : (
-        <div className="list-group">
-          {[...orders].reverse().map(order => (
-            <div key={order._id} className="list-group-item mb-4 border rounded shadow-sm p-3">
-
-              {/* Product Cards */}
-              <div className="row">
-                {order.products.map(item => (
-                  <div key={item.product?._id || item._id} className="col-md-4 mb-3">
-                    {item.product ? (
-                      <ProductCard product={item.product} quantity={item.quantity} showQuantity />
-                    ) : (
-                      <div className="text-muted small">Product Removed</div>
-                    )}
-                  </div>
-                ))}
+      {!loading && recentProducts?.length > 0 && (
+        <div className="mb-4">
+          <h5>Recently Viewed</h5>
+          <div className="d-flex overflow-auto">
+            {recentProducts.map((product) => (
+              <div key={product._id}>
+                <SmallProductCard product={product} />
               </div>
-
-              {/* Order Details */}
-              <div className="mt-3">
-                <div><strong>Order ID:</strong> {order._id}</div>
-                <div><strong>Date:</strong> {new Date(order.createdAt).toLocaleString()}</div>
-                <div><strong>Shop:</strong> {order.shop?.name || 'Unknown'}</div>
-                <div><strong>Total:</strong> ₹{order.totalAmount}</div>
-                <div><strong>Status:</strong> {order.status}</div>
-              </div>
-
-            </div>
-          ))}
+            ))}
+          </div>
         </div>
       )}
 
+      {!loading && recentProducts?.length === 0 && (
+        <p className="text-muted">No recently viewed products.</p>
+      )}
+
+      {/* Logout Button using context */}
+      <div className="text-center mt-4">
+        <button onClick={logout} className="btn btn-outline-danger">
+          Logout
+        </button>
+      </div>
     </div>
   );
 }

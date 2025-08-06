@@ -1,14 +1,18 @@
 import { useContext } from 'react';
-import { Navigate } from 'react-router-dom';
+import { Navigate, useLocation } from 'react-router-dom';
 import { CustomerContext } from '../contexts/CustomerContext';
 
 export default function CustomerProtectedRoute({ children }) {
   const { customer, loading } = useContext(CustomerContext);
+  const location = useLocation();
 
-  if (loading) return <div className="text-center mt-5">Loading...</div>;
+  if (loading) {
+    return <div className="text-center mt-5">Loading...</div>;
+  }
 
   if (!customer) {
-    return <Navigate to="/customer/login" />;
+    // Redirect to login but save intended location
+    return <Navigate to="/customer/login" state={{ from: location }} replace />;
   }
 
   return children;

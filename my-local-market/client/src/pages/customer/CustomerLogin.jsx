@@ -12,13 +12,14 @@ export default function CustomerLogin() {
   const handleGoogleSuccess = async (credentialResponse) => {
     try {
       const decoded = jwtDecode(credentialResponse.credential);
-      const { email, name, picture } = decoded;
+      const { email, name, picture, sub } = decoded;
 
       // Send token or user info to backend
       const res = await api.post('/customers/google-login', {
         email,
         name,
         picture,
+        googleId: sub
       });
 
       localStorage.setItem('customerToken', res.data.token);
@@ -35,7 +36,7 @@ export default function CustomerLogin() {
   };
 
   return (
-    <div className="container mt-5" style={{ maxWidth: '500px' }}>
+    <div className="container pt-5 mt-5" style={{ maxWidth: '500px' }}>
       <h3 className="mb-4">Customer Login with Google</h3>
       <GoogleLogin onSuccess={handleGoogleSuccess} onError={() => alert('Login Failed')} />
     </div>

@@ -1,6 +1,6 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import api from '../services/api';
+import { useNavigate, Link } from 'react-router-dom';
+import api from '../../services/api';
 
 export default function Register() {
   const [form, setForm] = useState({
@@ -18,7 +18,7 @@ export default function Register() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      const res = await api.post('/sellers/register', form); // Send as JSON
+      const res = await api.post('/sellers/register', form);
       alert('Registered successfully!');
       navigate('/login');
     } catch (err) {
@@ -28,7 +28,7 @@ export default function Register() {
   };
 
   return (
-    <div className="container mt-5 mb-5">
+    <div className="container pt-5 mt-5 mb-5">
       <h2 className="text-center mb-4">Register as a Seller</h2>
       <div className="row justify-content-center">
         <div className="col-12 col-md-8 col-lg-6">
@@ -58,6 +58,15 @@ export default function Register() {
 
             <div className="col-12 text-center">
               <button type="submit" className="btn btn-success w-100">Register</button>
+            </div>
+
+            <div className="col-12 text-center mt-3">
+              <p className="mb-0">
+                Already have an account?{' '}
+                <Link to="/seller/login" className="text-primary text-decoration-underline">
+                  Log in
+                </Link>
+              </p>
             </div>
           </form>
         </div>

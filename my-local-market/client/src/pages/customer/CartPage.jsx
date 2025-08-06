@@ -103,7 +103,7 @@ export default function CartPage() {
   };
 
   return (
-    <div className="container mt-4">
+    <div className="container pt-5 mt-4">
       <h2>Your Cart</h2>
       {cartItems.length === 0 ? (
         <p>Your cart is empty.</p>

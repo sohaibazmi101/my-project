@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import api from '../services/api';
+import SmallProductCard from '../components/SmallProductCard';
 
 export default function Home() {
   const [categories, setCategories] = useState([]);
@@ -12,7 +13,6 @@ export default function Home() {
   const [showNotice, setShowNotice] = useState(true);
 
   useEffect(() => {
-    // Automatically show modal on load
     setShowNotice(true);
   }, []);
 
@@ -50,7 +50,7 @@ export default function Home() {
   }, [banners]);
 
   return (
-    <div className="container mt-4">
+    <div className="container-fluid pt-5 mt-4">
       {/* Banners Carousel */}
       {banners.length > 0 && (
         <div
@@ -117,100 +117,42 @@ export default function Home() {
       )}
 
       {/* // Featured Section  */}
-      <div id="featuredCarousel" className="carousel slide mb-5" data-bs-ride="carousel" data-bs-interval="2500">
-        <div className="d-flex justify-content-between align-items-baseline mb-3">
-          <h3 className="mb-0">Featured Products
-            <Link to="/featured" className="text-primary text-decoration-none" style={{ fontSize: '0.9rem', marginLeft: '0.3rem' }}>
-              See all
-            </Link>
-          </h3>
-        </div>
-        <div className="carousel-inner">
-          {featured.length > 0 ? (
-            featured.map((item, index) => (
-              <div className={`carousel-item ${index === 0 ? 'active' : ''}`} key={item._id}>
-                <div className="w-100">
-                  <div className="card border-0 rounded-0 text-white" style={{ position: 'relative' }}>
-                    <img
-                      src={(item.images && item.images[0]) || 'https://placehold.co/1200x400?text=No+Image'}
-                      className="d-block w-100"
-                      alt={item.name}
-                      style={{ objectFit: 'cover', height: '400px' }}
-                    />
-                    <div
-                      className="card-img-overlay d-flex flex-column justify-content-end"
-                      style={{ background: 'rgba(0,0,0,0.4)' }}
-                    >
-                      <h4 className="card-title">{item.name}</h4>
-                      <p className="card-text fw-semibold">₹{item.price}</p>
-                      <Link to={`/product/${item._id}`} className="btn btn-light btn-sm w-auto">
-                        View
-                      </Link>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            ))
-          ) : (
-            <div className="text-center p-5">
-              <p>No featured products yet</p>
-            </div>
-          )}
-        </div>
+      <div className="d-flex justify-content-between align-items-center">
+        <h5 className="mb-2 mb-md-0">Top Featured</h5>
+        <Link
+          to="/featured"
+          className="text-primary text-decoration-none d-flex align-items-center"
+          style={{ fontSize: '0.9rem' }}
+        >
+          See all <i className="ms-1 bi bi-arrow-right"></i>
+        </Link>
+      </div>
 
-        {featured.length > 1 && (
-          <>
-            <button
-              className="carousel-control-prev"
-              type="button"
-              data-bs-target="#featuredCarousel"
-              data-bs-slide="prev"
-            >
-              <span className="carousel-control-prev-icon" aria-hidden="true" />
-              <span className="visually-hidden">Previous</span>
-            </button>
-            <button
-              className="carousel-control-next"
-              type="button"
-              data-bs-target="#featuredCarousel"
-              data-bs-slide="next"
-            >
-              <span className="carousel-control-next-icon" aria-hidden="true" />
-              <span className="visually-hidden">Next</span>
-            </button>
-          </>
+      <div className="d-flex overflow-auto mb-4 pb-2" style={{ gap: '0.5rem' }}>
+        {featured.length > 0 ? (
+          featured.map((product) => (
+            <div key={product._id} style={{ flex: '0 0 auto' }}>
+              <SmallProductCard product={product} quantity={1} showQuantity={false} />
+            </div>
+          ))
+        ) : (
+          <p>No Featured</p>
         )}
       </div>
 
-
       {/* New Arrivals */}
-      <h3 className="mb-3">New Arrivals</h3>
-      <div className="row row-cols-2 row-cols-sm-3 row-cols-md-4 g-3 mb-5">
+      <h5 className="mb-2">New Arrivals</h5>
+      <div className="d-flex overflow-auto mb-4 pb-2" style={{ gap: '0.5rem' }}>
         {newArrivals.length > 0 ? (
           newArrivals.map((product) => (
-            <div key={product._id} className="col">
-              <div className="card h-100 shadow-sm">
-                <img
-                  src={(product.images && product.images[0]) || 'https://placehold.co/300x200?text=No+Image'}
-                  className="card-img-top"
-                  alt={product.name}
-                  style={{ height: '200px', objectFit: 'cover' }}
-                />
-                <div className="card-body d-flex flex-column text-center">
-                  <h5 className="card-title">{product.name}</h5>
-                  <p className="card-text text-muted">₹{product.price}</p>
-                  <Link to={`/product/${product._id}`} className="btn btn-sm btn-outline-primary mt-auto">
-                    View
-                  </Link>
-                </div>
-              </div>
+            <div key={product._id} style={{ flex: '0 0 auto' }}>
+              <SmallProductCard product={product} quantity={1} showQuantity={false} />
             </div>
           ))
         ) : (
           <p>No new arrivals yet</p>
         )}
       </div>
-
       {/* Hero Section */}
       <div className="text-center mb-5 px-3">
         <div className="d-flex flex-column flex-md-row justify-content-center gap-3 mt-4">
@@ -220,7 +162,7 @@ export default function Home() {
       </div>
 
       {/* Bootstrap Modal for Test Warning */}
-      {showNotice && (
+      {/* {showNotice && (
         <div className="modal fade show d-block" tabIndex="-1" style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}>
           <div className="modal-dialog modal-dialog-centered">
             <div className="modal-content">
@@ -242,7 +184,7 @@ export default function Home() {
             </div>
           </div>
         </div>
-      )}
+      )} */}
 
 
       {/* Inline styles for progress dots */}
@@ -265,6 +207,19 @@ export default function Home() {
             padding: 10px;
             border-radius: 50%;
           }
+            .scroll-container::-webkit-scrollbar {
+              height: 8px;
+            }
+
+            .scroll-container::-webkit-scrollbar-thumb {
+              background-color: #888;
+              border-radius: 4px;
+            }
+
+            .scroll-container::-webkit-scrollbar-thumb:hover {
+              background-color: #555;
+            }
+
 
       `}</style>
     </div>

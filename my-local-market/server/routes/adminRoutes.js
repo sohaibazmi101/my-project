@@ -1,20 +1,22 @@
 const express = require('express');
 const router = express.Router();
 const adminAuth = require('../middleware/adminAuth');
-const { loginAdmin } = require('../controllers/adminController');
 
+// Controllers
+const { loginAdmin } = require('../controllers/adminController');
 const {
   addCategory,
   getCategories,
-  deleteCategory
+  deleteCategory,
+  updateCategoryRank
 } = require('../controllers/categoryController');
-
 const { getAllProducts, toggleFeatured } = require('../controllers/productController');
 const { getBanners, addBanner, deleteBanner } = require('../controllers/bannerController');
 const { getCMSContent, updateCMSContent } = require('../controllers/cmsController');
 
-// ✅ Use Cloudinary uploader middleware
+// Upload middlewares
 const uploadBanner = require('../middleware/uploadBanner');
+const uploadCategoryImage = require('../middleware/uploadCategoryImage');
 
 // Admin login
 router.post('/login', loginAdmin);
@@ -23,12 +25,21 @@ router.post('/login', loginAdmin);
 router.post('/categories', adminAuth, addCategory);
 router.get('/categories', adminAuth, getCategories);
 router.delete('/categories/:id', adminAuth, deleteCategory);
+router.patch('/categories/:id/move', adminAuth, updateCategoryRank);
+
+// Category image upload
+router.post('/categories/upload', adminAuth, uploadCategoryImage, (req, res) => {
+  if (!req.categoryImageUrl) {
+    return res.status(400).json({ message: 'Upload failed' });
+  }
+  res.status(200).json({ imageUrl: req.categoryImageUrl });
+});
 
 // Product routes
 router.get('/products', adminAuth, getAllProducts);
 router.patch('/products/:id/featured', adminAuth, toggleFeatured);
 
-// ✅ Upload banner to Cloudinary
+// Banner image upload
 router.post('/banners/upload', adminAuth, uploadBanner, (req, res) => {
   if (!req.bannerUrl) {
     return res.status(400).json({ message: 'Banner upload failed' });
@@ -36,12 +47,12 @@ router.post('/banners/upload', adminAuth, uploadBanner, (req, res) => {
   res.status(200).json({ imageUrl: req.bannerUrl });
 });
 
-// Banner DB operations
+// Banner routes
 router.get('/banners', adminAuth, getBanners);
 router.post('/banners', adminAuth, addBanner);
 router.delete('/banners/:id', adminAuth, deleteBanner);
 
-// CMS
+// CMS routes
 router.get('/cms/:section', adminAuth, getCMSContent);
 router.post('/cms/:section', adminAuth, updateCMSContent);
 
