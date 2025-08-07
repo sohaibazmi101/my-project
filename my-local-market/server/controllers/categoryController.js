@@ -2,12 +2,12 @@ const Category = require('../models/Category');
 
 exports.addCategory = async (req, res) => {
   try {
-    const { name } = req.body;
-    const icon = req.categoryImageUrl;
+    const { name, icon } = req.body;
 
     if (!name || !icon) {
-      return res.status(400).json({ message: 'Name and image required' });
+      return res.status(400).json({ message: 'Name and icon required' });
     }
+
     const categoryCount = await Category.countDocuments();
     const rank = categoryCount + 1;
 
@@ -18,8 +18,6 @@ exports.addCategory = async (req, res) => {
     res.status(500).json({ message: 'Server error' });
   }
 };
-
-
 
 exports.getCategories = async (req, res) => {
   try {
