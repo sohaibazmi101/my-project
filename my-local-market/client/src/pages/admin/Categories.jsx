@@ -10,36 +10,37 @@ export default function Categories() {
     const res = await api.get('/admin/categories', {
       headers: { Authorization: `Bearer ${localStorage.getItem('adminToken')}` }
     });
-
-    // Sort categories by rank (ascending)
     const sorted = res.data.sort((a, b) => a.rank - b.rank);
     setCategories(sorted);
   };
 
   const handleFileUpload = async (file) => {
-    setUploading(true);
-    const formData = new FormData();
-    formData.append('categoryImage', file);
+  setUploading(true);
+  const formData = new FormData();
+  formData.append('icon', file);
 
-    try {
-      const res = await api.post('/admin/categories/upload', formData, {
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem('adminToken')}`,
-          'Content-Type': 'multipart/form-data'
-        }
-      });
-      setForm((prev) => ({ ...prev, icon: res.data.imageUrl }));
-    } catch (err) {
-      console.error('Upload failed:', err);
-      alert('Upload failed');
-    } finally {
-      setUploading(false);
-    }
-  };
+  try {
+    const res = await api.post('/admin/categories/upload', formData, {
+      headers: {
+        Authorization: `Bearer ${localStorage.getItem('adminToken')}`
+      }
+    });
+    setForm((prev) => ({ ...prev, icon: res.data.imageUrl }));
+  } catch (err) {
+    console.error('Upload failed:', err);
+    alert('Upload failed');
+  } finally {
+    setUploading(false);
+  }
+};
+
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!form.name.trim()) return;
+    if (!form.name.trim() || !form.icon) {
+      alert('Name and icon required');
+      return;
+    }
 
     await api.post('/admin/categories', form, {
       headers: { Authorization: `Bearer ${localStorage.getItem('adminToken')}` }
@@ -116,16 +117,12 @@ export default function Categories() {
             {categories.map((cat, i) => (
               <tr key={cat._id}>
                 <td>{i + 1}</td>
-                <td style={{ fontSize: '1.5rem' }}>
-                  {cat.icon?.startsWith('http') ? (
-                    <img
-                      src={cat.icon}
-                      alt="icon"
-                      style={{ width: '40px', height: '40px', objectFit: 'cover' }}
-                    />
-                  ) : (
-                    cat.icon
-                  )}
+                <td>
+                  <img
+                    src={cat.icon}
+                    alt="icon"
+                    style={{ width: '40px', height: '40px', objectFit: 'cover', borderRadius: '50%' }}
+                  />
                 </td>
                 <td>{cat.name}</td>
                 <td>{cat.rank ?? '-'}</td>
