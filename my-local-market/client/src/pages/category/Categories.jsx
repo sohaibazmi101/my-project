@@ -77,32 +77,25 @@ export default function Categories() {
 
         return (
             <>
-                <h5 className="mb-3">For you in {selected?.name}</h5>
+                <h5 className="mb-3">Products in {selected?.name}</h5>
                 {products.length === 0 ? (
                     <p>No products found in this category.</p>
                 ) : (
-                    <div className="row g-3">
+                    <div className="d-flex overflow-auto gap-3 pb-2">
                         {products.map((product) => (
-                            <div key={product._id} className="col-6 col-sm-4 col-md-3 col-lg-2">
-                                <div className="card h-100">
-                                    <img
-                                        src={product.images?.[0]}
-                                        className="card-img-top"
-                                        alt={product.name}
-                                        style={{ height: '140px', objectFit: 'cover' }}
-                                    />
-                                    <div className="card-body p-2">
-                                        <h6 className="card-title text-truncate">{product.name}</h6>
-                                        <p className="mb-0 text-muted small">₹{product.price}</p>
-                                    </div>
-                                </div>
-                            </div>
+                            <SmallProductCard
+                                key={product._id}
+                                product={product}
+                                quantity={1}
+                                showQuantity={false}
+                            />
                         ))}
                     </div>
                 )}
             </>
         );
     };
+
 
     return (
         <div className="container-fluid">
@@ -111,9 +104,9 @@ export default function Categories() {
                 <div
                     className="col-auto"
                     style={{
-                        width: '100px',
+                        width: '70px',
                         height: '100vh',
-                        overflowY: 'auto',
+                        overflowY: 'auto', // Make sidebar scrollable
                         backgroundColor: '#f8f9fa',
                         borderRight: '1px solid #dee2e6',
                         padding: '1rem 0.5rem',
@@ -122,33 +115,51 @@ export default function Categories() {
                     }}
                 >
                     <div
-                        onClick={() => setActiveCategory('foryou')}
-                        style={{
-                            border: activeCategory === 'foryou' ? '2px solid #007bff' : '1px solid #ccc',
-                            borderRadius: '50%',
-                            marginBottom: '1rem',
-                            padding: '4px',
-                        }}
+                        className="d-flex flex-column align-items-center w-100"
+                        style={{ gap: '0.5rem' }}
                     >
-                        <CategoryCard category={{ name: 'For You', icon: '🧠' }} />
-                    </div>
-
-                    {categories.map((cat) => (
+                        {/* For You Category */}
                         <div
-                            key={cat._id}
-                            onClick={() => setActiveCategory(cat._id)}
+                            onClick={() => setActiveCategory('foryou')}
                             style={{
-                                border: activeCategory === cat._id ? '2px solid #007bff' : '1px solid #ccc',
-                                borderRadius: '50%',
-                                marginBottom: '1rem',
-                                padding: '4px',
+                                backgroundColor: activeCategory === 'foryou' ? '#e0e0e0' : 'transparent',
+                                transform: activeCategory === 'foryou' ? 'scale(1.1)' : 'scale(1)',
+                                transition: 'all 0.2s ease',
+                                borderRadius: '12px',
+                                cursor: 'pointer',
+                                padding: '2px',
+                                display: 'flex',
+                                justifyContent: 'center',
                             }}
                         >
-                            <CategoryCard category={cat} />
+                            <CategoryCard category={{ name: 'For You', icon: 'None' }} />
                         </div>
-                    ))}
-                </div>
 
+                        <hr className="w-100 my-2" />
+
+                        {/* Other Categories */}
+                        {categories.map((cat, index) => (
+                            <div key={cat._id} className="w-100 d-flex flex-column align-items-center">
+                                <div
+                                    onClick={() => setActiveCategory(cat._id)}
+                                    style={{
+                                        backgroundColor: activeCategory === cat._id ? '#e0e0e0' : 'transparent',
+                                        transform: activeCategory === cat._id ? 'scale(1.1)' : 'scale(1)',
+                                        transition: 'all 0.2s ease',
+                                        borderRadius: '12px',
+                                        cursor: 'pointer',
+                                        padding: '2px',
+                                        display: 'flex',
+                                        justifyContent: 'center',
+                                    }}
+                                >
+                                    <CategoryCard category={cat} />
+                                </div>
+                                {index < categories.length - 1 && <hr className="w-100 my-2" />}
+                            </div>
+                        ))}
+                    </div>
+                </div>
                 {/* Main Content */}
                 <div className="col p-4 overflow-auto">
                     {activeCategory === 'foryou' ? renderForYouSections() : renderSelectedCategory()}
@@ -156,5 +167,4 @@ export default function Categories() {
             </div>
         </div>
     );
-
 }

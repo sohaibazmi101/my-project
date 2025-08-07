@@ -11,8 +11,8 @@ export default function CategoryCard({ category, onClick }) {
       <div
         className="rounded-circle shadow-sm bg-white d-flex align-items-center justify-content-center mx-auto"
         style={{
-          width: 70,
-          height: 70,
+          width: 50,
+          height: 50,
           overflow: 'hidden',
           border: '1px solid #ddd',
         }}
