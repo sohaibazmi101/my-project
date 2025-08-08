@@ -170,7 +170,7 @@ const [missingAddress, setMissingAddress] = useState({
   const images = product.images?.filter(Boolean) || [];
 
   return (
-    <div className="container-fluid pt-5 mt-5">
+    <div className="container-fluid mt-3">
       <div className="card mx-auto shadow-sm" style={{ maxWidth: '800px' }}>
         {/* Carousel */}
         {images.length > 0 && (

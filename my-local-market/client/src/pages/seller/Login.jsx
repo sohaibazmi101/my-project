@@ -4,7 +4,7 @@ import api from '../../services/api';
 import { useSeller } from '../../contexts/SellerContext';
 
 export default function Login() {
-  const [form, setForm] = useState({ email: '', password: '' });
+  const [form, setForm] = useState({ identifier: '', password: '' });
   const navigate = useNavigate();
   const { login } = useSeller();
 
@@ -38,14 +38,14 @@ export default function Login() {
 
         <form onSubmit={handleSubmit}>
           <div className="mb-3">
-            <label className="form-label">Email</label>
+            <label className="form-label">Email or Shop ID</label>
             <input
-              type="email"
-              name="email"
+              type="text"
+              name="identifier"
               className="form-control"
               onChange={handleChange}
               required
-              placeholder="you@example.com"
+              placeholder="you@example.com or SH10001"
             />
           </div>
 

@@ -2,7 +2,6 @@ const Shop = require('../models/Shop');
 const Product = require('../models/Product');
 const mongoose = require('mongoose');
 
-// Get current seller's shop details
 exports.getMyShop = async (req, res) => {
   try {
     const shop = await Shop.findOne({ sellerId: req.seller })
@@ -19,7 +18,6 @@ exports.getMyShop = async (req, res) => {
   }
 };
 
-// Update shop info (banner, description, name)
 exports.updateShopDetails = async (req, res) => {
   try {
     const { description, banner, name } = req.body;
@@ -37,7 +35,6 @@ exports.updateShopDetails = async (req, res) => {
   }
 };
 
-// Get all shops (for public view)
 exports.getAllShops = async (req, res) => {
   try {
     const shops = await Shop.find().select('-__v').lean(); // optional: clean response
@@ -48,12 +45,10 @@ exports.getAllShops = async (req, res) => {
   }
 };
 
-// Get a single shop by ID (for ShopDetails page)
 exports.getShopById = async (req, res) => {
   try {
     const { id } = req.params;
 
-    // Check if ID is a valid MongoDB ObjectId
     if (!mongoose.Types.ObjectId.isValid(id)) {
       return res.status(400).json({ message: 'Invalid shop ID' });
     }
@@ -66,10 +61,8 @@ exports.getShopById = async (req, res) => {
       return res.status(404).json({ message: 'Shop not found' });
     }
 
-    // ✅ Fetch all products belonging to this shop
     const products = await Product.find({ shop: id });
 
-    // ✅ Return both shop and products
     res.json({ shop, products });
   } catch (err) {
     console.error('❌ getShopById Error:', err.message);
@@ -78,13 +71,10 @@ exports.getShopById = async (req, res) => {
 };
 
 
-
-// Helper to toggle product in a shop's array field
 const toggleProductField = async (req, res, fieldName) => {
   try {
     const { productId } = req.params;
 
-    // Validate ObjectId
     if (!mongoose.Types.ObjectId.isValid(productId)) {
       return res.status(400).json({ message: 'Invalid product ID' });
     }
@@ -112,12 +102,10 @@ const toggleProductField = async (req, res, fieldName) => {
   }
 };
 
-// Toggle featured product
 exports.toggleFeaturedProduct = (req, res) => {
   toggleProductField(req, res, 'featuredProducts');
 };
 
-// Toggle new product
 exports.toggleNewProduct = (req, res) => {
   toggleProductField(req, res, 'newProducts');
 };

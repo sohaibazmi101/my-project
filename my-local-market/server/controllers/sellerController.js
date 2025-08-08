@@ -1,6 +1,7 @@
 const Seller = require('../models/Seller');
 const Shop = require('../models/Shop');
 const bcrypt = require('bcrypt');
+const Product = require('../models/Product');
 
 exports.registerSeller = async (req, res) => {
   try {
@@ -9,14 +10,11 @@ exports.registerSeller = async (req, res) => {
       shopCategory, whatsapp, location
     } = req.body;
 
-    // 1. Check if email already exists
     const existing = await Seller.findOne({ email });
     if (existing) return res.status(400).json({ message: 'Email already registered' });
 
-    // 2. Hash password
     const hashedPassword = await bcrypt.hash(password, 10);
 
-    // 3. Create seller with hashed password
     const seller = new Seller({
       name,
       email,
@@ -30,29 +28,42 @@ exports.registerSeller = async (req, res) => {
 
     await seller.save();
 
+    const lastShop = await Shop.findOne({})
+      .sort({ shopCode: -1 })
+      .exec();
+
+    let newShopNumber = 10001;
+    if (lastShop && lastShop.shopCode) {
+      const lastNumber = parseInt(lastShop.shopCode.replace(/^SH/, ''), 10);
+      if (!isNaN(lastNumber)) {
+        newShopNumber = lastNumber + 1;
+      }
+    }
+
+    const newShopCode = 'SH' + newShopNumber;
+
     const shop = new Shop({
       sellerId: seller._id,
+      shopCode: newShopCode,
       name,
       description: '',
       address,
       category: shopCategory,
       whatsapp,
       location,
-      banner: req.bannerUrl || '', //Use uploaded banner URL
+      banner: req.bannerUrl || '',
       featuredProducts: [],
       newProducts: [],
     });
 
     await shop.save();
 
-    res.status(201).json({ message: 'Seller and shop registered successfully' });
+    res.status(201).json({ message: 'Seller and shop registered successfully', shopCode: newShopCode });
   } catch (err) {
     console.error('Registration error:', err.message);
     res.status(500).json({ message: 'Registration error', error: err.message });
   }
 };
-
-const Product = require('../models/Product');
 
 exports.getSellerProfile = async (req, res) => {
   try {
@@ -74,4 +85,3 @@ exports.getSellerProfile = async (req, res) => {
     res.status(500).json({ message: 'Server error' });
   }
 };
-

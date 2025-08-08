@@ -1,34 +1,22 @@
-// server/controllers/authController.js
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const Seller = require('../models/Seller');
-
-exports.registerSeller = async (req, res) => {
-  try {
-    const { name, email, password, phone, address, shopCategory, whatsapp, location } = req.body;
-
-    const existing = await Seller.findOne({ email });
-    if (existing) return res.status(400).json({ message: 'Email already in use' });
-
-    const hashedPassword = await bcrypt.hash(password, 10);
-
-    const seller = await Seller.create({
-      name, email, password: hashedPassword, phone, address, shopCategory, whatsapp, location
-    });
-
-    res.status(201).json({ message: 'Seller registered successfully', sellerId: seller._id });
-  } catch (err) {
-    console.error('Register error:', err.message);
-    res.status(500).json({ message: 'Server error' });
-  }
-};
+const Shop = require('../models/Shop');
 
 exports.loginSeller = async (req, res) => {
   try {
-    const { email, password } = req.body;
+    const { identifier, password } = req.body;
+    let seller;
+    if (/^SH\d+$/.test(identifier)) {
+      const shop = await Shop.findOne({ shopCode: identifier });
+      if (!shop) return res.status(400).json({ message: 'Invalid credentials' });
 
-    const seller = await Seller.findOne({ email });
-    if (!seller) return res.status(400).json({ message: 'Invalid credentials' });
+      seller = await Seller.findById(shop.sellerId);
+      if (!seller) return res.status(400).json({ message: 'Invalid credentials' });
+    } else {
+      seller = await Seller.findOne({ email: identifier });
+      if (!seller) return res.status(400).json({ message: 'Invalid credentials' });
+    }
 
     const isMatch = await bcrypt.compare(password, seller.password);
     if (!isMatch) return res.status(400).json({ message: 'Invalid credentials' });

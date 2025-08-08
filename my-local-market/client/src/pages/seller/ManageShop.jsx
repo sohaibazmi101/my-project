@@ -121,6 +121,19 @@ export default function ManageShop() {
           onChange={handleInputChange}
         />
       </div>
+
+      <div className="mb-4">
+        <label>Shop ID</label>
+        <input
+          type="text"
+          className="form-control"
+          name="shopCode"
+          value={shop.shopCode || ''}
+          readOnly
+          disabled
+        />
+      </div>
+
       <div className="mb-4">
         <label>About Shop</label>
         <textarea
