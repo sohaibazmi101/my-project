@@ -32,6 +32,9 @@ import BottomNavbar from './components/BottomNavbar';
 import { useLocation } from 'react-router-dom';
 import Account from './pages/customer/Account';
 import PublicCategories from './pages/category/Categories';
+import EditProduct from './pages/seller/EditProduct';
+import CategoryView from './pages/category/CategoryView';
+import ManageOffers from './pages/admin/ManageOffers';
 
 
 function AppContent() {
@@ -55,6 +58,7 @@ function AppContent() {
         <Route path="/search" element={<SearchResults />} />
         <Route path="/featured" element={<FeaturedProducts />} />
         <Route path="/category/categories" element={<PublicCategories />} />
+        <Route path="/category/:categoryId" element={<CategoryView />} />
 
         {/* Seller Dashboard Routes (protected) */}
         <Route
@@ -74,6 +78,14 @@ function AppContent() {
           }
         />
         <Route
+          path="seller/products/edit/:id"
+          element={
+            <SellerProtectedRoute>
+              <EditProduct />
+            </SellerProtectedRoute>
+          }
+        />
+        <Route
           path="/sellers/me"
           element={
             <SellerProtectedRoute>
@@ -89,6 +101,7 @@ function AppContent() {
           <Route path="categories" element={<Categories />} />
           <Route path="featured" element={<AdminFeaturedProducts />} />
           <Route path="banners" element={<Banners />} />
+          <Route path="/admin/manage-offers" element={<ManageOffers />} />
         </Route>
 
         {/* Customer Routes (protected) */}

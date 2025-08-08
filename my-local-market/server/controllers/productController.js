@@ -1,7 +1,5 @@
-// server/controllers/productController.js
-const Product = require('../models/Product');
-
 const Shop = require('../models/Shop');
+const Product = require('../models/Product');
 
 exports.addProduct = async (req, res) => {
   try {
@@ -12,28 +10,50 @@ exports.addProduct = async (req, res) => {
       description,
       availability,
       images,
+      offer // <-- new
     } = req.body;
 
     if (!images || !images[0]) {
       return res.status(400).json({ message: 'At least one image is required' });
     }
 
-    // ✅ Get seller's shop first
     const shop = await Shop.findOne({ sellerId: req.seller });
     if (!shop) {
       return res.status(404).json({ message: 'Shop not found for this seller' });
     }
 
-    const product = await Product.create({
+    // Find last productCode and generate new one
+    const lastProduct = await Product.findOne({})
+      .sort({ productCode: -1 })
+      .exec();
+
+    let newProductNumber = 10001;
+    if (lastProduct && lastProduct.productCode) {
+      const lastNumber = parseInt(lastProduct.productCode.replace(/^PR/, ''), 10);
+      if (!isNaN(lastNumber)) {
+        newProductNumber = lastNumber + 1;
+      }
+    }
+
+    const newProductCode = 'PR' + newProductNumber;
+
+    const productData = {
       sellerId: req.seller,
-      shop: shop._id, // ✅ link product to the shop
+      shop: shop._id,
+      productCode: newProductCode,
       name,
       category,
       price,
       description,
       availability,
       images,
-    });
+    };
+
+    if (offer) {
+      productData.offer = offer;
+    }
+
+    const product = await Product.create(productData);
 
     res.status(201).json({ message: 'Product added', product });
   } catch (err) {
@@ -42,14 +62,13 @@ exports.addProduct = async (req, res) => {
   }
 };
 
-
 exports.editProduct = async (req, res) => {
   try {
-    // Optional: you can also validate here that `images` is valid if needed
+    // req.body can include offer object now
     const product = await Product.findOneAndUpdate(
       { _id: req.params.id, sellerId: req.seller },
       req.body,
-      { new: true }
+      { new: true, runValidators: true }
     );
 
     if (!product) {
@@ -63,8 +82,6 @@ exports.editProduct = async (req, res) => {
   }
 };
 
-
-
 exports.deleteProduct = async (req, res) => {
   try {
     const result = await Product.findOneAndDelete({ _id: req.params.id, sellerId: req.seller });
@@ -76,7 +93,6 @@ exports.deleteProduct = async (req, res) => {
   }
 };
 
-// Get all products (admin only)
 exports.getAllProducts = async (req, res) => {
   try {
     const products = await Product.find().populate('sellerId', 'name');
@@ -86,7 +102,6 @@ exports.getAllProducts = async (req, res) => {
   }
 };
 
-// Toggle featured status
 exports.toggleFeatured = async (req, res) => {
   try {
     const product = await Product.findById(req.params.id);
@@ -110,7 +125,6 @@ exports.getFeaturedProducts = async (req, res) => {
   }
 };
 
-// In productController.js
 exports.getNewArrivals = async (req, res) => {
   try {
     const products = await Product.find()
@@ -124,7 +138,6 @@ exports.getNewArrivals = async (req, res) => {
     res.status(500).json({ message: 'Error fetching product' });
   }
 };
-
 
 exports.searchProducts = async (req, res) => {
   const q = req.query.q;
@@ -147,5 +160,26 @@ exports.getProductsByCategory = async (req, res) => {
     res.json(products);
   } catch (err) {
     res.status(500).json({ message: 'Error fetching category products' });
+  }
+};
+
+// New: Get all active offers products
+exports.getOfferProducts = async (req, res) => {
+  try {
+    const now = new Date();
+    const products = await Product.find({
+      'offer.isActive': true,
+      $and: [
+        { $or: [{ 'offer.validFrom': { $exists: false } }, { 'offer.validFrom': { $lte: now } }] },
+        { $or: [{ 'offer.validTill': { $exists: false } }, { 'offer.validTill': { $gte: now } }] },
+      ],
+    })
+      .populate('sellerId', 'name')
+      .limit(10);
+
+    res.json(products);
+  } catch (err) {
+    console.error('Error fetching offer products:', err);
+    res.status(500).json({ message: 'Error fetching offers' });
   }
 };

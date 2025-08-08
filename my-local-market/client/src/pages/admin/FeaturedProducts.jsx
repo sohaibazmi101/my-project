@@ -3,12 +3,15 @@ import api from '../../services/api';
 
 export default function FeaturedProducts() {
   const [products, setProducts] = useState([]);
+  const [filteredProducts, setFilteredProducts] = useState([]);
+  const [searchCode, setSearchCode] = useState('');
 
   const fetchProducts = async () => {
     const res = await api.get('/admin/products', {
       headers: { Authorization: `Bearer ${localStorage.getItem('adminToken')}` }
     });
     setProducts(res.data);
+    setFilteredProducts(res.data);
   };
 
   const toggleFeatured = async (id) => {
@@ -22,14 +25,39 @@ export default function FeaturedProducts() {
     fetchProducts();
   }, []);
 
+  // Filter products by productCode whenever searchCode changes
+  useEffect(() => {
+  if (!searchCode) {
+    setFilteredProducts(products);
+  } else {
+    const filtered = products.filter(p =>
+      p.productCode && p.productCode.toLowerCase().includes(searchCode.toLowerCase())
+    );
+    setFilteredProducts(filtered);
+  }
+}, [searchCode, products]);
+
+
   return (
     <div>
       <h3>🌟 Manage Featured Products</h3>
+
+      {/* Search bar for productCode */}
+      <div className="mb-3">
+        <input
+          type="text"
+          className="form-control"
+          placeholder="Search by Product Code..."
+          value={searchCode}
+          onChange={(e) => setSearchCode(e.target.value)}
+        />
+      </div>
 
       <table className="table table-bordered mt-3">
         <thead>
           <tr>
             <th>#</th>
+            <th>Product Code</th>
             <th>Product</th>
             <th>Category</th>
             <th>Seller</th>
@@ -39,9 +67,10 @@ export default function FeaturedProducts() {
           </tr>
         </thead>
         <tbody>
-          {products.map((p, i) => (
+          {filteredProducts.map((p, i) => (
             <tr key={p._id}>
               <td>{i + 1}</td>
+              <td>{p.productCode}</td>
               <td>{p.name}</td>
               <td>{p.category}</td>
               <td>{p.sellerId?.name || 'N/A'}</td>
@@ -63,9 +92,9 @@ export default function FeaturedProducts() {
               </td>
             </tr>
           ))}
-          {products.length === 0 && (
+          {filteredProducts.length === 0 && (
             <tr>
-              <td colSpan="7" className="text-center">No products available</td>
+              <td colSpan="8" className="text-center">No products available</td>
             </tr>
           )}
         </tbody>

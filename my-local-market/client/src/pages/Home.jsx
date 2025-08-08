@@ -11,9 +11,9 @@ export default function Home() {
   const [banners, setBanners] = useState([]);
   const [currentBanner, setCurrentBanner] = useState(0);
   const [newArrivals, setNewArrivals] = useState([]);
-  const navigate = useNavigate();
   const [bestSellers, setBestSellers] = useState([]);
   const [search, setSearch] = useState('');
+  const navigate = useNavigate();
 
   const handleSearch = (e) => {
     e.preventDefault();
@@ -22,13 +22,22 @@ export default function Home() {
       setSearch('');
     }
   };
-
-
   useEffect(() => {
-    api.get('/categories').then((res) => setCategories(res.data)).catch((err) => console.error('Category error:', err));
-    api.get('/products/banners').then(res => setBanners(res.data)).catch(() => setBanners([]));
-    api.get('/products/featured').then((res) => setFeatured(res.data)).catch((err) => console.error('Featured error:', err));
-    api.get('/products/new-arrivals').then(res => setNewArrivals(res.data)).catch(err => console.error('Error loading new arrivals:', err));
+    api.get('/categories')
+      .then((res) => setCategories(res.data))
+      .catch((err) => console.error('Category error:', err));
+
+    api.get('/products/banners')
+      .then(res => setBanners(res.data))
+      .catch(() => setBanners([]));
+
+    api.get('/products/featured')
+      .then((res) => setFeatured(res.data))
+      .catch((err) => console.error('Featured error:', err));
+
+    api.get('/products/new-arrivals')
+      .then(res => setNewArrivals(res.data))
+      .catch(err => console.error('Error loading new arrivals:', err));
   }, []);
 
   useEffect(() => {
@@ -42,13 +51,12 @@ export default function Home() {
   useEffect(() => {
     api.get('/')
       .then((res) => {
-        setBestSellers(res.data.slice(0, 10));
+        setBestSellers(res.data);
       })
       .catch((err) => {
-        console.error('Error fetching best sellers:', err.message);
+        console.error('Error fetching shops:', err.message);
       });
   }, []);
-
 
   return (
     <div className="container-fluid pt-5 mt-4">
@@ -58,14 +66,14 @@ export default function Home() {
         style={{
           background: 'linear-gradient(to bottom, #05213fff, #0b77e2ff)',
           color: 'white',
-          paddingTop: '20px',
-          paddingBottom: '15px'
+          paddingTop: '10px',
+          paddingBottom: '1px'
         }}
       >
         {/* Heading and Paragraph */}
         <div className="text-center mb-4">
-          <h2 className="fw-bold mb-3">Shop more. Spend less.</h2>
-          <p className="mb-4 fs-8">From our store to your door — with love.</p>
+          <h2 className="fw-bold mb-3">Shop more, Spend less</h2>
+          <p className="mb-4 fs-8">From our store to your door — with love</p>
 
           {/* Search Bar */}
           <form
@@ -94,6 +102,7 @@ export default function Home() {
             onTouchEnd={(e) => {
               const deltaX = e.changedTouches[0].clientX - window.touchX;
               if (deltaX < -50) setCurrentBanner((prev) => (prev + 1) % banners.length);
+              else if (deltaX > 50) setCurrentBanner((prev) => (prev - 1 + banners.length) % banners.length);
             }}
           >
             <div className="carousel-inner position-relative">
@@ -117,7 +126,8 @@ export default function Home() {
               <button
                 className="carousel-control-prev"
                 style={{ left: '10px', zIndex: 2 }}
-                onClick={() => setCurrentBanner((prev) => (prev + 1) % banners.length)}
+                onClick={() => setCurrentBanner((prev) => (prev - 1 + banners.length) % banners.length)}
+                aria-label="Previous Slide"
               >
                 <span className="carousel-control-prev-icon bg-dark rounded-circle" />
               </button>
@@ -125,6 +135,7 @@ export default function Home() {
                 className="carousel-control-next"
                 style={{ right: '10px', zIndex: 2 }}
                 onClick={() => setCurrentBanner((prev) => (prev + 1) % banners.length)}
+                aria-label="Next Slide"
               >
                 <span className="carousel-control-next-icon bg-dark rounded-circle" />
               </button>
@@ -140,7 +151,6 @@ export default function Home() {
         )}
       </div>
 
-
       {/* Top Sellers / Categories */}
       <div className="mb-2" style={{ marginTop: '5px' }}>
         <h5 style={{ marginBottom: '6px' }}>Top Sellers</h5>
@@ -153,19 +163,25 @@ export default function Home() {
               overflowY: 'hidden',
             }}
           >
-            {categories.map((cat) => (
-              <div key={cat._id} style={{ flex: '0 0 auto' }}>
-                <CategoryCard category={cat} />
-              </div>
-            ))}
+            {categories
+              .slice()
+              .sort((a, b) => a.rank - b.rank)
+              .map((cat) => (
+                <div
+                  key={cat._id}
+                  style={{ flex: '0 0 auto', cursor: 'pointer' }}
+                  onClick={() => navigate(`/category/${cat._id}`)}
+                >
+                  <CategoryCard category={cat} />
+                </div>
+              ))}
           </div>
         )}
       </div>
-      
       {/* Featured */}
       <div
         style={{
-          background: 'linear-gradient(to bottom, #5be87cff, #f6fff8)', // Light green → lighter green
+          background: 'linear-gradient(to bottom, #5be87cff, #f6fff8)',
           borderRadius: '8px',
           padding: '1rem',
           paddingBottom: '0.5rem'
@@ -232,16 +248,17 @@ export default function Home() {
         </div>
       </div>
 
-      {/* Best Sellers */}
+      {/* Top Sellers */}
       <div
         style={{
           background: 'linear-gradient(to bottom, #4fed74ff, #f6fff8)',
           borderRadius: '8px',
           padding: '1rem',
-          paddingBottom: '0.5rem'
+          paddingBottom: '0.5rem',
+          marginTop: '1rem'  // add some spacing above this section
         }}
       >
-        <h5 className="mb-2">Best Sellers</h5>
+        <h5 className="mb-2">Top Sellers</h5>
         <div
           className="scroll-container pb-1 d-flex hide-scroll"
           style={{
@@ -257,10 +274,11 @@ export default function Home() {
               </div>
             ))
           ) : (
-            <p>No best sellers yet</p>
+            <p>No top sellers yet</p>
           )}
         </div>
       </div>
+
 
       {/* CTA */}
       <div className="text-center mb-4 px-3">

@@ -5,7 +5,7 @@ export default function Footer() {
         <p className="mb-1">© {new Date().getFullYear()} HarCheezNow. All rights reserved.</p>
         <small className="d-block">
           <i className="bi bi-ui-checks-grid me-1"></i>
-          Designed by Soaid Azmi
+          Designed by Soaid Shams
         </small>
         <small className="d-block mt-1">
           <i className="bi bi-code-slash me-1"></i>

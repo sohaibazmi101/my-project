@@ -11,6 +11,8 @@ const {
   searchProducts,
   getNewArrivals,
   getProductsByCategory,
+  getOfferProducts,
+  getAllProducts,
 } = require('../controllers/productController');
 
 const { getBanners } = require('../controllers/bannerController');
@@ -30,9 +32,14 @@ router.post('/products/upload', auth, upload.single('image'), async (req, res) =
 
 router.get('/products/search', searchProducts);
 
+router.get('/products', getAllProducts);
+
+
 router.get('/products/featured', getFeaturedProducts);
 
 router.get('/products/new-arrivals', getNewArrivals);
+
+router.get('/products/offers', getOfferProducts);
 
 router.get('/products/banners', getBanners);
 

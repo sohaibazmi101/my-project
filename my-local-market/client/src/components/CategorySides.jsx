@@ -1,16 +1,10 @@
 import React from 'react';
 
-export default function CategoryCard({ category, onClick }) {
+export default function CategoryCard({ category }) {
   return (
     <div
-      className="text-center mx-2 my-2"
-      style={{ cursor: onClick ? 'pointer' : 'default' }}
-      onClick={onClick}
-      role={onClick ? 'button' : undefined}
-      tabIndex={onClick ? 0 : undefined}
-      onKeyPress={(e) => {
-        if (onClick && (e.key === 'Enter' || e.key === ' ')) onClick();
-      }}
+      className="text-center"
+      style={{ cursor: 'default', margin: '4px 8px' }} // less margin: 4px vertical, 8px horizontal
     >
       <div
         className="rounded-circle shadow-sm bg-white d-flex align-items-center justify-content-center mx-auto"
@@ -31,7 +25,7 @@ export default function CategoryCard({ category, onClick }) {
           <span style={{ fontSize: '1.5rem' }}>?</span>
         )}
       </div>
-      <div style={{ fontSize: '0.85rem', marginTop: 6 }}>{category.name}</div>
+      <div style={{ fontSize: '0.85rem', marginTop: 3 }}>{category.name}</div> {/* reduced marginTop */}
     </div>
   );
 }

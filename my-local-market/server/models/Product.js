@@ -1,6 +1,6 @@
 const mongoose = require('mongoose');
 require('./Seller');
-require('./Shop'); // optional but good to include for completeness
+require('./Shop');
 
 const productSchema = new mongoose.Schema({
   sellerId: {
@@ -12,6 +12,18 @@ const productSchema = new mongoose.Schema({
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Shop',
     required: true
+  },
+  productCode: {
+    type: String,
+    unique: true,
+    required: true
+  },
+  offer: {
+    isActive: { type: Boolean, default: false },
+    percentage: { type: Number, default: 0 },
+    previousPrice: { type: Number },
+    validFrom: { type: Date },
+    validTill: { type: Date },
   },
   name: { type: String, required: true },
   category: { type: String, required: true },

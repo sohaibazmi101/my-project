@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import api from '../../services/api';
+import ProductCardForSeller from '../../components/ProductCardForSeller';
 
 export default function ManageShop() {
   const [shop, setShop] = useState(null);
@@ -21,23 +22,24 @@ export default function ManageShop() {
           Authorization: `Bearer ${token}`,
         },
       });
-
       const shop = res.data.shop;
       const products = res.data.products;
+
+      // Normalize IDs and flags for consistency
       shop.featuredProducts = (shop.featuredProducts || []).map(id => id.toString());
       shop.newProducts = (shop.newProducts || []).map(id => id.toString());
+
       const normalizedProducts = (products || []).map(p => ({
         ...p,
         _id: p._id.toString()
       }));
+
       setShop(shop);
       setProducts(normalizedProducts);
       setBanner(shop.banner || '');
-
-      console.log('Loaded shop:', shop);
-
     } catch (err) {
       console.error('Failed to fetch shop data:', err);
+      alert('Failed to load shop data');
     }
   };
 
@@ -80,6 +82,7 @@ export default function ManageShop() {
         headers: { Authorization: `Bearer ${token}` }
       });
       alert('Shop updated successfully');
+      fetchShop(); // refresh after save
     } catch (err) {
       console.error(err);
       alert('Failed to update shop');
@@ -96,6 +99,7 @@ export default function ManageShop() {
       updatedShop[fieldKey] = [...updatedShop[fieldKey], idStr];
     }
     setShop(updatedShop);
+
     try {
       await api.patch(`/shops/${shop._id}/product/${idStr}/toggle-${field}`, null, {
         headers: { Authorization: `Bearer ${token}` }
@@ -106,9 +110,30 @@ export default function ManageShop() {
       fetchShop(); // fallback in case toggle fails
     }
   };
+
+  const handleDeleteProduct = async (productId) => {
+    if (!window.confirm('Are you sure you want to delete this product?')) return;
+
+    try {
+      await api.delete(`/products/${productId}/delete`, { // <-- add /delete here
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      alert('Product deleted');
+      fetchShop(); // refresh product list
+    } catch (err) {
+      console.error('Delete product error:', err);
+      alert('Failed to delete product');
+    }
+  };
+
+  const handleEditProduct = (productId) => {
+    navigate(`/seller/products/edit/${productId}`);
+  };
+
   if (!shop) return <div className="text-center mt-5">Loading shop...</div>;
+
   return (
-    <div className="container pt-5 mt-5">
+    <div className="container mt-5">
       <h2>Manage Your Shop</h2>
 
       <div className="mb-4">
@@ -144,6 +169,7 @@ export default function ManageShop() {
           rows="3"
         />
       </div>
+
       <div className="mb-4">
         <label>Shop Location</label>
         <input
@@ -154,12 +180,14 @@ export default function ManageShop() {
           onChange={handleInputChange}
         />
       </div>
+
       <div className="mb-4">
         <label>Shop Banner</label>
         <input
           type="file"
           className="form-control"
           onChange={(e) => handleBannerUpload(e.target.files[0])}
+          disabled={uploading}
         />
         {banner && (
           <img
@@ -170,62 +198,29 @@ export default function ManageShop() {
           />
         )}
       </div>
+
       <button className="btn btn-success mb-5" onClick={handleShopSave} disabled={uploading}>
         {uploading ? 'Uploading...' : 'Save Shop Info'}
       </button>
+
       <hr />
+
       <h4>Your Products</h4>
       {products.length === 0 ? (
         <p>No products found</p>
       ) : (
         <div className="row">
           {products.map((product) => (
-            <div className="col-md-4 mb-3" key={product._id}>
-              <div className="card h-100">
-                <img
-                  src={product.images?.[0]}
-                  alt={product.name}
-                  className="card-img-top"
-                  style={{ height: '180px', objectFit: 'cover' }}
-                />
-                <div className="card-body">
-                  <h5>{product.name}</h5>
-                  <p>₹{product.price}</p>
-
-                  {/* Featured Button */}
-                  {shop.featuredProducts.includes(product._id.toString()) ? (
-                    <button
-                      className="btn btn-warning btn-sm me-2"
-                      onClick={() => toggleProductFlag(product._id, 'featured')}
-                    >
-                      Unmark Featured
-                    </button>
-                  ) : (
-                    <button
-                      className="btn btn-outline-warning btn-sm me-2"
-                      onClick={() => toggleProductFlag(product._id, 'featured')}
-                    >
-                      Mark as Featured
-                    </button>
-                  )}
-                  {/* New Button */}
-                  {shop.newProducts.includes(product._id.toString()) ? (
-                    <button
-                      className="btn btn-info btn-sm"
-                      onClick={() => toggleProductFlag(product._id, 'new')}
-                    >
-                      Unmark New
-                    </button>
-                  ) : (
-                    <button
-                      className="btn btn-outline-info btn-sm"
-                      onClick={() => toggleProductFlag(product._id, 'new')}
-                    >
-                      Mark as New
-                    </button>
-                  )}
-                </div>
-              </div>
+            <div key={product._id} className="col-6 col-md-4 mb-3">
+              <ProductCardForSeller
+                product={product}
+                isFeatured={shop.featuredProducts.includes(product._id.toString())}
+                isNew={shop.newProducts.includes(product._id.toString())}
+                onToggleFeatured={(id) => toggleProductFlag(id, 'featured')}
+                onToggleNew={(id) => toggleProductFlag(id, 'new')}
+                onEdit={handleEditProduct}
+                onDelete={handleDeleteProduct}
+              />
             </div>
           ))}
         </div>

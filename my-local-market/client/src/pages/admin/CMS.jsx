@@ -5,7 +5,7 @@ export default function CMS() {
   const [content, setContent] = useState('');
   const [loading, setLoading] = useState(true);
 
-  const section = 'homepage'; // can be "about", "footer" etc.
+  const section = 'homepage';
 
   useEffect(() => {
     api.get(`/admin/cms/${section}`, {
