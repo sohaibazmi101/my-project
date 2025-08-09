@@ -20,9 +20,11 @@ const {
 
 router.get('/', getAllShops);
 
-router.get('/shops/:id', getShopById);
-
+// THIS ROUTE MUST COME FIRST to be correctly matched
 router.get('/shops/featured', getFeaturedShops);
+
+// THIS ROUTE MUST COME AFTER the more specific ones
+router.get('/shops/:id', getShopById);
 
 // --- Seller Protected Routes ---
 
@@ -38,6 +40,8 @@ router.post('/shops/banner/upload', auth, uploadBanner, (req, res) => {
 
 router.patch('/shops/:id/product/:productId/toggle-featured', auth, toggleFeaturedProduct);
 router.patch('/shops/:id/product/:productId/toggle-new', auth, toggleNewProduct);
+
+// --- Admin Protected Routes ---
 router.get('/admin/shops/all', adminAuth, getAllShopsForAdmin);
 router.post('/admin/shops/featured', adminAuth, updateFeaturedShops);
 

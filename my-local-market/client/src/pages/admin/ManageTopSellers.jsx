@@ -13,8 +13,10 @@ export default function ManageTopSellers() {
       setLoading(true);
       try {
         const [allShopsRes, featuredShopsRes] = await Promise.all([
-          api.get('/admin/shops/all'),
-          api.get('/shops/featured') // This is the public endpoint
+          api.get('/admin/shops/all', {
+            headers: { Authorization: `Bearer ${localStorage.getItem('adminToken')}` }
+          }),
+          api.get('/shops/featured') // This is the public endpoint and does not require a token
         ]);
         setAllShops(allShopsRes.data);
         setFeaturedShops(featuredShopsRes.data);
