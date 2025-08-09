@@ -64,7 +64,8 @@ exports.addProduct = async (req, res) => {
 
 exports.editProduct = async (req, res) => {
   try {
-    const query = { _id: req.params.id };
+    // Change _id to productCode
+    const query = { productCode: req.params.productCode };
 
     // If not admin, ensure the seller owns the product
     if (!req.user?.isAdmin) {
@@ -89,7 +90,8 @@ exports.editProduct = async (req, res) => {
 
 exports.deleteProduct = async (req, res) => {
   try {
-    const query = { _id: req.params.id };
+    // Change _id to productCode
+    const query = { productCode: req.params.productCode };
 
     if (!req.user?.isAdmin) {
       query.sellerId = req.seller;

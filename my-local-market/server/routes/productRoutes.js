@@ -61,7 +61,7 @@ router.get('/products/category/:name', getProductsByCategory);
 
 // Seller or admin protected routes
 router.post('/products/add', sellerOrAdminAuth, addProduct);
-router.put('/products/:id/edit', sellerOrAdminAuth, editProduct);
-router.delete('/products/:id/delete', sellerOrAdminAuth, deleteProduct);
+router.put('/products/:productCode/edit', sellerOrAdminAuth, editProduct);
+router.delete('/products/:productCode/delete', sellerOrAdminAuth, deleteProduct);
 
 module.exports = router;
