@@ -6,19 +6,22 @@ export default function TopCategoriesSection() {
   const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(true);
 
+  // ...
   useEffect(() => {
     const fetchCategories = async () => {
       try {
         const res = await api.get('/categories/top-with-products');
+        console.log('API Response Data:', res.data); // <-- Add this line
         setCategories(res.data);
       } catch (error) {
-        console.error('Failed to fetch top categories:', error);
+        // ...
       } finally {
         setLoading(false);
       }
     };
     fetchCategories();
   }, []);
+// ...
 
   if (loading) {
     return (

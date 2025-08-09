@@ -197,3 +197,32 @@ exports.getOfferProducts = async (req, res) => {
     res.status(500).json({ message: 'Error fetching offers' });
   }
 };
+
+exports.getProductsByCategoryRandom = async (req, res) => {
+  try {
+    const { categoryId } = req.params;
+
+    if (!mongoose.Types.ObjectId.isValid(categoryId)) {
+      return res.status(400).json({ message: 'Invalid category ID' });
+    }
+
+    const products = await Product.aggregate([
+      { $match: { category: new mongoose.Types.ObjectId(categoryId) } },
+      { $sample: { size: 20 } },
+      {
+        $lookup: {
+          from: 'shops',
+          localField: 'shop',
+          foreignField: '_id',
+          as: 'shopDetails'
+        }
+      },
+      { $unwind: '$shopDetails' }
+    ]);
+    
+    res.json(products);
+  } catch (error) {
+    console.error('❌ getProductsByCategoryRandom Error:', error.message);
+    res.status(500).json({ message: 'Server error' });
+  }
+};

@@ -13,6 +13,7 @@ const {
   getProductsByCategory,
   getOfferProducts,
   getAllProducts,
+  getProductsByCategoryRandom,
 } = require('../controllers/productController');
 
 const { getBanners } = require('../controllers/bannerController');
@@ -58,6 +59,7 @@ router.get('/products/:id', async (req, res) => {
 });
 
 router.get('/products/category/:name', getProductsByCategory);
+router.get('/products/category/:categoryId/random', getProductsByCategoryRandom);
 
 // Seller or admin protected routes
 router.post('/products/add', sellerOrAdminAuth, addProduct);
