@@ -25,7 +25,6 @@ export default function FeaturedProducts() {
     fetchProducts();
   }, []);
 
-  // Filter products by productCode whenever searchCode changes
   useEffect(() => {
   if (!searchCode) {
     setFilteredProducts(products);
@@ -40,7 +39,7 @@ export default function FeaturedProducts() {
 
   return (
     <div>
-      <h3>🌟 Manage Featured Products</h3>
+      <h3>Manage Featured Products</h3>
 
       {/* Search bar for productCode */}
       <div className="mb-3">

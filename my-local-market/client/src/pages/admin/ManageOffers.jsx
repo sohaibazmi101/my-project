@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import api from '../../services/api';
 
 export default function ManageOffers() {
   const [products, setProducts] = useState([]);
@@ -13,8 +14,7 @@ export default function ManageOffers() {
   });
   const [error, setError] = useState(null);
   const [saving, setSaving] = useState(false);
-
-  const adminToken = localStorage.getItem('adminToken');
+  const [searchTerm, setSearchTerm] = useState('');
 
   useEffect(() => {
     fetchProducts();
@@ -24,14 +24,14 @@ export default function ManageOffers() {
     setLoading(true);
     setError(null);
     try {
-      const res = await fetch('/api/products', {
-        headers: { Authorization: `Bearer ${adminToken}` },
+      const res = await api.get('/admin/products', {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem('adminToken')}`,
+        },
       });
-      if (!res.ok) throw new Error('Failed to fetch products');
-      const data = await res.json();
-      setProducts(data);
+      setProducts(res.data || []);
     } catch (err) {
-      setError(err.message);
+      setError(err.response?.data?.message || err.message);
     } finally {
       setLoading(false);
     }
@@ -43,8 +43,8 @@ export default function ManageOffers() {
       isActive: product.offer?.isActive || false,
       percentage: product.offer?.percentage || 0,
       previousPrice: product.offer?.previousPrice || product.price || '',
-      validFrom: product.offer?.validFrom ? product.offer.validFrom.slice(0,10) : '',
-      validTill: product.offer?.validTill ? product.offer.validTill.slice(0,10) : '',
+      validFrom: product.offer?.validFrom ? product.offer.validFrom.slice(0, 10) : '',
+      validTill: product.offer?.validTill ? product.offer.validTill.slice(0, 10) : '',
     });
     setError(null);
   }
@@ -56,17 +56,28 @@ export default function ManageOffers() {
 
   function handleChange(e) {
     const { name, value, type, checked } = e.target;
-    setFormData((prev) => ({
-      ...prev,
-      [name]: type === 'checkbox' ? checked : value,
-    }));
+    setFormData((prev) => {
+      let updated = {
+        ...prev,
+        [name]: type === 'checkbox' ? checked : value,
+      };
+
+      // Auto-update price based on percentage
+      if (name === 'percentage' && selectedProduct) {
+        const originalPrice = selectedProduct.price;
+        const discount = (originalPrice * value) / 100;
+        updated.previousPrice = originalPrice;
+        updated.calculatedPrice = originalPrice - discount;
+      }
+
+      return updated;
+    });
   }
 
   async function handleSaveOffer(e) {
     e.preventDefault();
     setError(null);
 
-    // Basic validation
     const { isActive, percentage, previousPrice, validFrom, validTill } = formData;
     if (isActive) {
       if (percentage < 0 || percentage > 100) {
@@ -77,10 +88,6 @@ export default function ManageOffers() {
         setError('Previous price must be a positive number');
         return;
       }
-      if (Number(previousPrice) <= selectedProduct.price) {
-        setError('Previous price should be greater than current price');
-        return;
-      }
       if (validFrom && validTill && validFrom > validTill) {
         setError('Valid From date must be before Valid Till date');
         return;
@@ -89,54 +96,65 @@ export default function ManageOffers() {
 
     setSaving(true);
     try {
+      const originalPrice = selectedProduct.price;
+      const discount = (originalPrice * percentage) / 100;
+      const newPrice = originalPrice - discount;
+
       const body = {
-        offer: {
-          isActive,
-          percentage: Number(percentage),
-          previousPrice: Number(previousPrice),
-          validFrom: validFrom ? new Date(validFrom).toISOString() : null,
-          validTill: validTill ? new Date(validTill).toISOString() : null,
-        },
+        price: isActive ? newPrice : originalPrice, // update price directly
+        offer: isActive
+          ? {
+              isActive,
+              percentage: Number(percentage),
+              previousPrice: Number(originalPrice),
+              validFrom: validFrom ? new Date(validFrom).toISOString() : null,
+              validTill: validTill ? new Date(validTill).toISOString() : null,
+            }
+          : {
+              isActive: false,
+              percentage: 0,
+              previousPrice: null,
+              validFrom: null,
+              validTill: null,
+            },
       };
 
-      // If offer disabled, clear all offer fields
-      if (!isActive) {
-        body.offer = {
-          isActive: false,
-          percentage: 0,
-          previousPrice: null,
-          validFrom: null,
-          validTill: null,
-        };
-      }
+      await api.put(
+        `/products/${selectedProduct._id}/edit`,
+        body,
+        {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem('adminToken')}`,
+          },
+        }
+      );
 
-      const res = await fetch(`/api/products/${selectedProduct._id}/edit`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${adminToken}`,
-        },
-        body: JSON.stringify(body),
-      });
-
-      if (!res.ok) {
-        const errData = await res.json();
-        throw new Error(errData.message || 'Failed to save offer');
-      }
-
-      // Refresh products list
       await fetchProducts();
       closeOfferForm();
     } catch (err) {
-      setError(err.message);
+      setError(err.response?.data?.message || err.message);
     } finally {
       setSaving(false);
     }
   }
 
+  const filteredProducts = products.filter((p) =>
+    p.productCode?.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
   return (
     <div className="container mt-4">
       <h2>Manage Product Offers</h2>
+
+      <div className="mb-3">
+        <input
+          type="text"
+          placeholder="Search by Product Code"
+          className="form-control"
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+        />
+      </div>
 
       {loading && <p>Loading products...</p>}
       {error && <div className="alert alert-danger">{error}</div>}
@@ -145,6 +163,7 @@ export default function ManageOffers() {
         <table className="table table-bordered table-hover mt-3">
           <thead className="table-light">
             <tr>
+              <th>Product Code</th>
               <th>Product Name</th>
               <th>Category</th>
               <th>Price (₹)</th>
@@ -157,21 +176,32 @@ export default function ManageOffers() {
             </tr>
           </thead>
           <tbody>
-            {products.length === 0 && (
+            {filteredProducts.length === 0 && (
               <tr>
-                <td colSpan="9" className="text-center">No products found.</td>
+                <td colSpan="10" className="text-center">
+                  No products found.
+                </td>
               </tr>
             )}
-            {products.map((prod) => (
+            {filteredProducts.map((prod) => (
               <tr key={prod._id}>
+                <td>{prod.productCode}</td>
                 <td>{prod.name}</td>
                 <td>{prod.category}</td>
                 <td>{prod.price.toFixed(2)}</td>
                 <td>{prod.offer?.isActive ? 'Yes' : 'No'}</td>
                 <td>{prod.offer?.percentage ?? '-'}</td>
                 <td>{prod.offer?.previousPrice ?? '-'}</td>
-                <td>{prod.offer?.validFrom ? new Date(prod.offer.validFrom).toLocaleDateString() : '-'}</td>
-                <td>{prod.offer?.validTill ? new Date(prod.offer.validTill).toLocaleDateString() : '-'}</td>
+                <td>
+                  {prod.offer?.validFrom
+                    ? new Date(prod.offer.validFrom).toLocaleDateString()
+                    : '-'}
+                </td>
+                <td>
+                  {prod.offer?.validTill
+                    ? new Date(prod.offer.validTill).toLocaleDateString()
+                    : '-'}
+                </td>
                 <td>
                   <button
                     className="btn btn-sm btn-primary"
@@ -188,12 +218,24 @@ export default function ManageOffers() {
 
       {/* Offer Edit Modal */}
       {selectedProduct && (
-        <div className="modal show d-block" tabIndex="-1" role="dialog" style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}>
+        <div
+          className="modal show d-block"
+          tabIndex="-1"
+          role="dialog"
+          style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}
+        >
           <div className="modal-dialog" role="document">
             <form className="modal-content" onSubmit={handleSaveOffer}>
               <div className="modal-header">
-                <h5 className="modal-title">Edit Offer - {selectedProduct.name}</h5>
-                <button type="button" className="btn-close" onClick={closeOfferForm} aria-label="Close" />
+                <h5 className="modal-title">
+                  Edit Offer - {selectedProduct.name}
+                </h5>
+                <button
+                  type="button"
+                  className="btn-close"
+                  onClick={closeOfferForm}
+                  aria-label="Close"
+                />
               </div>
               <div className="modal-body">
                 {error && <div className="alert alert-danger">{error}</div>}
@@ -207,11 +249,18 @@ export default function ManageOffers() {
                     checked={formData.isActive}
                     onChange={handleChange}
                   />
-                  <label className="form-check-label" htmlFor="isActive">Offer Active</label>
+                  <label
+                    className="form-check-label"
+                    htmlFor="isActive"
+                  >
+                    Offer Active
+                  </label>
                 </div>
 
                 <div className="mb-3">
-                  <label htmlFor="percentage" className="form-label">Discount Percentage (%)</label>
+                  <label htmlFor="percentage" className="form-label">
+                    Discount Percentage (%)
+                  </label>
                   <input
                     type="number"
                     className="form-control"
@@ -227,23 +276,25 @@ export default function ManageOffers() {
                 </div>
 
                 <div className="mb-3">
-                  <label htmlFor="previousPrice" className="form-label">Previous Price (₹)</label>
+                  <label className="form-label">
+                    Calculated Price (₹)
+                  </label>
                   <input
                     type="number"
                     className="form-control"
-                    id="previousPrice"
-                    name="previousPrice"
-                    min="0"
-                    step="0.01"
-                    value={formData.previousPrice}
-                    onChange={handleChange}
-                    disabled={!formData.isActive}
-                    required={formData.isActive}
+                    value={
+                      selectedProduct
+                        ? (selectedProduct.price - (selectedProduct.price * formData.percentage) / 100).toFixed(2)
+                        : ''
+                    }
+                    readOnly
                   />
                 </div>
 
                 <div className="mb-3">
-                  <label htmlFor="validFrom" className="form-label">Valid From</label>
+                  <label htmlFor="validFrom" className="form-label">
+                    Valid From
+                  </label>
                   <input
                     type="date"
                     className="form-control"
@@ -256,7 +307,9 @@ export default function ManageOffers() {
                 </div>
 
                 <div className="mb-3">
-                  <label htmlFor="validTill" className="form-label">Valid Till</label>
+                  <label htmlFor="validTill" className="form-label">
+                    Valid Till
+                  </label>
                   <input
                     type="date"
                     className="form-control"
@@ -269,8 +322,18 @@ export default function ManageOffers() {
                 </div>
               </div>
               <div className="modal-footer">
-                <button type="button" className="btn btn-secondary" onClick={closeOfferForm}>Cancel</button>
-                <button type="submit" className="btn btn-primary" disabled={saving}>
+                <button
+                  type="button"
+                  className="btn btn-secondary"
+                  onClick={closeOfferForm}
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="btn btn-primary"
+                  disabled={saving}
+                >
                   {saving ? 'Saving...' : 'Save Offer'}
                 </button>
               </div>

@@ -10,7 +10,7 @@ exports.addProduct = async (req, res) => {
       description,
       availability,
       images,
-      offer // <-- new
+      offer
     } = req.body;
 
     if (!images || !images[0]) {
@@ -64,12 +64,17 @@ exports.addProduct = async (req, res) => {
 
 exports.editProduct = async (req, res) => {
   try {
-    // req.body can include offer object now
-    const product = await Product.findOneAndUpdate(
-      { _id: req.params.id, sellerId: req.seller },
-      req.body,
-      { new: true, runValidators: true }
-    );
+    const query = { _id: req.params.id };
+
+    // If not admin, ensure the seller owns the product
+    if (!req.user?.isAdmin) {
+      query.sellerId = req.seller;
+    }
+
+    const product = await Product.findOneAndUpdate(query, req.body, {
+      new: true,
+      runValidators: true
+    });
 
     if (!product) {
       return res.status(404).json({ message: 'Product not found or unauthorized' });
@@ -84,14 +89,24 @@ exports.editProduct = async (req, res) => {
 
 exports.deleteProduct = async (req, res) => {
   try {
-    const result = await Product.findOneAndDelete({ _id: req.params.id, sellerId: req.seller });
-    if (!result) return res.status(404).json({ message: 'Product not found or unauthorized' });
+    const query = { _id: req.params.id };
+
+    if (!req.user?.isAdmin) {
+      query.sellerId = req.seller;
+    }
+
+    const result = await Product.findOneAndDelete(query);
+    if (!result) {
+      return res.status(404).json({ message: 'Product not found or unauthorized' });
+    }
 
     res.json({ message: 'Product deleted' });
   } catch (err) {
+    console.error(err);
     res.status(500).json({ message: 'Server error' });
   }
 };
+
 
 exports.getAllProducts = async (req, res) => {
   try {
