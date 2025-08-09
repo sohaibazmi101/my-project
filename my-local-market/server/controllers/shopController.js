@@ -11,7 +11,7 @@ exports.getMyShop = async (req, res) => {
 
     const products = await Product.find({ sellerId: req.seller });
 
-    res.json({ shop, products }); // ✅ frontend expects this format
+    res.json({ shop, products });
   } catch (err) {
     console.error('❌ getMyShop Error:', err.message);
     res.status(500).json({ message: 'Error getting shop' });
@@ -37,7 +37,7 @@ exports.updateShopDetails = async (req, res) => {
 
 exports.getAllShops = async (req, res) => {
   try {
-    const shops = await Shop.find().select('-__v').lean(); // optional: clean response
+    const shops = await Shop.find().select('-__v').lean();
     res.json(shops);
   } catch (err) {
     console.error('❌ getAllShops Error:', err.message);
@@ -69,7 +69,6 @@ exports.getShopById = async (req, res) => {
     res.status(500).json({ message: 'Server error' });
   }
 };
-
 
 const toggleProductField = async (req, res, fieldName) => {
   try {
@@ -108,4 +107,57 @@ exports.toggleFeaturedProduct = (req, res) => {
 
 exports.toggleNewProduct = (req, res) => {
   toggleProductField(req, res, 'newProducts');
+};
+
+// --- NEW FUNCTIONS FOR TOP SELLERS ---
+
+/**
+ * @description Get a list of all shops for the admin dashboard.
+ * This is a duplicate of exports.getAllShops but kept separate for clarity on routes.
+ */
+exports.getAllShopsForAdmin = async (req, res) => {
+  try {
+    const shops = await Shop.find();
+    res.json(shops);
+  } catch (err) {
+    console.error('❌ getAllShopsForAdmin Error:', err.message);
+    res.status(500).json({ message: 'Error fetching shops' });
+  }
+};
+
+/**
+ * @description Get all shops with a featuredPosition, sorted by position.
+ */
+exports.getFeaturedShops = async (req, res) => {
+  try {
+    const shops = await Shop.find({ featuredPosition: { $exists: true } })
+      .sort({ featuredPosition: 1 });
+    res.json(shops);
+  } catch (err) {
+    console.error('❌ getFeaturedShops Error:', err.message);
+    res.status(500).json({ message: 'Server error' });
+  }
+};
+
+/**
+ * @description Update the featured shops list based on an ordered array of IDs.
+ * This function is for admins only.
+ */
+exports.updateFeaturedShops = async (req, res) => {
+  try {
+    const featuredShopIds = req.body.featuredShopIds; // Expects an array of shop IDs
+
+    // Clear all existing featured positions
+    await Shop.updateMany({}, { $unset: { featuredPosition: "" } });
+
+    // Set new featured positions based on the ordered array
+    for (let i = 0; i < featuredShopIds.length; i++) {
+      await Shop.findByIdAndUpdate(featuredShopIds[i], { featuredPosition: i + 1 });
+    }
+    
+    res.json({ message: 'Featured shops updated successfully' });
+  } catch (err) {
+    console.error('❌ updateFeaturedShops Error:', err.message);
+    res.status(500).json({ message: 'Server error' });
+  }
 };

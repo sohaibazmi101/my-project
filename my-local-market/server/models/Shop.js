@@ -21,7 +21,14 @@ const shopSchema = new mongoose.Schema({
   banner: { type: String }, 
   featuredProducts: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Product' }],
   newProducts: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Product' }],
+  featuredPosition: {
+    type: Number,
+    min: 1,
+    unique: true, 
+    sparse: true,
+  }
 }, {
   timestamps: true,
 });
+
 module.exports = mongoose.model('Shop', shopSchema);

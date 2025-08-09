@@ -50,11 +50,23 @@ const handleDelete = async () => {
 
   const handleEditSave = async () => {
     if (!selectedProduct) return;
-    await api.put(`/products/${selectedProduct.productCode}/edit`, editForm, {
-      headers: { Authorization: `Bearer ${localStorage.getItem('adminToken')}` }
-    });
-    setShowEditModal(false);
-    fetchProducts();
+
+    const categoryObject = categories.find(cat => cat._id === editForm.category);
+
+    const updatedProductData = {
+      ...editForm,
+      category: categoryObject ? categoryObject.name : editForm.category,
+    };
+
+    try {
+      await api.put(`/products/${selectedProduct.productCode}/edit`, updatedProductData, {
+        headers: { Authorization: `Bearer ${localStorage.getItem('adminToken')}` }
+      });
+      setShowEditModal(false);
+      fetchProducts();
+    } catch (error) {
+      console.error('Error saving product:', error);
+    }
   };
 
   useEffect(() => {

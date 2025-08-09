@@ -35,6 +35,7 @@ import PublicCategories from './pages/category/Categories';
 import EditProduct from './pages/seller/EditProduct';
 import CategoryView from './pages/category/CategoryView';
 import ManageOffers from './pages/admin/ManageOffers';
+import ManageTopSellers from './pages/admin/ManageTopSellers';
 
 
 function AppContent() {
@@ -102,6 +103,7 @@ function AppContent() {
           <Route path="featured" element={<AdminFeaturedProducts />} />
           <Route path="banners" element={<Banners />} />
           <Route path="/admin/manage-offers" element={<ManageOffers />} />
+          <Route path="/admin/manage-top-seller" element={<ManageTopSellers />} />
         </Route>
 
         {/* Customer Routes (protected) */}
