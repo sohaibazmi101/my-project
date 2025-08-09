@@ -3,7 +3,8 @@ import { Link, useNavigate } from 'react-router-dom';
 import api from '../services/api';
 import SmallProductCard from '../components/SmallProductCard';
 import CategoryCard from '../components/CategoryCard';
-import ShopCard from '../components/ShopCard';
+import TopSellersSection from '../components/TopSellersSection';
+import TopCategoriesSection from '../components/TopCategoriesSection';
 
 export default function Home() {
   const [categories, setCategories] = useState([]);
@@ -47,16 +48,6 @@ export default function Home() {
     }, 2500);
     return () => clearInterval(interval);
   }, [banners]);
-
-  useEffect(() => {
-    api.get('/')
-      .then((res) => {
-        setBestSellers(res.data);
-      })
-      .catch((err) => {
-        console.error('Error fetching shops:', err.message);
-      });
-  }, []);
 
   return (
     <div className="container-fluid pt-5 mt-4">
@@ -248,37 +239,10 @@ export default function Home() {
         </div>
       </div>
 
-      {/* Top Sellers */}
-      <div
-        style={{
-          background: 'linear-gradient(to bottom, #4fed74ff, #f6fff8)',
-          borderRadius: '8px',
-          padding: '1rem',
-          paddingBottom: '0.5rem',
-          marginTop: '1rem'  // add some spacing above this section
-        }}
-      >
-        <h5 className="mb-2">Top Sellers</h5>
-        <div
-          className="scroll-container pb-1 d-flex hide-scroll"
-          style={{
-            gap: '0.5rem',
-            overflowX: 'auto',
-            paddingBottom: '0.5rem'
-          }}
-        >
-          {bestSellers.length > 0 ? (
-            bestSellers.map((shop) => (
-              <div key={shop._id} style={{ flex: '0 0 auto' }}>
-                <ShopCard shop={shop} />
-              </div>
-            ))
-          ) : (
-            <p>No top sellers yet</p>
-          )}
-        </div>
-      </div>
+      <TopCategoriesSection />
 
+      {/* Top Sellers */}
+        <TopSellersSection />
 
       {/* CTA */}
       <div className="text-center mb-4 px-3">

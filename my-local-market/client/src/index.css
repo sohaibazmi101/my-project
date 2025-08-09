@@ -26,6 +26,19 @@ body.dark {
   color: #f1f1f1;
 }
 
+.shoplist-container {
+  background-color: #f8f9fa; /* A light grey background for the section */
+}
+
+/* Optional: Adds a subtle hover effect to the cards for better user experience */
+.card {
+  transition: transform 0.2s ease-in-out;
+}
+
+.card:hover {
+  transform: translateY(-5px); /* Lifts the card on hover */
+}
+
 body.dark .navbar {
   background-color: #296802 !important;
 }

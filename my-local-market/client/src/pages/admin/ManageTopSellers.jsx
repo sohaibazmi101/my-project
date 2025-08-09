@@ -69,18 +69,35 @@ export default function ManageTopSellers() {
 
   // Handler to save the final featured list order to the backend
   const handleSave = async () => {
-    setIsSaving(true);
-    try {
-      const featuredShopIds = featuredShops.map((shop) => shop._id);
-      await api.post('/admin/shops/featured', { featuredShopIds });
-      alert('Top Sellers updated successfully!');
-    } catch (error) {
-      console.error('Failed to save featured shops:', error);
-      alert('Failed to save changes.');
-    } finally {
+  setIsSaving(true);
+  try {
+    const featuredShopIds = featuredShops.map((shop) => shop._id);
+    const token = localStorage.getItem('adminToken'); // Get the admin token
+
+    if (!token) {
+      alert('You are not authorized. Please log in as an admin.');
       setIsSaving(false);
+      return;
     }
-  };
+
+    await api.post(
+      '/admin/shops/featured',
+      { featuredShopIds },
+      {
+        headers: {
+          Authorization: `Bearer ${token}`, // Add the token to the headers
+        },
+      }
+    );
+
+    alert('Top Sellers updated successfully!');
+  } catch (error) {
+    console.error('Failed to save featured shops:', error);
+    alert('Failed to save changes.');
+  } finally {
+    setIsSaving(false);
+  }
+};
 
   if (loading) {
     return <div className="text-center mt-5">Loading...</div>;

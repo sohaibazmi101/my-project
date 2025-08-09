@@ -1,4 +1,43 @@
 const Category = require('../models/Category');
+const Product = require('../models/Product');
+
+exports.getTopCategoriesWithProducts = async (req, res) => {
+  try {
+    const topCategories = await Category.find()
+      .sort({ rank: 1 }) // Sort by rank to get the top categories
+      .limit(5);
+
+    const categoriesWithProducts = await Promise.all(
+      topCategories.map(async (category) => {
+        const randomProducts = await Product.aggregate([
+          { $match: { category: category._id } },
+          { $sample: { size: 20 } }, // Get 20 random products
+          {
+            $lookup: {
+              from: 'shops', // The collection name for your shops
+              localField: 'shop',
+              foreignField: '_id',
+              as: 'shopDetails'
+            }
+          },
+          { $unwind: '$shopDetails' }
+        ]);
+        
+        return {
+          _id: category._id,
+          name: category.name,
+          icon: category.icon,
+          products: randomProducts
+        };
+      })
+    );
+
+    res.json(categoriesWithProducts);
+  } catch (error) {
+    console.error('❌ getTopCategoriesWithProducts Error:', error.message);
+    res.status(500).json({ message: 'Server error' });
+  }
+};
 
 exports.addCategory = async (req, res) => {
   try {
