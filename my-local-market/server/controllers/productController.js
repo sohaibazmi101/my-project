@@ -1,5 +1,7 @@
+const mongoose = require('mongoose');
 const Shop = require('../models/Shop');
 const Product = require('../models/Product');
+const Category = require('../models/Category');
 
 exports.addProduct = async (req, res) => {
   try {
@@ -206,8 +208,15 @@ exports.getProductsByCategoryRandom = async (req, res) => {
       return res.status(400).json({ message: 'Invalid category ID' });
     }
 
+    // Step 1: Find the category document by its ID to get its name
+    const category = await Category.findById(categoryId);
+    if (!category) {
+      return res.status(404).json({ message: 'Category not found' });
+    }
+
+    // Step 2: Use the category name (string) in the aggregation pipeline
     const products = await Product.aggregate([
-      { $match: { category: new mongoose.Types.ObjectId(categoryId) } },
+      { $match: { category: category.name } }, // Match by string name instead of ObjectId
       { $sample: { size: 20 } },
       {
         $lookup: {
