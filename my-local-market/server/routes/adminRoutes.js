@@ -13,6 +13,7 @@ const {
 const { getAllProducts, toggleFeatured } = require('../controllers/productController');
 const { getBanners, addBanner, deleteBanner } = require('../controllers/bannerController');
 const { getCMSContent, updateCMSContent } = require('../controllers/cmsController');
+const { getAllOrdersForAdmin } = require('../controllers/orderController'); // New import
 
 // Upload middlewares
 const uploadBanner = require('../middleware/uploadBanner');
@@ -55,5 +56,8 @@ router.delete('/banners/:id', adminAuth, deleteBanner);
 // CMS routes
 router.get('/cms/:section', adminAuth, getCMSContent);
 router.post('/cms/:section', adminAuth, updateCMSContent);
+
+// Order routes
+router.get('/orders', adminAuth, getAllOrdersForAdmin); // New route for getting all orders
 
 module.exports = router;

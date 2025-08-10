@@ -4,10 +4,24 @@ export default function Dashboard() {
   const navigate = useNavigate();
 
   return (
-    <div className="container pt-5 mt-5">
+    <div className="container mt-4">
       <h2 className="mb-4">Seller Dashboard</h2>
 
       <div className="row g-4">
+        <div className="col-md-6">
+          <div className="card shadow-sm h-100">
+            <div className="card-body d-flex flex-column justify-content-between">
+              <h4 className="card-title">Manage Your Orders Here</h4>
+              <p className="card-text">Manage All Orders From Customers.</p>
+              <button
+                className="btn btn-primary mt-auto"
+                onClick={() => navigate('/sellers/orders')}
+              >
+                Manage Orders
+              </button>
+            </div>
+          </div>
+        </div>
         <div className="col-md-6">
           <div className="card shadow-sm h-100">
             <div className="card-body d-flex flex-column justify-content-between">

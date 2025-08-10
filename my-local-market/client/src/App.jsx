@@ -42,6 +42,8 @@ import HelpAndSupport from './pages/users/HelpAndSupport';
 import AboutUs from './pages/users/AboutUs';
 import CancellationAndRefund from './pages/users/CancellationAndRefund';
 import ShippingAndDelivery from './pages/users/ShippingAndDelivery';
+import AdminOrdersPage from './pages/admin/AdminOrdersPage';
+import SellerOrdersPage from './pages/seller/SellerOrdersPage';
 
 
 function AppContent() {
@@ -106,6 +108,14 @@ function AppContent() {
             </SellerProtectedRoute>
           }
         />
+        <Route
+          path="/sellers/orders"
+          element={
+            <SellerProtectedRoute>
+              <SellerOrdersPage />
+            </SellerProtectedRoute>
+          }
+        />
 
         {/* Admin Routes */}
         <Route path="/admin/login" element={<AdminLogin />} />
@@ -116,6 +126,7 @@ function AppContent() {
           <Route path="banners" element={<Banners />} />
           <Route path="/admin/manage-offers" element={<ManageOffers />} />
           <Route path="/admin/manage-top-seller" element={<ManageTopSellers />} />
+          <Route path="/admin/orders" element={<AdminOrdersPage />} />
         </Route>
 
         {/* Customer Routes (protected) */}

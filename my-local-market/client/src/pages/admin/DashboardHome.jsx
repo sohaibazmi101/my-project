@@ -27,6 +27,9 @@ export default function DashboardHome() {
           <Link to="/admin/manage-top-seller" className="btn btn-danger">
             🎁 Manage Top Seller
           </Link>
+          <Link to="/admin/orders" className="btn btn-danger">
+            Manage Orders
+          </Link>
         </div>
       </div>
     </div>

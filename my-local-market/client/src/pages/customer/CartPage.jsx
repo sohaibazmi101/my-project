@@ -2,11 +2,34 @@ import { useEffect, useState } from 'react';
 import api from '../../services/api';
 import { useNavigate } from 'react-router-dom';
 import ProductCard from '../../components/ProductCard';
+import MissingDetailsModal from '../components/MissingDetailsModal';
+import ConfirmOrderModal from '../components/ConfirmOrderModal';
 
 export default function CartPage() {
   const [cartItems, setCartItems] = useState([]);
   const navigate = useNavigate();
   const token = localStorage.getItem('customerToken');
+
+  const [showMissingDetailsModal, setShowMissingDetailsModal] = useState(false);
+  const [showConfirmModal, setShowConfirmModal] = useState(false);
+  const [confirmDetails, setConfirmDetails] = useState({
+    name: '',
+    email: '',
+    mobile: '',
+    address: {
+      street: '',
+      city: '',
+      state: '',
+      pincode: '',
+    },
+  });
+  const [missingMobile, setMissingMobile] = useState('');
+  const [missingAddress, setMissingAddress] = useState({
+    street: '',
+    city: '',
+    state: '',
+    pincode: '',
+  });
 
   useEffect(() => {
     if (!token) {
@@ -67,34 +90,128 @@ export default function CartPage() {
   };
 
   const handleCheckout = async () => {
+    if (!token) {
+      navigate('/customer/login');
+      return;
+    }
+    try {
+      const { data: customer } = await api.get('/customers/profile', {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (
+        !customer.phone ||
+        !customer.address?.street ||
+        !customer.address?.city ||
+        !customer.address?.state ||
+        !customer.address?.pincode
+      ) {
+        setMissingMobile(customer.phone || '');
+        setMissingAddress({
+          street: customer.address?.street || '',
+          city: customer.address?.city || '',
+          state: customer.address?.state || '',
+          pincode: customer.address?.pincode || '',
+        });
+        setShowMissingDetailsModal(true);
+        return;
+      }
+      setConfirmDetails({
+        name: customer.name || '',
+        email: customer.email || '',
+        mobile: customer.phone || '',
+        address: {
+          street: customer.address?.street || '',
+          city: customer.address?.city || '',
+          state: customer.address?.state || '',
+          pincode: customer.address?.pincode || '',
+        },
+      });
+      setShowConfirmModal(true);
+    } catch (err) {
+      console.error('Error fetching customer profile', err);
+      alert('Something went wrong. Please try again.');
+    }
+  };
+
+  const handleUpdateDetails = async (e) => {
+    e.preventDefault();
+    try {
+      await api.patch(
+        '/customers/profile',
+        {
+          mobile: missingMobile,
+          address: missingAddress,
+        },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      setShowMissingDetailsModal(false);
+      handleCheckout();
+    } catch (err) {
+      console.error('Profile update failed', err);
+      alert('Failed to update profile. Try again.');
+    }
+  };
+
+  const handleConfirmOrder = async (quantity, paymentMethod, totalAmount, editableDetails) => {
     try {
       const grouped = Object.values(groupByShop());
-      for (const group of grouped) {
-        await api.post(
-          '/customers/orders',
-          {
-            cart: group.items.map(({ product, quantity }) => ({
-              product: product._id,
-              quantity,
-            })),
-          },
-          {
+
+      if (paymentMethod === 'cod') {
+        for (const group of grouped) {
+          const orderData = {
+            cart: group.items.map(item => ({ product: item.product._id, quantity: item.quantity })),
+            paymentMethod: 'Cash on Delivery',
+            totalAmount: group.items.reduce((sum, item) => sum + item.product.price * item.quantity, 0),
+          };
+          await api.post('/customers/orders', orderData, {
             headers: { Authorization: `Bearer ${token}` },
-          }
+          });
+        }
+        setCartItems([]);
+        alert('Order placed successfully!');
+        setShowConfirmModal(false);
+        navigate('/customer/orders');
+
+      } else if (paymentMethod === 'upi') {
+        const { data: { amount, orderId } } = await api.post(
+          '/customers/create-payment',
+          {
+            cart: cartItems.map(item => ({ product: item.product._id, quantity: item.quantity })),
+            totalAmount: calculateTotal(),
+          },
+          { headers: { Authorization: `Bearer ${token}` } }
         );
+        const options = {
+          key: import.meta.env.VITE_RAZORPAY_KEY_ID,
+          amount: amount,
+          currency: 'INR',
+          name: 'Your Store',
+          description: 'Payment for your order',
+          order_id: orderId,
+          handler: async function (response) {
+            alert('Payment successful!');
+            setCartItems([]);
+            setShowConfirmModal(false);
+            navigate('/customer/orders');
+          },
+          prefill: {
+            name: editableDetails.name,
+            email: editableDetails.email,
+            contact: editableDetails.mobile,
+          },
+          theme: { color: '#3399cc' },
+        };
+        const rzp1 = new window.Razorpay(options);
+        rzp1.open();
       }
-      setCartItems([]);
-      alert('Order placed successfully!');
-      navigate('/customer/profile');
     } catch (err) {
-      console.error('Order error:', err);
-      alert('Failed to place order.');
+      console.error('Order placement failed', err);
+      alert('Failed to place order. Please try again.');
     }
   };
 
   const groupedItems = groupByShop();
 
-  // 💰 Calculate total cart value
   const calculateTotal = () => {
     return cartItems.reduce(
       (total, item) => total + item.product.price * item.quantity,
@@ -103,7 +220,7 @@ export default function CartPage() {
   };
 
   return (
-    <div className="container pt-5 mt-4">
+    <div className="container mt-4">
       <h2>Your Cart</h2>
       {cartItems.length === 0 ? (
         <p>Your cart is empty.</p>
@@ -113,10 +230,7 @@ export default function CartPage() {
             <h5 className="mb-3">{group.shop.name}</h5>
             <div className="row">
               {group.items.map((item) => (
-                <div
-                  key={item.product._id}
-                  className="col-12 col-sm-6 col-md-4 col-lg-3 mb-4"
-                >
+                <div key={item.product._id} className="col-12 col-sm-6 col-md-4 col-lg-3 mb-4">
                   <div className="card w-100 h-100 d-flex flex-column justify-content-between">
                     <div className="p-2">
                       <ProductCard product={item.product} />
@@ -128,22 +242,16 @@ export default function CartPage() {
                           type="number"
                           min={1}
                           value={item.quantity}
-                          onChange={(e) =>
-                            updateQuantity(item.product._id, parseInt(e.target.value))
-                          }
+                          onChange={(e) => updateQuantity(item.product._id, parseInt(e.target.value))}
                           className="form-control form-control-sm"
                           style={{ width: 70 }}
                         />
                       </div>
-
                       <div className="d-flex justify-content-between align-items-center mb-2">
                         <span className="fw-bold">
                           ₹{item.product.price * item.quantity}
                         </span>
-                        <button
-                          className="btn btn-sm btn-danger"
-                          onClick={() => handleRemove(item.product._id)}
-                        >
+                        <button className="btn btn-sm btn-danger" onClick={() => handleRemove(item.product._id)}>
                           Remove
                         </button>
                       </div>
@@ -155,7 +263,6 @@ export default function CartPage() {
           </div>
         ))
       )}
-
       {cartItems.length > 0 && (
         <div className="d-flex justify-content-between align-items-center mt-3">
           <h5>Total: ₹{calculateTotal()}</h5>
@@ -164,6 +271,26 @@ export default function CartPage() {
           </button>
         </div>
       )}
+
+      {/* Modals */}
+      <MissingDetailsModal
+        show={showMissingDetailsModal}
+        onClose={() => setShowMissingDetailsModal(false)}
+        mobile={missingMobile}
+        address={missingAddress}
+        onMobileChange={(e) => setMissingMobile(e.target.value)}
+        onAddressChange={(key, value) => setMissingAddress((prev) => ({ ...prev, [key]: value }))}
+        onSaveAndContinue={handleUpdateDetails}
+      />
+
+      <ConfirmOrderModal
+        show={showConfirmModal}
+        onClose={() => setShowConfirmModal(false)}
+        cartItems={cartItems}
+        confirmDetails={confirmDetails}
+        onConfirmOrder={handleConfirmOrder}
+        totalAmount={calculateTotal()}
+      />
     </div>
   );
 }
