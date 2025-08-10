@@ -1,3 +1,5 @@
+// src/controllers/orderController.js
+
 const Order = require('../models/Order');
 const Product = require('../models/Product');
 const Customer = require('../models/Customer');
@@ -30,6 +32,8 @@ exports.placeOrder = async (req, res) => {
 
     // Group products by shop
     const shopGroups = {};
+    const productIdsInCart = new Set(); // Create a set to track all product IDs in the request cart
+
     for (const item of cart) {
       const product = await Product.findById(item.product).populate('shop');
       if (!product) continue;
@@ -38,11 +42,12 @@ exports.placeOrder = async (req, res) => {
       if (!shopGroups[shopId]) shopGroups[shopId] = { shop: product.shop, items: [] };
 
       shopGroups[shopId].items.push({ product, quantity: item.quantity });
+      productIdsInCart.add(item.product.toString()); // Add product ID to the set
     }
 
     const createdOrders = [];
 
-    // Create orders per shop and update customer's cart
+    // Create orders per shop
     for (const shopId in shopGroups) {
       const { shop, items } = shopGroups[shopId];
 
@@ -62,13 +67,11 @@ exports.placeOrder = async (req, res) => {
 
       await order.save();
       createdOrders.push(order);
-
-      // Remove items from customer's cart that belong to this shop
-      customer.cart = customer.cart.filter(item =>
-        !items.some(i => i.product._id.toString() === item.product.toString())
-      );
     }
-
+    
+    // --- CORRECTED LOGIC ---
+    // Update the customer's cart in a single, atomic operation after creating all orders.
+    customer.cart = customer.cart.filter(item => !productIdsInCart.has(item.product.toString()));
     await customer.save();
 
     res.status(201).json(createdOrders);
