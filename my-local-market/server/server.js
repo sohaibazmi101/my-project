@@ -23,7 +23,8 @@ const adminRoutes = require('./routes/adminRoutes');
 const publicRoutes = require('./routes/publicRoutes');
 const customerRoutes = require('./routes/customerRoutes');
 const cartRoutes = require('./routes/cartRoutes');
-const categoryRoutes = require('./routes/categoryRoutes'); // Import the category router
+const categoryRoutes = require('./routes/categoryRoutes');
+const paymentRoutes = require('./routes/paymentRoutes');
 
 app.use('/api/cart', cartRoutes);
 app.use('/api/customers', customerRoutes);
@@ -32,7 +33,8 @@ app.use('/api', productRoutes);
 app.use('/api', shopRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api', publicRoutes); // optional
-app.use('/api/categories', categoryRoutes); // Mount the category router at this path
+app.use('/api/categories', categoryRoutes);
+app.use('/api', paymentRoutes);
 
 // Health check
 app.get('/api/ping', (req, res) => {

@@ -204,7 +204,6 @@ export default function ProductView() {
             )}
           </div>
         )}
-
         {/* Product Info */}
         <div className="card-body">
           <h3 className="card-title">{product.name}</h3>

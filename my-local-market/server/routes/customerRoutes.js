@@ -1,5 +1,6 @@
 const express = require('express');
 const router = express.Router();
+const verifyCustomer = require('../middleware/verifyCustomer');
 
 const {
   googleLoginCustomer,
@@ -14,17 +15,19 @@ const {
   placeOrder,
 } = require('../controllers/orderController');
 
-const verifyCustomer = require('../middleware/verifyCustomer');
-
+// --- Public Routes (No Auth Needed) ---
 router.post('/google-login', googleLoginCustomer);
 
-router.get('/profile', verifyCustomer, getCustomerProfile);
-router.put('/profile', verifyCustomer, updateProfile);
+// --- Protected Routes (Auth Needed) ---
+router.use(verifyCustomer); // Apply middleware to all routes below
 
-router.post('/recently-viewed', verifyCustomer, addRecentlyViewed);
-router.get('/recently-viewed', verifyCustomer, getRecentlyViewed);
+router.get('/profile', getCustomerProfile);
+router.put('/profile', updateProfile);
 
-router.post('/orders', verifyCustomer, placeOrder);
-router.get('/orders', verifyCustomer, getCustomerOrders);
+router.post('/recently-viewed', addRecentlyViewed);
+router.get('/recently-viewed', getRecentlyViewed);
+
+router.post('/orders', placeOrder);
+router.get('/orders', getCustomerOrders);
 
 module.exports = router;
