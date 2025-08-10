@@ -36,6 +36,12 @@ import EditProduct from './pages/seller/EditProduct';
 import CategoryView from './pages/category/CategoryView';
 import ManageOffers from './pages/admin/ManageOffers';
 import ManageTopSellers from './pages/admin/ManageTopSellers';
+import TermsAndConditions from './pages/users/TermsAndConditions';
+import PrivacyPolicy from './pages/users/PrivacyPolicy';
+import HelpAndSupport from './pages/users/HelpAndSupport';
+import AboutUs from './pages/users/AboutUs';
+import CancellationAndRefund from './pages/users/CancellationAndRefund';
+import ShippingAndDelivery from './pages/users/ShippingAndDelivery';
 
 
 function AppContent() {
@@ -60,6 +66,12 @@ function AppContent() {
         <Route path="/featured" element={<FeaturedProducts />} />
         <Route path="/category/categories" element={<PublicCategories />} />
         <Route path="/category/:categoryId" element={<CategoryView />} />
+        <Route path="/terms" element={<TermsAndConditions />} />
+        <Route path="/privacy" element={<PrivacyPolicy />} />
+        <Route path="/help" element={<HelpAndSupport />} />
+        <Route path="/about" element={<AboutUs />} />
+        <Route path="/refund" element={<CancellationAndRefund />} />
+        <Route path="/shipping" element={<ShippingAndDelivery />} />
 
         {/* Seller Dashboard Routes (protected) */}
         <Route

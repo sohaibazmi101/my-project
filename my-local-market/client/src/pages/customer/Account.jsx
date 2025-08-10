@@ -10,10 +10,13 @@ import {
     FaSignInAlt,
     FaBoxOpen,
     FaUser,
+    FaUndo,
     FaUserEdit,
     FaSignOutAlt,
-    FaTachometerAlt
+    FaTachometerAlt,
+    FaShippingFast  // add this line
 } from 'react-icons/fa';
+
 import SmallProductCard from '../../components/SmallProductCard';
 
 export default function Account() {
@@ -190,6 +193,27 @@ export default function Account() {
                             <FaChevronRight className="text-muted" />
                         </Link>
                     </li>
+
+                    <li className="mb-2">
+                        <Link to="/refund" className="d-flex justify-content-between align-items-center p-2 rounded" style={linkStyle}>
+                            <div className="d-flex align-items-center">
+                                <FaUndo className="me-2 text-info" />
+                                Cancellation and Refund
+                            </div>
+                            <FaChevronRight className="text-muted" />
+                        </Link>
+                    </li>
+
+                    <li className="mb-2">
+                        <Link to="/shipping" className="d-flex justify-content-between align-items-center p-2 rounded" style={linkStyle}>
+                            <div className="d-flex align-items-center">
+                                <FaShippingFast className="me-2 text-info" />
+                                Shipping and Delivery
+                            </div>
+                            <FaChevronRight className="text-muted" />
+                        </Link>
+                    </li>
+
                     <li className="mb-2">
                         <Link to="/help" className="d-flex justify-content-between align-items-center p-2 rounded" style={linkStyle}>
                             <div className="d-flex align-items-center">
