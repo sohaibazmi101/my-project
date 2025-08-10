@@ -11,7 +11,7 @@ const { registerSeller, getSellerProfile } = require('../controllers/sellerContr
 const { loginSeller } = require('../controllers/authController');
 const { getSellerOrders } = require('../controllers/orderController');
 const { createShopForSeller } = require('../controllers/sellerController');
-const { getPendingKycs } = require('../controllers/sellerController');
+const { getPendingKycs, updateKycStatus } = require('../controllers/sellerController');
 
 // @route   POST /api/seller/register
 // @desc    Register seller with KYC documents
@@ -31,6 +31,7 @@ router.get('/me', sellerAuth, getSellerProfile);
 
 // Add this line to your seller routes file
 router.get('/kyc/pending', adminAuth, getPendingKycs);
+router.put('/:sellerId/kyc', adminAuth, updateKycStatus);
 
 // @route   GET /api/seller/orders
 // @desc    Get all orders for logged-in seller

@@ -163,3 +163,23 @@ exports.getPendingKycs = async (req, res) => {
     res.status(500).json({ message: 'Server error', error: err.message });
   }
 };
+
+exports.updateKycStatus = async (req, res) => {
+    try {
+        const { sellerId } = req.params;
+        const { status } = req.body;
+
+        const seller = await Seller.findById(sellerId);
+        if (!seller) {
+            return res.status(404).json({ message: 'Seller not found.' });
+        }
+
+        seller.kycStatus = status;
+        await seller.save();
+
+        res.status(200).json({ message: `Seller KYC status updated to ${status}.` });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: 'Server error' });
+    }
+};
