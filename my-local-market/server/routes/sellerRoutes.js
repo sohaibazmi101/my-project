@@ -1,24 +1,37 @@
 const express = require('express');
 const router = express.Router();
 
+// Middleware
 const uploadBanner = require('../middleware/uploadBanner');
-const authMiddleware = require('../middleware/authMiddleware');
+const sellerAuth = require('../middleware/authMiddleware'); // Renamed for clarity
 
 // Controllers
 const { registerSeller, getSellerProfile } = require('../controllers/sellerController');
 const { loginSeller } = require('../controllers/authController');
-const { getSellerOrders } = require('../controllers/orderController'); // <-- New import
+const { getSellerOrders } = require('../controllers/orderController');
+const uploadKycDocs = require('../middleware/uploadKycDocs');
 
-// ✅ Register seller with optional banner
+
+router.post('/register', uploadKycDocs.fields([
+  { name: 'aadhaar', maxCount: 1 },
+  { name: 'pan', maxCount: 1 }
+]), registerSeller);
+
+
+// @route   POST /api/seller/register
+// @desc    Register seller with optional banner
 router.post('/register', uploadBanner, registerSeller);
 
-// ✅ Login seller
+// @route   POST /api/seller/login
+// @desc    Seller login
 router.post('/login', loginSeller);
 
-// ✅ Get logged-in seller's profile
-router.get('/me', authMiddleware, getSellerProfile);
+// @route   GET /api/seller/me
+// @desc    Get logged-in seller's profile
+router.get('/me', sellerAuth, getSellerProfile);
 
-// ✅ Get a seller's orders
-router.get('/orders', authMiddleware, getSellerOrders); // <-- New route
+// @route   GET /api/seller/orders
+// @desc    Get all orders for logged-in seller
+router.get('/orders', sellerAuth, getSellerOrders);
 
 module.exports = router;

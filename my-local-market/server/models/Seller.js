@@ -1,7 +1,7 @@
 const mongoose = require('mongoose');
 
 const sellerSchema = new mongoose.Schema({
-  name: { type: String, required: true },
+  sellerName: { type: String, required: true },
   email: { type: String, required: true, unique: true },
   password: { type: String, required: true },
   phone: { type: String, required: true },
@@ -9,6 +9,16 @@ const sellerSchema = new mongoose.Schema({
   shopCategory: { type: String, required: true },
   whatsapp: { type: String, required: true },
   location: { type: String },
+  aadhaarNumber: { type: String },
+  aadhaarImage: { type: String },
+  panNumber: { type: String },
+  panImage: { type: String },
+  kycStatus: {
+    type: String,
+    enum: ['pending', 'approved', 'rejected'],
+    default: 'pending'
+  },
+  kycRejectedReason: { type: String }
 }, {
   timestamps: true
 });
