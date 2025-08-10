@@ -6,6 +6,6 @@ const { addToCart, getCart, removeFromCart, updateCartQty } = require('../contro
 router.post('/add', verifyCustomer, addToCart);
 router.get('/', verifyCustomer, getCart);
 router.delete('/:productId', verifyCustomer, removeFromCart);
-router.patch('/cart/update', verifyCustomer, updateCartQty)
+router.patch('/update', verifyCustomer, updateCartQty)
 
 module.exports = router;
