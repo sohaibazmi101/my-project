@@ -10,7 +10,7 @@ export default function SellerOrdersPage() {
   useEffect(() => {
     const fetchOrders = async () => {
       try {
-        const res = await api.get('/seller/orders', {
+        const res = await api.get('/sellers/orders', {
           headers: { Authorization: `Bearer ${sellerToken}` },
         });
         setOrders(res.data);
