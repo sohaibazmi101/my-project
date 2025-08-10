@@ -3,13 +3,10 @@ const Shop = require('../models/Shop');
 const bcrypt = require('bcrypt');
 const Product = require('../models/Product');
 
-// ===============================
-// 1. Register Seller (with KYC)
-// ===============================
 exports.registerSeller = async (req, res) => {
   try {
     const {
-      sellerName, // personal name
+      sellerName,
       email,
       password,
       phone,
@@ -21,11 +18,9 @@ exports.registerSeller = async (req, res) => {
       panNumber
     } = req.body;
 
-    // Check if seller exists
     const existing = await Seller.findOne({ email });
     if (existing) return res.status(400).json({ message: 'Email already registered' });
 
-    // Validate file uploads
     if (!req.files || !req.files.aadhaarImage || !req.files.panImage) {
       return res.status(400).json({ message: 'Aadhaar and PAN images are required' });
     }
@@ -33,15 +28,12 @@ exports.registerSeller = async (req, res) => {
     const aadhaarImageUrl = req.files.aadhaarImage[0].path;
     const panImageUrl = req.files.panImage[0].path;
 
-    // Hash password
     const hashedPassword = await bcrypt.hash(password, 10);
 
-    // Mask Aadhaar number
     const maskedAadhaar = aadhaarNumber
       ? `XXXX XXXX ${aadhaarNumber.slice(-4)}`
       : '';
 
-    // Create seller
     const seller = new Seller({
       sellerName,
       email,
@@ -70,9 +62,6 @@ exports.registerSeller = async (req, res) => {
   }
 };
 
-// ===============================
-// 2. Admin Approve/Reject KYC
-// ===============================
 exports.updateKycStatus = async (req, res) => {
   try {
     const { sellerId } = req.params;
@@ -97,9 +86,6 @@ exports.updateKycStatus = async (req, res) => {
   }
 };
 
-// ===============================
-// 3. Create Shop After KYC Approval
-// ===============================
 exports.createShopForSeller = async (req, res) => {
   try {
     const { sellerId, shopName, description, address, category, whatsapp, location, banner } = req.body;
@@ -149,9 +135,6 @@ exports.createShopForSeller = async (req, res) => {
   }
 };
 
-// ===============================
-// 4. Get Seller Profile
-// ===============================
 exports.getSellerProfile = async (req, res) => {
   try {
     const seller = await Seller.findById(req.seller).select('-password');
@@ -171,9 +154,6 @@ exports.getSellerProfile = async (req, res) => {
   }
 };
 
-// ===============================
-// 5. Get All Pending KYCs (Admin View)
-// ===============================
 exports.getPendingKycs = async (req, res) => {
   try {
     const pendingSellers = await Seller.find({ kycStatus: 'pending' }).select('-password');

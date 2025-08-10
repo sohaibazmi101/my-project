@@ -247,7 +247,7 @@ export default function Home() {
       {/* CTA */}
       <div className="text-center mb-4 px-3">
         <div className="d-flex flex-column flex-md-row justify-content-center gap-3 mt-4">
-          <Link to="/login" className="btn btn-primary btn-lg">Seller Login</Link>
+          <Link to="seller/login" className="btn btn-primary btn-lg">Seller Login</Link>
           <Link to="/register" className="btn btn-outline-secondary btn-lg">Become a Seller</Link>
         </div>
       </div>

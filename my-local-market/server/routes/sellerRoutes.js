@@ -3,6 +3,7 @@ const router = express.Router();
 
 // Middleware
 const sellerAuth = require('../middleware/authMiddleware');
+const adminAuth = require('../middleware/adminAuth');
 const uploadKycDocs = require('../middleware/uploadKycDocs');
 
 // Controllers
@@ -10,6 +11,7 @@ const { registerSeller, getSellerProfile } = require('../controllers/sellerContr
 const { loginSeller } = require('../controllers/authController');
 const { getSellerOrders } = require('../controllers/orderController');
 const { createShopForSeller } = require('../controllers/sellerController');
+const { getPendingKycs } = require('../controllers/sellerController');
 
 // @route   POST /api/seller/register
 // @desc    Register seller with KYC documents
@@ -26,6 +28,9 @@ router.post('/login', loginSeller);
 // @route   GET /api/seller/me
 // @desc    Get logged-in seller's profile
 router.get('/me', sellerAuth, getSellerProfile);
+
+// Add this line to your seller routes file
+router.get('/kyc/pending', adminAuth, getPendingKycs);
 
 // @route   GET /api/seller/orders
 // @desc    Get all orders for logged-in seller

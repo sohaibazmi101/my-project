@@ -30,6 +30,9 @@ export default function DashboardHome() {
           <Link to="/admin/orders" className="btn btn-danger">
             Manage Orders
           </Link>
+          <Link to="/admin/kyc" className="btn btn-danger">
+            KYC Verification
+          </Link>
         </div>
       </div>
     </div>

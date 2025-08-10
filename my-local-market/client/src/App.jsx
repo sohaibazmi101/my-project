@@ -44,6 +44,7 @@ import CancellationAndRefund from './pages/users/CancellationAndRefund';
 import ShippingAndDelivery from './pages/users/ShippingAndDelivery';
 import AdminOrdersPage from './pages/admin/AdminOrdersPage';
 import SellerOrdersPage from './pages/seller/SellerOrdersPage';
+import AdminKycDashboard from './pages/admin/AdminKycDashboard';
 
 
 function AppContent() {
@@ -59,7 +60,7 @@ function AppContent() {
       <Routes>
         {/* Public Routes */}
         <Route path="/" element={<Home />} />
-        <Route path="/login" element={<Login />} />
+        <Route path="seller/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
         <Route path="/shops" element={<ShopList />} />
         <Route path="/shops/:id" element={<ShopDetails />} />
@@ -127,6 +128,7 @@ function AppContent() {
           <Route path="/admin/manage-offers" element={<ManageOffers />} />
           <Route path="/admin/manage-top-seller" element={<ManageTopSellers />} />
           <Route path="/admin/orders" element={<AdminOrdersPage />} />
+          <Route path="/admin/kyc" element={<AdminKycDashboard />} />
         </Route>
 
         {/* Customer Routes (protected) */}

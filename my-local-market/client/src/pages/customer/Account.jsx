@@ -139,7 +139,7 @@ export default function Account() {
                         </Link>
 
                         <Link
-                            to="/login"
+                            to="/seller/login"
                             className="d-flex align-items-center justify-content-between py-2 border-top"
                             style={{ textDecoration: 'none', color: 'inherit' }}
                         >
