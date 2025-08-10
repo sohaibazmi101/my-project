@@ -2,25 +2,22 @@ const express = require('express');
 const router = express.Router();
 
 // Middleware
-const uploadBanner = require('../middleware/uploadBanner');
-const sellerAuth = require('../middleware/authMiddleware'); // Renamed for clarity
+const sellerAuth = require('../middleware/authMiddleware');
+const uploadKycDocs = require('../middleware/uploadKycDocs');
 
 // Controllers
 const { registerSeller, getSellerProfile } = require('../controllers/sellerController');
 const { loginSeller } = require('../controllers/authController');
 const { getSellerOrders } = require('../controllers/orderController');
-const uploadKycDocs = require('../middleware/uploadKycDocs');
-
-
-router.post('/register', uploadKycDocs.fields([
-  { name: 'aadhaar', maxCount: 1 },
-  { name: 'pan', maxCount: 1 }
-]), registerSeller);
-
+const { createShopForSeller } = require('../controllers/sellerController');
 
 // @route   POST /api/seller/register
-// @desc    Register seller with optional banner
-router.post('/register', uploadBanner, registerSeller);
+// @desc    Register seller with KYC documents
+// Use only the middleware for KYC documents here
+router.post('/register', uploadKycDocs.fields([
+  { name: 'aadhaarImage', maxCount: 1 },
+  { name: 'panImage', maxCount: 1 }
+]), registerSeller);
 
 // @route   POST /api/seller/login
 // @desc    Seller login
