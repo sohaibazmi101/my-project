@@ -9,7 +9,7 @@ export default function RegisterSeller() {
     password: '',
     phone: '',
     address: '',
-    shopCategory: '', // This will be used to create the shop later
+    shopCategory: '',
     whatsapp: '',
     location: '',
     aadhaarNumber: '',

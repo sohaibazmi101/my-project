@@ -62,30 +62,6 @@ exports.registerSeller = async (req, res) => {
   }
 };
 
-exports.updateKycStatus = async (req, res) => {
-  try {
-    const { sellerId } = req.params;
-    const { status, reason } = req.body;
-
-    if (!['approved', 'rejected'].includes(status)) {
-      return res.status(400).json({ message: 'Invalid status' });
-    }
-
-    const seller = await Seller.findById(sellerId);
-    if (!seller) return res.status(404).json({ message: 'Seller not found' });
-
-    seller.kycStatus = status;
-    seller.kycRejectedReason = status === 'rejected' ? reason || 'Not specified' : '';
-
-    await seller.save();
-
-    res.json({ message: `KYC ${status} successfully` });
-  } catch (err) {
-    console.error('KYC update error:', err.message);
-    res.status(500).json({ message: 'Server error', error: err.message });
-  }
-};
-
 exports.createShopForSeller = async (req, res) => {
   try {
     const { sellerId, shopName, description, address, category, whatsapp, location, banner } = req.body;

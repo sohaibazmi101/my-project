@@ -10,8 +10,7 @@ const uploadKycDocs = require('../middleware/uploadKycDocs');
 const { registerSeller, getSellerProfile } = require('../controllers/sellerController');
 const { loginSeller } = require('../controllers/authController');
 const { getSellerOrders } = require('../controllers/orderController');
-const { createShopForSeller } = require('../controllers/sellerController');
-const { getPendingKycs, updateKycStatus } = require('../controllers/sellerController');
+const { getPendingKycs, updateKycStatus, createShopForSeller } = require('../controllers/sellerController');
 
 // @route   POST /api/seller/register
 // @desc    Register seller with KYC documents
@@ -28,6 +27,7 @@ router.post('/login', loginSeller);
 // @route   GET /api/seller/me
 // @desc    Get logged-in seller's profile
 router.get('/me', sellerAuth, getSellerProfile);
+router.post('/create-shop', sellerAuth, createShopForSeller);
 
 // Add this line to your seller routes file
 router.get('/kyc/pending', adminAuth, getPendingKycs);

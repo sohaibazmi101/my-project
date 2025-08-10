@@ -13,7 +13,7 @@ const shopSchema = new mongoose.Schema({
     required: true,
     unique: true,
   },
-  name: { type: String, required: true }, // Shop name (e.g., Raja Store)
+  name: { type: String, required: true },
   description: { type: String, default: '' },
   address: { type: String },
   category: { type: String },
