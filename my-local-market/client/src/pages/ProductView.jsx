@@ -182,7 +182,6 @@ export default function ProductView() {
     }
   };
 
-  // Update missing customer details modal submit
   const handleUpdateDetails = async (e) => {
     e.preventDefault();
     if (!token) {

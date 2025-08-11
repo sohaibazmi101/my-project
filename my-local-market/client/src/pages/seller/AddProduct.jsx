@@ -87,7 +87,7 @@ export default function AddProduct() {
         await api.post('/products/add', form);
         alert('Product added');
       }
-      navigate('seller/dashboard');
+      navigate('/seller/dashboard');
     } catch (err) {
       alert(err.response?.data?.message || 'Error saving product');
     }
@@ -127,7 +127,6 @@ export default function AddProduct() {
             ))}
           </select>
         </div>
-
         {/* Price */}
         <div className="mb-3">
           <label>Price</label>

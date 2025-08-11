@@ -7,6 +7,7 @@ import ConfirmOrderModal from '../components/ConfirmOrderModal';
 
 export default function CartPage() {
   const [cartItems, setCartItems] = useState([]);
+  const [orderLoading, setOrderLoading] = useState(false);
   const navigate = useNavigate();
   const token = localStorage.getItem('customerToken');
 
@@ -152,63 +153,27 @@ export default function CartPage() {
     }
   };
 
-  const handleConfirmOrder = async (quantity, paymentMethod, totalAmount, editableDetails) => {
+  const handleConfirmOrder = async (orderData) => {
     try {
-      const grouped = Object.values(groupByShop());
+      setOrderLoading(true);
 
-      if (paymentMethod === 'cod') {
-        for (const group of grouped) {
-          const orderData = {
-            cart: group.items.map(item => ({ product: item.product._id, quantity: item.quantity })),
-            paymentMethod: 'Cash on Delivery',
-            totalAmount: group.items.reduce((sum, item) => sum + item.product.price * item.quantity, 0),
-          };
-          await api.post('/customers/orders', orderData, {
-            headers: { Authorization: `Bearer ${token}` },
-          });
-        }
-        setCartItems([]);
-        alert('Order placed successfully!');
-        setShowConfirmModal(false);
-        navigate('/customer/orders');
+      console.log("Order payload:", orderData);
 
-      } else if (paymentMethod === 'upi') {
-        const { data: { amount, orderId } } = await api.post(
-          '/customers/create-payment',
-          {
-            cart: cartItems.map(item => ({ product: item.product._id, quantity: item.quantity })),
-            totalAmount: calculateTotal(),
-          },
-          { headers: { Authorization: `Bearer ${token}` } }
-        );
-        const options = {
-          key: import.meta.env.VITE_RAZORPAY_KEY_ID,
-          amount: amount,
-          currency: 'INR',
-          name: 'Your Store',
-          description: 'Payment for your order',
-          order_id: orderId,
-          handler: async function (response) {
-            alert('Payment successful!');
-            setCartItems([]);
-            setShowConfirmModal(false);
-            navigate('/customer/orders');
-          },
-          prefill: {
-            name: editableDetails.name,
-            email: editableDetails.email,
-            contact: editableDetails.mobile,
-          },
-          theme: { color: '#3399cc' },
-        };
-        const rzp1 = new window.Razorpay(options);
-        rzp1.open();
-      }
+      await api.post('/customers/orders', orderData, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+
+      alert('Order placed successfully!');
+      setShowConfirmModal(false);
+      navigate('/customer/orders');
     } catch (err) {
-      console.error('Order placement failed', err);
+      console.error('Order placement failed:', err);
       alert('Failed to place order. Please try again.');
+    } finally {
+      setOrderLoading(false);
     }
   };
+
 
   const groupedItems = groupByShop();
 
@@ -286,11 +251,18 @@ export default function CartPage() {
       <ConfirmOrderModal
         show={showConfirmModal}
         onClose={() => setShowConfirmModal(false)}
-        cartItems={cartItems}
+        cartItems={cartItems}           // <-- pass cart items here
         confirmDetails={confirmDetails}
         onConfirmOrder={handleConfirmOrder}
-        totalAmount={calculateTotal()}
+        totalAmount={calculateTotal()}  // <-- total cart amount
       />
+
+
+      {orderLoading && (
+        <div className="position-fixed top-50 start-50 translate-middle p-3 bg-white shadow rounded">
+          <span>Placing your order, please wait...</span>
+        </div>
+      )}
     </div>
   );
 }
