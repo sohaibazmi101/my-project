@@ -35,7 +35,8 @@ export default function OrderHistory() {
     return (
         <div className="container mt-4">
             <h3>Your Order History</h3>
-            {orders.map((order) => (
+            {/* CORRECTED: Reverse the orders array before mapping over it */}
+            {orders.slice().reverse().map((order) => (
                 <div key={order._id} className="mb-4 p-3 border rounded shadow-sm">
                     <div className="row row-cols-1 row-cols-sm-2 row-cols-md-3 g-3">
                         {order.products.map((item, idx) => (

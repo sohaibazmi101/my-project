@@ -86,6 +86,7 @@ exports.placeOrder = async (req, res) => {
         customerInfo,
       });
 
+      // Mongoose's pre-save hook will automatically generate the unique orderNumber here
       await order.save();
       createdOrders.push(order);
     }

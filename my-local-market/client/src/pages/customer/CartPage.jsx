@@ -251,13 +251,11 @@ export default function CartPage() {
       <ConfirmOrderModal
         show={showConfirmModal}
         onClose={() => setShowConfirmModal(false)}
-        cartItems={cartItems}           // <-- pass cart items here
+        cartItems={cartItems}
         confirmDetails={confirmDetails}
         onConfirmOrder={handleConfirmOrder}
-        totalAmount={calculateTotal()}  // <-- total cart amount
+        totalAmount={calculateTotal()}
       />
-
-
       {orderLoading && (
         <div className="position-fixed top-50 start-50 translate-middle p-3 bg-white shadow rounded">
           <span>Placing your order, please wait...</span>
