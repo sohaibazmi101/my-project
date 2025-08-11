@@ -7,22 +7,36 @@ export default function ShopDetails() {
   const { id } = useParams();
   const [shop, setShop] = useState(null);
   const [products, setProducts] = useState([]);
+  const [categories, setCategories] = useState([]);
+
+  useEffect(() => {
+    const fetchCategories = async () => {
+      try {
+        const res = await api.get('/categories');
+        setCategories(res.data || []);
+      } catch (err) {
+        console.error('Failed to fetch categories:', err);
+        setCategories([]);
+      }
+    };
+    fetchCategories();
+  }, []);
 
   useEffect(() => {
     api.get(`/shops/${id}`)
       .then(res => {
         setShop(res.data.shop);
-
-        // Uncomment this to test layout with more products
-        // const expanded = [...res.data.products, ...res.data.products, ...res.data.products];
-        // setProducts(expanded);
-
         setProducts(res.data.products);
       })
       .catch(err => console.error(err));
   }, [id]);
 
   if (!shop) return <div className="text-center mt-5">Loading...</div>;
+
+  // Safely get category name (if categories and shop.category exist)
+  const categoryName = (shop.category && categories.length > 0)
+    ? (categories.find(cat => cat._id.toString() === shop.category.toString())?.name || 'Unknown Category')
+    : 'Loading category...';
 
   const featured = shop.featuredProducts || [];
   const recent = shop.newProducts || [];
@@ -126,7 +140,7 @@ export default function ShopDetails() {
       {/* Shop Info */}
       <section className="text-center mb-4">
         <h2>{shop.name}</h2>
-        {shop.category && <p className="text-muted mb-1">{shop.category}</p>}
+        <p className="text-muted mb-1">{categoryName}</p>
         {shop.address && <p className="text-muted mb-1">{shop.address}</p>}
         {shop.description && <p className="text-muted">{shop.description}</p>}
 

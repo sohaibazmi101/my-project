@@ -1,7 +1,9 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import api from '../../services/api';
-import ProductCardForSeller from '../../components/ProductCardForSeller';
+import CreateShopForm from './components/CreateShopForm';
+import ShopInfoForm from './components/ShopInfoForm';
+import ProductList from './components/ProductList';
 
 export default function ManageShop() {
   const [shop, setShop] = useState(undefined); // undefined = loading, null = no shop
@@ -28,8 +30,10 @@ export default function ManageShop() {
   useEffect(() => {
     fetchShop();
     fetchCategories();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  // Fetch existing shop and products for the logged in seller
   const fetchShop = async () => {
     try {
       const res = await api.get('/sellers/me', {
@@ -48,6 +52,7 @@ export default function ManageShop() {
         return;
       }
 
+      // Normalize product IDs to strings for comparison
       shop.featuredProducts = (shop.featuredProducts || []).map(id => id.toString());
       shop.newProducts = (shop.newProducts || []).map(id => id.toString());
 
@@ -66,6 +71,7 @@ export default function ManageShop() {
     }
   };
 
+  // Fetch available categories for shop creation
   const fetchCategories = async () => {
     try {
       const res = await api.get('/categories');
@@ -76,12 +82,13 @@ export default function ManageShop() {
     }
   };
 
-  // Create new shop handlers
+  // Handle changes in the create shop form
   const handleCreateShopChange = (e) => {
     const { name, value } = e.target;
     setNewShopData(prev => ({ ...prev, [name]: value }));
   };
 
+  // Submit handler for creating new shop
   const handleCreateShopSubmit = async (e) => {
     e.preventDefault();
     setCreatingShop(true);
@@ -96,7 +103,7 @@ export default function ManageShop() {
         location: newShopData.location,
         banner: newShopData.banner,
       };
-      const res = await api.post('/customers/create-shop', payload, {
+      const res = await api.post('/sellers/create-shop', payload, {
         headers: { Authorization: `Bearer ${token}` }
       });
       alert('Shop created successfully!');
@@ -109,6 +116,7 @@ export default function ManageShop() {
     }
   };
 
+  // Handle banner image upload (both create and manage shop)
   const handleBannerUpload = async (file) => {
     setUploading(true);
     const formData = new FormData();
@@ -139,13 +147,13 @@ export default function ManageShop() {
     }
   };
 
-  // Existing handlers (handleInputChange, handleShopSave, toggleProductFlag, handleDeleteProduct, handleEditProduct)
-
+  // Handle input changes in manage existing shop form
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setShop((prev) => ({ ...prev, [name]: value }));
   };
 
+  // Save shop info update
   const handleShopSave = async () => {
     try {
       await api.put(`/shops/${shop._id}/update`, {
@@ -164,6 +172,7 @@ export default function ManageShop() {
     }
   };
 
+  // Toggle featured or new product flags
   const toggleProductFlag = async (productId, field) => {
     const idStr = productId.toString();
     const fieldKey = field === 'featured' ? 'featuredProducts' : 'newProducts';
@@ -186,6 +195,7 @@ export default function ManageShop() {
     }
   };
 
+  // Delete a product
   const handleDeleteProduct = async (productId) => {
     if (!window.confirm('Are you sure you want to delete this product?')) return;
 
@@ -201,6 +211,7 @@ export default function ManageShop() {
     }
   };
 
+  // Navigate to edit product page
   const handleEditProduct = (productId) => {
     navigate(`/seller/products/edit/${productId}`);
   };
@@ -212,208 +223,46 @@ export default function ManageShop() {
   }
 
   if (shop === null) {
-    // Create shop form with category select dropdown
+    // Render Create Shop Form component with props
     return (
-      <div className="container mt-5">
-        <h2>Create Your Shop</h2>
-        <form onSubmit={handleCreateShopSubmit}>
-
-          <div className="mb-3">
-            <label className="form-label">Shop Name</label>
-            <input
-              type="text"
-              className="form-control"
-              name="shopName"
-              value={newShopData.shopName}
-              onChange={handleCreateShopChange}
-              required
-            />
-          </div>
-
-          <div className="mb-3">
-            <label className="form-label">Description</label>
-            <textarea
-              className="form-control"
-              name="description"
-              value={newShopData.description}
-              onChange={handleCreateShopChange}
-              rows="3"
-            />
-          </div>
-
-          <div className="mb-3">
-            <label className="form-label">Address</label>
-            <input
-              type="text"
-              className="form-control"
-              name="address"
-              value={newShopData.address}
-              onChange={handleCreateShopChange}
-            />
-          </div>
-
-          <div className="mb-3">
-            <label className="form-label">Category</label>
-            <select
-              className="form-control"
-              name="category"
-              value={newShopData.category}
-              onChange={handleCreateShopChange}
-              required
-            >
-              <option value="">Select Category</option>
-              {categories.map(cat => (
-                <option key={cat._id} value={cat._id}>{cat.name}</option>
-              ))}
-            </select>
-          </div>
-
-          <div className="mb-3">
-            <label className="form-label">WhatsApp Number</label>
-            <input
-              type="text"
-              className="form-control"
-              name="whatsapp"
-              value={newShopData.whatsapp}
-              onChange={handleCreateShopChange}
-            />
-          </div>
-
-          <div className="mb-3">
-            <label className="form-label">Location</label>
-            <input
-              type="text"
-              className="form-control"
-              name="location"
-              value={newShopData.location}
-              onChange={handleCreateShopChange}
-            />
-          </div>
-
-          <div className="mb-3">
-            <label className="form-label">Shop Banner (optional)</label>
-            <input
-              type="file"
-              className="form-control"
-              onChange={(e) => handleBannerUpload(e.target.files[0])}
-              disabled={uploading}
-            />
-            {newShopData.banner && (
-              <img
-                src={newShopData.banner}
-                alt="Shop Banner"
-                className="img-fluid mt-2"
-                style={{ maxHeight: '200px', objectFit: 'cover' }}
-              />
-            )}
-          </div>
-
-          <button
-            type="submit"
-            className="btn btn-primary"
-            disabled={creatingShop || uploading}
-          >
-            {creatingShop ? 'Creating Shop...' : 'Create Shop'}
-          </button>
-        </form>
-      </div>
+      <CreateShopForm
+        newShopData={newShopData}
+        categories={categories}
+        uploading={uploading}
+        creatingShop={creatingShop}
+        onChange={handleCreateShopChange}
+        onBannerUpload={handleBannerUpload}
+        onSubmit={handleCreateShopSubmit}
+      />
     );
   }
 
-  // Manage shop UI when shop exists
+  // Render Manage Shop and Product List components
   return (
-    <div className="container mt-5">
-      <h2>Manage Your Shop</h2>
-
-      <div className="mb-4">
-        <label>Shop Name</label>
-        <input
-          type="text"
-          className="form-control"
-          name="name"
-          value={shop.name || ''}
-          onChange={handleInputChange}
-        />
-      </div>
-
-      <div className="mb-4">
-        <label>Shop ID</label>
-        <input
-          type="text"
-          className="form-control"
-          name="shopCode"
-          value={shop.shopCode || ''}
-          readOnly
-          disabled
-        />
-      </div>
-
-      <div className="mb-4">
-        <label>About Shop</label>
-        <textarea
-          className="form-control"
-          name="description"
-          value={shop.description || ''}
-          onChange={handleInputChange}
-          rows="3"
-        />
-      </div>
-
-      <div className="mb-4">
-        <label>Shop Location</label>
-        <input
-          type="text"
-          className="form-control"
-          name="location"
-          value={shop.location || ''}
-          onChange={handleInputChange}
-        />
-      </div>
-
-      <div className="mb-4">
-        <label>Shop Banner</label>
-        <input
-          type="file"
-          className="form-control"
-          onChange={(e) => handleBannerUpload(e.target.files[0])}
-          disabled={uploading}
-        />
-        {banner && (
-          <img
-            src={banner}
-            alt="Shop Banner"
-            className="img-fluid mt-2"
-            style={{ maxHeight: '200px', objectFit: 'cover' }}
-          />
-        )}
-      </div>
-
-      <button className="btn btn-success mb-5" onClick={handleShopSave} disabled={uploading}>
-        {uploading ? 'Uploading...' : 'Save Shop Info'}
-      </button>
+    <>
+      <ShopInfoForm
+        shop={shop}
+        banner={banner}
+        uploading={uploading}
+        onInputChange={handleInputChange}
+        onBannerUpload={handleBannerUpload}
+        onSave={handleShopSave}
+      />
 
       <hr />
 
-      <h4>Your Products</h4>
-      {products.length === 0 ? (
-        <p>No products found</p>
-      ) : (
-        <div className="row">
-          {products.map((product) => (
-            <div key={product._id} className="col-6 col-md-4 mb-3">
-              <ProductCardForSeller
-                product={product}
-                isFeatured={shop.featuredProducts.includes(product._id.toString())}
-                isNew={shop.newProducts.includes(product._id.toString())}
-                onToggleFeatured={(id) => toggleProductFlag(id, 'featured')}
-                onToggleNew={(id) => toggleProductFlag(id, 'new')}
-                onEdit={handleEditProduct}
-                onDelete={handleDeleteProduct}
-              />
-            </div>
-          ))}
-        </div>
-      )}
-    </div>
+      <div className="container">
+        <h4>Your Products</h4>
+        <ProductList
+          products={products}
+          featuredProducts={shop.featuredProducts}
+          newProducts={shop.newProducts}
+          onToggleFeatured={(id) => toggleProductFlag(id, 'featured')}
+          onToggleNew={(id) => toggleProductFlag(id, 'new')}
+          onEdit={handleEditProduct}
+          onDelete={handleDeleteProduct}
+        />
+      </div>
+    </>
   );
 }

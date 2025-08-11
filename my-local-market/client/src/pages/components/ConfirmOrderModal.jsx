@@ -3,24 +3,41 @@ import React, { useState, useEffect } from 'react';
 export default function ConfirmOrderModal({
   show,
   onClose,
-  product, // This will be an object for a single product or null for the cart
-  cartItems, // New prop for cart items
+  product, // single product object or null for cart
+  cartItems, // array of cart items (optional)
   confirmDetails,
   onConfirmOrder,
-  totalAmount: cartTotalAmount, // New prop for the total cart amount
+  totalAmount: cartTotalAmount, // total amount for cart (optional)
 }) {
+  const emptyDetails = {
+    name: '',
+    email: '',
+    mobile: '',
+    address: {
+      street: '',
+      city: '',
+      state: '',
+      pincode: '',
+    },
+  };
+
+  // Manage quantity & paymentMethod internally (default 1 and 'cod')
   const [quantity, setQuantity] = useState(1);
-  const [paymentMethod, setPaymentMethod] = useState('upi');
-  const [editableDetails, setEditableDetails] = useState(confirmDetails);
+  const [paymentMethod, setPaymentMethod] = useState('cod');
+  const [editableDetails, setEditableDetails] = useState(confirmDetails || emptyDetails);
 
   useEffect(() => {
-    setEditableDetails(confirmDetails);
-  }, [confirmDetails]);
+    if (show) {
+      setEditableDetails(confirmDetails || emptyDetails);
+      setQuantity(1);
+      setPaymentMethod('cod');
+    }
+  }, [show, confirmDetails]);
 
-  // Determine if we are handling a single product or a cart
+  // Determine if handling cart or single product
   const isCart = Array.isArray(cartItems) && cartItems.length > 0;
-  
-  // Calculate the total amount based on whether it's a cart or a single product
+
+  // Calculate total amount
   const totalAmount = isCart
     ? cartTotalAmount
     : product?.price * quantity || 0;
@@ -29,34 +46,61 @@ export default function ConfirmOrderModal({
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    onConfirmOrder(isCart ? cartItems : [{ product, quantity }], paymentMethod, totalAmount, editableDetails);
+
+    const orderData = {
+      cart: isCart
+        ? cartItems.map(item => ({
+          product: item.product._id,
+          quantity: item.quantity,
+          paymentMethod: paymentMethod,
+        }))
+        : [
+          {
+            product: product._id,
+            quantity: quantity,
+            paymentMethod: paymentMethod,
+          },
+        ],
+      totalAmount,
+      shippingAddress: editableDetails.address,
+      customerInfo: {
+        name: editableDetails.name,
+        email: editableDetails.email,
+        mobile: editableDetails.mobile,
+      },
+    };
+
+    onConfirmOrder(orderData);
   };
 
   return (
-    <div className="modal d-block bg-dark bg-opacity-50">
-      <div className="modal-dialog modal-dialog-centered">
+    <div className="modal d-block bg-dark bg-opacity-50" tabIndex="-1" role="dialog">
+      <div className="modal-dialog modal-dialog-centered" role="document">
         <div className="modal-content p-4">
           <h4 className="mb-3">Confirm Shipping Details & Payment</h4>
           <form onSubmit={handleSubmit}>
-            {/* ... (Editable fields for name, email, mobile, and address) ... */}
             <input
               type="text"
               className="form-control mb-2"
-              value={editableDetails.name}
-              onChange={(e) => setEditableDetails({ ...editableDetails, name: e.target.value })}
+              value={editableDetails?.name || ''}
+              onChange={(e) =>
+                setEditableDetails({ ...editableDetails, name: e.target.value })
+              }
               placeholder="Name"
               required
             />
             <input
               type="email"
               className="form-control mb-2"
-              value={editableDetails.email}
-              onChange={(e) => setEditableDetails({ ...editableDetails, email: e.target.value })}
+              value={editableDetails?.email || ''}
+              onChange={(e) =>
+                setEditableDetails({ ...editableDetails, email: e.target.value })
+              }
               placeholder="Email"
               required
             />
-            
-            {/* Conditionally render quantity input for a single product */}
+
+            {/* Quantity input only for single product */}
             {!isCart && (
               <>
                 <label className="form-label mt-2">Quantity</label>
@@ -77,53 +121,63 @@ export default function ConfirmOrderModal({
             <input
               type="text"
               className="form-control mb-2"
-              value={editableDetails.mobile}
-              onChange={(e) => setEditableDetails({ ...editableDetails, mobile: e.target.value })}
               placeholder="Mobile"
+              value={editableDetails?.mobile || ''}
+              onChange={(e) =>
+                setEditableDetails({ ...editableDetails, mobile: e.target.value })
+              }
               required
             />
             <input
               type="text"
               className="form-control mb-2"
               placeholder="Street"
-              value={editableDetails.address.street}
-              onChange={(e) => setEditableDetails({
-                ...editableDetails,
-                address: { ...editableDetails.address, street: e.target.value }
-              })}
+              value={editableDetails?.address?.street || ''}
+              onChange={(e) =>
+                setEditableDetails({
+                  ...editableDetails,
+                  address: { ...editableDetails.address, street: e.target.value },
+                })
+              }
               required
             />
             <input
               type="text"
               className="form-control mb-2"
               placeholder="City"
-              value={editableDetails.address.city}
-              onChange={(e) => setEditableDetails({
-                ...editableDetails,
-                address: { ...editableDetails.address, city: e.target.value }
-              })}
+              value={editableDetails?.address?.city || ''}
+              onChange={(e) =>
+                setEditableDetails({
+                  ...editableDetails,
+                  address: { ...editableDetails.address, city: e.target.value },
+                })
+              }
               required
             />
             <input
               type="text"
               className="form-control mb-2"
               placeholder="State"
-              value={editableDetails.address.state}
-              onChange={(e) => setEditableDetails({
-                ...editableDetails,
-                address: { ...editableDetails.address, state: e.target.value }
-              })}
+              value={editableDetails?.address?.state || ''}
+              onChange={(e) =>
+                setEditableDetails({
+                  ...editableDetails,
+                  address: { ...editableDetails.address, state: e.target.value },
+                })
+              }
               required
             />
             <input
               type="text"
               className="form-control mb-3"
               placeholder="Pincode"
-              value={editableDetails.address.pincode}
-              onChange={(e) => setEditableDetails({
-                ...editableDetails,
-                address: { ...editableDetails.address, pincode: e.target.value }
-              })}
+              value={editableDetails?.address?.pincode || ''}
+              onChange={(e) =>
+                setEditableDetails({
+                  ...editableDetails,
+                  address: { ...editableDetails.address, pincode: e.target.value },
+                })
+              }
               required
             />
 
@@ -133,8 +187,13 @@ export default function ConfirmOrderModal({
                 <ul className="list-group list-group-flush">
                   {isCart ? (
                     cartItems.map((item) => (
-                      <li key={item.product._id} className="list-group-item d-flex justify-content-between">
-                        <span>{item.product.name} x {item.quantity}</span>
+                      <li
+                        key={item.product._id}
+                        className="list-group-item d-flex justify-content-between"
+                      >
+                        <span>
+                          {item.product.name} x {item.quantity}
+                        </span>
                         <span>₹{(item.product.price * item.quantity).toFixed(2)}</span>
                       </li>
                     ))

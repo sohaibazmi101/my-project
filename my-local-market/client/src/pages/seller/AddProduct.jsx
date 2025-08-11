@@ -87,7 +87,7 @@ export default function AddProduct() {
         await api.post('/products/add', form);
         alert('Product added');
       }
-      navigate('/dashboard');
+      navigate('seller/dashboard');
     } catch (err) {
       alert(err.response?.data?.message || 'Error saving product');
     }

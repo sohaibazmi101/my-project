@@ -1,5 +1,3 @@
-// src/controllers/paymentController.js
-
 const Razorpay = require('razorpay');
 const crypto = require('crypto');
 const Order = require('../models/Order');
@@ -21,27 +19,26 @@ exports.createPayment = async (req, res) => {
     }
 
     const customer = await Customer.findById(customerId);
-    if (!customer) {
-      return res.status(404).json({ message: 'Customer not found' });
-    }
+    if (!customer) return res.status(404).json({ message: 'Customer not found' });
 
     const shopGroups = {};
     let totalCartAmount = 0;
 
+    // Fetch products and group by shop
     for (const item of cart) {
       const product = await Product.findById(item.product).populate('shop');
       if (!product) continue;
 
       const shopId = product.shop._id.toString();
-      if (!shopGroups[shopId]) {
-        shopGroups[shopId] = { shop: product.shop, items: [] };
-      }
+      if (!shopGroups[shopId]) shopGroups[shopId] = { shop: product.shop, items: [] };
 
       shopGroups[shopId].items.push({ product, quantity: item.quantity });
       totalCartAmount += product.price * item.quantity;
     }
 
     const pendingOrders = [];
+
+    // Create DB order records with paymentMethod 'upi' and paymentStatus 'pending'
     for (const shopId in shopGroups) {
       const { shop, items } = shopGroups[shopId];
 
@@ -57,19 +54,19 @@ exports.createPayment = async (req, res) => {
         shop: shop._id,
         products: orderProducts,
         totalAmount,
-        paymentMethod: 'UPI',
-        paymentStatus: 'Pending',
+        paymentMethod: 'upi',
+        paymentStatus: 'pending',
       });
 
       await order.save();
       pendingOrders.push(order);
     }
-    
-    // Create a single Razorpay order for the entire cart's total amount
+
+    // Create Razorpay order for total amount (paise)
     const razorpayOrder = await instance.orders.create({
-      amount: totalCartAmount * 100, // Amount in paise
+      amount: totalCartAmount * 100,
       currency: 'INR',
-      receipt: pendingOrders.map(o => o._id).join(','), // Store a list of your order IDs
+      receipt: pendingOrders.map(o => o._id.toString()).join(','),
     });
 
     res.status(200).json({
@@ -85,8 +82,6 @@ exports.createPayment = async (req, res) => {
   }
 };
 
-// src/controllers/paymentController.js
-
 exports.handleWebhook = async (req, res) => {
   const shasum = crypto.createHmac('sha256', process.env.RAZORPAY_WEBHOOK_SECRET);
   shasum.update(JSON.stringify(req.body));
@@ -96,13 +91,10 @@ exports.handleWebhook = async (req, res) => {
     const { payload } = req.body;
     const receipt = payload.payment.entity.receipt;
 
-    // Split the comma-separated string of IDs into an array
     const orderIds = receipt.split(',');
 
-    // Iterate through each order ID and update the payment status
     for (const orderId of orderIds) {
-        // You can add error handling here in case an ID is invalid
-        await Order.findByIdAndUpdate(orderId, { paymentStatus: 'Completed' });
+      await Order.findByIdAndUpdate(orderId, { paymentStatus: 'completed' });
     }
   }
 

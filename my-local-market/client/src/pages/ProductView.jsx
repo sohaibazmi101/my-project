@@ -1,4 +1,4 @@
-import { useParams, Link, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 import { useEffect, useState, useCallback } from 'react';
 import api from '../services/api';
 import GoogleLoginModal from '../components/GoogleLoginModal';
@@ -10,24 +10,16 @@ import ConfirmOrderModal from './components/ConfirmOrderModal';
 export default function ProductView() {
   const { id } = useParams();
   const navigate = useNavigate();
+  const token = localStorage.getItem('customerToken');
+
   const [product, setProduct] = useState(null);
   const [isInCart, setIsInCart] = useState(false);
-  const token = localStorage.getItem('customerToken');
   const [loading, setLoading] = useState(false);
   const [showLoginModal, setShowLoginModal] = useState(false);
   const [missingDetailsModal, setMissingDetailsModal] = useState(false);
   const [showConfirmModal, setShowConfirmModal] = useState(false);
-  const [confirmDetails, setConfirmDetails] = useState({
-    name: '',
-    email: '',
-    mobile: '',
-    address: {
-      street: '',
-      city: '',
-      state: '',
-      pincode: '',
-    },
-  });
+
+  // States for missing info modal (phone/address)
   const [missingMobile, setMissingMobile] = useState('');
   const [missingAddress, setMissingAddress] = useState({
     street: '',
@@ -36,10 +28,20 @@ export default function ProductView() {
     pincode: '',
   });
 
+  // Store confirmed customer details fetched from backend, to prefill modal form
+  const [confirmDetails, setConfirmDetails] = useState({
+    name: '',
+    email: '',
+    mobile: '',
+    address: { street: '', city: '', state: '', pincode: '' },
+  });
+
+  // Fetch product details and save recently viewed product
   const fetchProduct = useCallback(async () => {
     try {
       const res = await api.get(`/products/${id}`);
       setProduct(res.data);
+
       if (token) {
         try {
           await api.post(
@@ -52,23 +54,24 @@ export default function ProductView() {
         }
       }
     } catch (err) {
-      console.error(err);
+      console.error('Failed to fetch product:', err);
+      setProduct(null);
     }
   }, [id, token]);
 
+  // Check if product is already in cart
   const checkIfInCart = useCallback(async () => {
+    if (!token) return setIsInCart(false);
     try {
       const res = await api.get('/cart', {
         headers: { Authorization: `Bearer ${token}` },
       });
       const cartItems = res.data?.cart || [];
-      const found = cartItems.find((item) => {
-        const cartProductId = item?.product?._id?.toString?.();
-        return cartProductId === id;
-      });
+      const found = cartItems.find((item) => item?.product?._id === id);
       setIsInCart(!!found);
     } catch (err) {
-      console.error('Failed to check cart', err);
+      console.error('Failed to check cart:', err);
+      setIsInCart(false);
     }
   }, [token, id]);
 
@@ -79,11 +82,14 @@ export default function ProductView() {
     }
   }, [id, token, fetchProduct, checkIfInCart]);
 
+  // Add product to cart (quantity fixed 1 here)
   const handleAddToCart = async () => {
     if (!token) {
       alert('Please login as customer to add items to cart.');
       return;
     }
+    if (!product) return;
+
     try {
       setLoading(true);
       await api.post(
@@ -94,22 +100,26 @@ export default function ProductView() {
       alert('Product added to cart!');
       checkIfInCart();
     } catch (err) {
-      console.error('Add to cart failed', err?.response?.data || err);
+      console.error('Add to cart failed:', err?.response?.data || err);
       alert(err?.response?.data?.message || 'Add to cart failed');
     } finally {
       setLoading(false);
     }
   };
 
+  // Buy Now clicked: fetch profile, check for missing info, open modal
   const handleBuyNow = async () => {
     if (!token) {
       setShowLoginModal(true);
       return;
     }
+
     try {
       const { data: customer } = await api.get('/customers/profile', {
         headers: { Authorization: `Bearer ${token}` },
       });
+
+      // Check missing phone or address
       if (
         !customer.phone ||
         !customer.address?.street ||
@@ -127,6 +137,8 @@ export default function ProductView() {
         setMissingDetailsModal(true);
         return;
       }
+
+      // Prefill confirmDetails for ConfirmOrderModal
       setConfirmDetails({
         name: customer.name || '',
         email: customer.email || '',
@@ -138,66 +150,46 @@ export default function ProductView() {
           pincode: customer.address?.pincode || '',
         },
       });
+
       setShowConfirmModal(true);
     } catch (err) {
-      console.error('Error fetching customer profile', err);
+      console.error('Error fetching customer profile:', err);
       alert('Something went wrong. Please try again.');
     }
   };
 
-  const handleConfirmOrder = async (quantity, paymentMethod, totalAmount) => {
+  // Confirm order handler: accepts order data from ConfirmOrderModal
+  const [orderLoading, setOrderLoading] = useState(false);
+
+  const handleConfirmOrder = async (orderData) => {
     try {
-      if (paymentMethod === 'cod') {
-        const orderData = {
-          cart: [{ product: product._id, quantity }],
-          paymentMethod: 'Cash on Delivery',
-          totalAmount,
-        };
-        await api.post('/customers/orders', orderData, {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-        alert('Order placed successfully!');
-        setShowConfirmModal(false);
-        navigate('/customer/orders');
-      } else if (paymentMethod === 'upi') {
-        const { data: { amount, orderId } } = await api.post(
-          '/customers/create-payment',
-          {
-            cart: [{ product: product._id, quantity }],
-            totalAmount,
-          },
-          { headers: { Authorization: `Bearer ${token}` } }
-        );
-        const options = {
-          key: import.meta.env.VITE_RAZORPAY_KEY_ID,
-          amount: amount,
-          currency: 'INR',
-          name: 'Your Store',
-          description: 'Payment for your order',
-          order_id: orderId,
-          handler: async function (response) {
-            alert('Payment successful!');
-            setShowConfirmModal(false);
-            navigate('/customer/orders');
-          },
-          prefill: {
-            name: confirmDetails.name,
-            email: confirmDetails.email,
-            contact: confirmDetails.mobile,
-          },
-          theme: { color: '#3399cc' },
-        };
-        const rzp1 = new window.Razorpay(options);
-        rzp1.open();
-      }
+      setOrderLoading(true);
+
+      console.log("Order payload:", orderData);
+
+      await api.post('/customers/orders', orderData, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+
+      alert('Order placed successfully!');
+      setShowConfirmModal(false);
+      navigate('/customer/orders');
     } catch (err) {
-      console.error('Order placement failed', err);
+      console.error('Order placement failed:', err);
       alert('Failed to place order. Please try again.');
+    } finally {
+      setOrderLoading(false);
     }
   };
 
+  // Update missing customer details modal submit
   const handleUpdateDetails = async (e) => {
     e.preventDefault();
+    if (!token) {
+      alert('Please login first.');
+      return;
+    }
+
     try {
       await api.patch(
         '/customers/profile',
@@ -208,10 +200,10 @@ export default function ProductView() {
         { headers: { Authorization: `Bearer ${token}` } }
       );
       setMissingDetailsModal(false);
-      handleBuyNow();
+      handleBuyNow(); // retry buy now flow after updating details
     } catch (err) {
-      console.error('Profile update failed', err);
-      alert('Failed to update profile. Try again.');
+      console.error('Profile update failed:', err);
+      alert('Failed to update profile. Please try again.');
     }
   };
 
@@ -240,7 +232,9 @@ export default function ProductView() {
         mobile={missingMobile}
         address={missingAddress}
         onMobileChange={(e) => setMissingMobile(e.target.value)}
-        onAddressChange={(key, value) => setMissingAddress((prev) => ({ ...prev, [key]: value }))}
+        onAddressChange={(key, value) =>
+          setMissingAddress((prev) => ({ ...prev, [key]: value }))
+        }
         onSaveAndContinue={handleUpdateDetails}
       />
 
@@ -250,7 +244,14 @@ export default function ProductView() {
         product={product}
         confirmDetails={confirmDetails}
         onConfirmOrder={handleConfirmOrder}
+        totalAmount={product.price * 1} // initial quantity 1 for single product
       />
+
+      {orderLoading && (
+        <div className="position-fixed top-50 start-50 translate-middle p-3 bg-white shadow rounded">
+          <span>Placing your order, please wait...</span>
+        </div>
+      )}
     </div>
   );
 }

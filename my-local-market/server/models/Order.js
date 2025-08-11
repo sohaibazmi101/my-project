@@ -16,8 +16,13 @@ const orderSchema = new mongoose.Schema({
       product: {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'Product',
+        required: true,
       },
-      quantity: Number,
+      quantity: {
+        type: Number,
+        required: true,
+        min: 1,
+      },
     },
   ],
   status: {
@@ -31,13 +36,13 @@ const orderSchema = new mongoose.Schema({
   },
   paymentMethod: {
     type: String,
-    enum: ['Cash on Delivery', 'UPI'],
+    enum: ['cod', 'upi'],
     required: true,
   },
   paymentStatus: {
     type: String,
-    enum: ['Pending', 'Completed', 'Failed'],
-    default: 'Pending',
+    enum: ['pending', 'completed', 'failed'],
+    default: 'pending',
   },
 }, { timestamps: true });
 
