@@ -3,6 +3,7 @@
 const Order = require('../models/Order');
 const Product = require('../models/Product');
 const Customer = require('../models/Customer');
+const Shop = require('../models/Shop');
 
 /**
  * @desc Get all orders for a specific customer
@@ -123,12 +124,17 @@ exports.getAllOrdersForAdmin = async (req, res) => {
  * @route GET /api/seller/orders
  * @access Private/Seller
  */
+
 exports.getSellerOrders = async (req, res) => {
   const sellerId = req.seller._id;
+
   try {
-    const orders = await Order.find({ shop: sellerId })
+    const sellerShops = await Shop.find({ sellerId: sellerId }).select('_id');
+    const shopIds = sellerShops.map(shop => shop._id);
+    const orders = await Order.find({ shop: { $in: shopIds } })
       .populate('customer', 'name email')
       .populate('products.product', 'name price shop');
+
     res.status(200).json(orders);
   } catch (err) {
     console.error('Get seller orders error:', err);
