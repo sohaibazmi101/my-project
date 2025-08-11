@@ -128,11 +128,12 @@ exports.getAllOrdersForAdmin = async (req, res) => {
  */
 
 exports.getSellerOrders = async (req, res) => {
-  const sellerId = req.seller._id;
+  const sellerId = req.seller; // sellerId is directly from authMiddleware
 
   try {
-    const sellerShops = await Shop.find({ sellerId: sellerId }).select('_id');
+    const sellerShops = await Shop.find({ sellerId }).select('_id');
     const shopIds = sellerShops.map(shop => shop._id);
+
     const orders = await Order.find({ shop: { $in: shopIds } })
       .populate('customer', 'name email')
       .populate('products.product', 'name price shop');
@@ -143,3 +144,4 @@ exports.getSellerOrders = async (req, res) => {
     res.status(500).json({ message: 'Server error' });
   }
 };
+
