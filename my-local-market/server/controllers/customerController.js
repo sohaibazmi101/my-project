@@ -59,8 +59,6 @@ exports.googleLoginCustomer = async (req, res) => {
   try {
     const { name, email, picture, googleId } = req.body;
 
-    console.log("Incoming Google login:", req.body); // Add this line
-
     if (!email || !name) {
       return res.status(400).json({ error: 'Name and email are required' });
     }

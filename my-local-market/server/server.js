@@ -38,7 +38,6 @@ app.use('/api', publicRoutes);
 app.use('/api/categories', categoryRoutes);
 app.use('/api', paymentRoutes);
 
-// Health check
 app.get('/api/ping', (req, res) => {
   res.json({ message: 'Server is live' });
 });

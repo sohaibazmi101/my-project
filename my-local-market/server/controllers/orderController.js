@@ -1,15 +1,8 @@
-// src/controllers/orderController.js
-
 const Order = require('../models/Order');
 const Product = require('../models/Product');
 const Customer = require('../models/Customer');
 const Shop = require('../models/Shop');
 
-/**
- * @desc Get all orders for a specific customer
- * @route GET /api/customers/orders
- * @access Private/Customer
- */
 exports.getCustomerOrders = async (req, res) => {
   try {
     const customerId = req.customer._id;
@@ -23,11 +16,6 @@ exports.getCustomerOrders = async (req, res) => {
   }
 };
 
-/**
- * @desc Place an order from the customer's cart
- * @route POST /api/customers/orders
- * @access Private/Customer
- */
 exports.placeOrder = async (req, res) => {
   try {
     const customerId = req.customer._id;
@@ -45,11 +33,17 @@ exports.placeOrder = async (req, res) => {
       return res.status(404).json({ message: 'Customer not found' });
     }
 
+    const isPrepaid = cart.some(item => item.paymentMethod !== 'cod');
+    if (isPrepaid) {
+      return res.status(400).json({
+        message: 'Prepaid orders must be created via /customers/create-payment endpoint'
+      });
+    }
+
     const productIds = cart.map(item => item.product);
     const products = await Product.find({ _id: { $in: productIds } }).populate('shop');
     const productMap = new Map(products.map(p => [p._id.toString(), p]));
 
-    // Group items by shop
     const shopGroups = {};
     const orderedProductIds = new Set();
     for (const item of cart) {
@@ -60,7 +54,7 @@ exports.placeOrder = async (req, res) => {
         shopGroups[shopId] = {
           shop: product.shop,
           items: [],
-          paymentMethod: item.paymentMethod,
+          paymentMethod: 'cod',
         };
       }
       shopGroups[shopId].items.push({ product, quantity: item.quantity });
@@ -82,6 +76,7 @@ exports.placeOrder = async (req, res) => {
         products: orderProducts,
         totalAmount,
         paymentMethod,
+        paymentStatus: 'pending',
         shippingAddress,
         customerInfo,
       });
@@ -89,8 +84,6 @@ exports.placeOrder = async (req, res) => {
       await order.save();
       createdOrders.push(order);
     }
-
-    // Remove ordered products from customer cart
     customer.cart = customer.cart.filter(item => !orderedProductIds.has(item.product.toString()));
     await customer.save();
 
@@ -100,6 +93,7 @@ exports.placeOrder = async (req, res) => {
     res.status(500).json({ message: 'Order placement failed' });
   }
 };
+
 
 /**
  * @desc Get all orders for the admin dashboard
