@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
-import api from '../../services/api'; // Assuming you have an Axios instance configured
-import 'bootstrap/dist/css/bootstrap.min.css'; // Make sure Bootstrap is imported for table styling
+import api from '../../services/api';
+import 'bootstrap/dist/css/bootstrap.min.css';
 
 export default function AdminOrdersPage() {
   const [orders, setOrders] = useState([]);
@@ -45,28 +45,39 @@ export default function AdminOrdersPage() {
       ) : (
         <div className="table-responsive">
           <table className="table table-hover table-striped table-bordered">
-            <thead className="thead-dark">
+            <thead className="table-dark">
               <tr>
-                <th scope="col">Order ID</th>
+                <th scope="col">Order Number</th>
                 <th scope="col">Date</th>
                 <th scope="col">Customer Name</th>
-                <th scope="col">Shop Name</th>
+                <th scope="col">Shop Code</th>
+                <th scope="col">Product Codes</th>
                 <th scope="col">Total Amount</th>
+                <th scope="col">Payment Method</th> {/* NEW: Added header */}
                 <th scope="col">Status</th>
               </tr>
             </thead>
             <tbody>
               {orders.map(order => (
                 <tr key={order._id}>
-                  <td>{order._id}</td>
+                  <td>{order.orderNumber}</td>
                   <td>{new Date(order.createdAt).toLocaleDateString()}</td>
-                  {/* Using optional chaining for safe access */}
                   <td>{order.customer?.name || 'N/A'}</td>
-                  <td>{order.shop?.name || 'N/A'}</td>
-                  <td>₹{order.totalAmount.toFixed(2)}</td>
-                  {/* Assuming you will add a status field to your Order model */}
+                  <td>{order.shop?.shopCode || 'N/A'}</td>
                   <td>
-                    <span className="badge bg-warning text-dark">Pending</span>
+                    {order.products.map(item => item.product?.productCode).join(', ')}
+                  </td>
+                  <td>₹{order.totalAmount.toFixed(2)}</td>
+                  <td>{order.paymentMethod}</td> {/* NEW: Display payment method */}
+                  <td>
+                    <span className={`badge ${
+                      order.status === 'Delivered' ? 'bg-success' :
+                      order.status === 'Shipped' ? 'bg-info' :
+                      order.status === 'Cancelled' ? 'bg-danger' :
+                      'bg-warning text-dark'
+                    }`}>
+                      {order.status}
+                    </span>
                   </td>
                 </tr>
               ))}

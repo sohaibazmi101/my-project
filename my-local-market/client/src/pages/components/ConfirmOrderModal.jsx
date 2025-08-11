@@ -23,14 +23,14 @@ export default function ConfirmOrderModal({
 
   // Manage quantity & paymentMethod internally (default 1 and 'cod')
   const [quantity, setQuantity] = useState(1);
-  const [paymentMethod, setPaymentMethod] = useState('cod');
+  const [paymentMethod, setPaymentMethod] = useState('Cash on Delivery');
   const [editableDetails, setEditableDetails] = useState(confirmDetails || emptyDetails);
 
   useEffect(() => {
     if (show) {
       setEditableDetails(confirmDetails || emptyDetails);
       setQuantity(1);
-      setPaymentMethod('cod');
+      setPaymentMethod('Cash on Delivery');
     }
   }, [show, confirmDetails]);
 
@@ -225,8 +225,8 @@ export default function ConfirmOrderModal({
                   type="radio"
                   name="paymentMethod"
                   id="upiRadio"
-                  value="upi"
-                  checked={paymentMethod === 'upi'}
+                  value="UPI"
+                  checked={paymentMethod === 'UPI'}
                   onChange={(e) => setPaymentMethod(e.target.value)}
                 />
                 <label className="form-check-label" htmlFor="upiRadio">
@@ -239,14 +239,15 @@ export default function ConfirmOrderModal({
                   type="radio"
                   name="paymentMethod"
                   id="codRadio"
-                  value="cod"
-                  checked={paymentMethod === 'cod'}
+                  value="Cash on Delivery"
+                  checked={paymentMethod === 'Cash on Delivery'}
                   onChange={(e) => setPaymentMethod(e.target.value)}
                 />
                 <label className="form-check-label" htmlFor="codRadio">
                   Cash on Delivery (COD)
                 </label>
               </div>
+
             </div>
 
             <div className="d-flex justify-content-between mt-3">

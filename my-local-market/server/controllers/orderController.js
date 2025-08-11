@@ -110,8 +110,10 @@ exports.getAllOrdersForAdmin = async (req, res) => {
   try {
     const orders = await Order.find()
       .populate('customer', 'name email')
-      .populate('shop', 'name')
-      .populate('products.product', 'name price');
+      // CHANGED: Populate the shopCode field
+      .populate('shop', 'name shopCode')
+      // CHANGED: Populate the productCode field
+      .populate('products.product', 'name price productCode');
     res.status(200).json(orders);
   } catch (err) {
     console.error('Get all orders error:', err);
