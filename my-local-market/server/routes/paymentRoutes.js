@@ -5,9 +5,9 @@ const verifyCustomer = require('../middleware/verifyCustomer');
 
 router.post('/payments/create-payment', verifyCustomer, paymentController.createPayment);
 
+// The `express.raw` middleware is now handled in server.js, so remove it here.
 router.post(
   '/payments/webhook',
-  express.raw({ type: 'application/json' }),
   paymentController.handleWebhook
 );
 

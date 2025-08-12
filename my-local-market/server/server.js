@@ -12,12 +12,13 @@ const app = express();
 // Middleware
 app.use(cors());
 
-// IMPORTANT: This must come BEFORE app.use(express.json())
-// Razorpay webhook is handled here with express.raw
+// IMPORTANT FIX: Handle the webhook route with `express.raw` first.
+// This is a special case to ensure the body is not parsed into JSON.
 const paymentRoutes = require('./routes/paymentRoutes');
-app.use('/api', paymentRoutes);
+app.use('/api/payments/webhook', express.raw({ type: 'application/json' }), paymentRoutes);
 
-// General purpose body parsers for all other routes
+// General purpose body parser for all other routes
+// This will correctly parse the body for routes like /payments/create-payment and /payments/verify
 app.use(express.json());
 
 // Static folder for local uploads (if any)
@@ -42,7 +43,8 @@ app.use('/api', shopRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api', publicRoutes);
 app.use('/api/categories', categoryRoutes);
-
+// Mount all other payment routes here. They will use the global `express.json()`
+app.use('/api', paymentRoutes);
 
 app.get('/api/ping', (req, res) => {
   res.json({ message: 'Server is live' });
