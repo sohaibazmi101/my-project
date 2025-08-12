@@ -9,62 +9,64 @@ const RAZORPAY_KEY = import.meta.env.VITE_RAZORPAY_KEY_ID || '';
  * @returns {Promise<void>}
  */
 export async function placeOrderWithRazorpay(orderData, token) {
-  if (!token) throw new Error('User not authenticated');
+    if (!token) throw new Error('User not authenticated');
 
-  // Step 1: Create order on backend
-  const createOrderRes = await api.post(
-    '/payments/create-payment',
-    {
-      amount: orderData.totalAmount * 100, // amount in paise
-    },
-    {
-      headers: { Authorization: `Bearer ${token}` },
-    }
-  );
-  const { orderId } = createOrderRes.data;
-
-  // Step 2: Open Razorpay payment modal
-  const paymentResult = await new Promise((resolve, reject) => {
-    const options = {
-      key: RAZORPAY_KEY,
-      amount: orderData.totalAmount * 100,
-      currency: 'INR',
-      name: 'Your Shop Name',
-      description: 'Order Payment',
-      order_id: orderId,
-      handler: function (response) {
-        resolve(response);
-      },
-      modal: {
-        ondismiss: function () {
-          reject(new Error('Payment cancelled by user'));
+    // Step 1: Create order on backend
+    const createOrderRes = await api.post(
+        '/payments/create-payment',
+        {
+            cart: orderData.cart,                // send cart array here
+            // you can send other fields if needed
         },
-      },
-      prefill: {
-        name: orderData.customerInfo.name,
-        email: orderData.customerInfo.email,
-        contact: orderData.customerInfo.mobile,
-      },
-      theme: {
-        color: '#3399cc',
-      },
-    };
+        {
+            headers: { Authorization: `Bearer ${token}` },
+        }
+    );
 
-    const rzp = new window.Razorpay(options);
-    rzp.open();
-  });
+    const { orderId } = createOrderRes.data;
 
-  // Step 3: Verify payment on backend
-  await api.post(
-    '/payments/verify',
-    {
-      ...paymentResult,
-      orderData,
-    },
-    {
-      headers: { Authorization: `Bearer ${token}` },
-    }
-  );
+    // Step 2: Open Razorpay payment modal
+    const paymentResult = await new Promise((resolve, reject) => {
+        const options = {
+            key: RAZORPAY_KEY,
+            amount: orderData.totalAmount * 100,
+            currency: 'INR',
+            name: 'Your Shop Name',
+            description: 'Order Payment',
+            order_id: orderId,
+            handler: function (response) {
+                resolve(response);
+            },
+            modal: {
+                ondismiss: function () {
+                    reject(new Error('Payment cancelled by user'));
+                },
+            },
+            prefill: {
+                name: orderData.customerInfo.name,
+                email: orderData.customerInfo.email,
+                contact: orderData.customerInfo.mobile,
+            },
+            theme: {
+                color: '#3399cc',
+            },
+        };
+
+        const rzp = new window.Razorpay(options);
+        rzp.open();
+    });
+
+    // Step 3: Verify payment on backend
+    await api.post(
+        '/payments/verify',
+        {
+            ...paymentResult,
+            orderData,
+        },
+        {
+            headers: { Authorization: `Bearer ${token}` },
+        }
+    );
 }
 
 /**
@@ -74,12 +76,12 @@ export async function placeOrderWithRazorpay(orderData, token) {
  * @returns {Promise<void>}
  */
 export async function placeOrderCOD(orderData, token) {
-  if (!token) throw new Error('User not authenticated');
+    if (!token) throw new Error('User not authenticated');
 
-  // Directly place order with paymentMethod = 'Cash on Delivery'
-  await api.post('/customers/orders', orderData, {
-    headers: { Authorization: `Bearer ${token}` },
-  });
+    // Directly place order with paymentMethod = 'Cash on Delivery'
+    await api.post('/customers/orders', orderData, {
+        headers: { Authorization: `Bearer ${token}` },
+    });
 }
 
 /**
@@ -89,15 +91,15 @@ export async function placeOrderCOD(orderData, token) {
  * @returns {Promise<void>}
  */
 export async function placeOrder(orderData, token) {
-  if (!token) throw new Error('User not authenticated');
+    if (!token) throw new Error('User not authenticated');
 
-  if (orderData.paymentMethod === 'UPI') {
-    // Razorpay flow
-    await placeOrderWithRazorpay(orderData, token);
-  } else if (orderData.paymentMethod === 'Cash on Delivery') {
-    // COD flow
-    await placeOrderCOD(orderData, token);
-  } else {
-    throw new Error('Unsupported payment method');
-  }
+    if (orderData.paymentMethod === 'UPI') {
+        // Razorpay flow
+        await placeOrderWithRazorpay(orderData, token);
+    } else if (orderData.paymentMethod === 'Cash on Delivery') {
+        // COD flow
+        await placeOrderCOD(orderData, token);
+    } else {
+        throw new Error('Unsupported payment method');
+    }
 }

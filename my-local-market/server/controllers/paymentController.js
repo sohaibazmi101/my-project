@@ -64,7 +64,7 @@ exports.createPayment = async (req, res) => {
         shop: shop._id,
         products: orderProducts,
         totalAmount: Math.round(totalAmount * 100) / 100,
-        paymentMethod: 'upi',
+        paymentMethod: 'UPI',
         paymentStatus: 'pending',
       });
 
