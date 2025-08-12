@@ -9,7 +9,6 @@ const instance = new Razorpay({
   key_secret: process.env.RAZORPAY_KEY_SECRET,
 });
 
-// Endpoint to ONLY create a Razorpay order. No database order is created yet.
 exports.createRazorpayOrder = async (req, res) => {
   try {
     const { cart } = req.body;
@@ -24,7 +23,7 @@ exports.createRazorpayOrder = async (req, res) => {
       return sum + (item ? product.price * item.quantity : 0);
     }, 0);
 
-    totalCartAmount = Math.round(totalCartAmount * 100); // paise
+    totalCartAmount = Math.round(totalCartAmount * 100);
 
     if (totalCartAmount <= 0) {
       return res.status(400).json({ message: 'Invalid cart amount' });
@@ -40,7 +39,7 @@ exports.createRazorpayOrder = async (req, res) => {
     res.status(200).json({
       success: true,
       orderId: razorpayOrder.id,
-      amount: totalCartAmount / 100, // rupees
+      amount: totalCartAmount / 100,
       currency: 'INR',
     });
 
@@ -50,7 +49,6 @@ exports.createRazorpayOrder = async (req, res) => {
   }
 };
 
-// NEW Endpoint to create a final order in the database after payment success.
 exports.createFinalOrder = async (req, res) => {
   try {
     const { razorpay_order_id, razorpay_payment_id, razorpay_signature, cart } = req.body;
@@ -64,7 +62,6 @@ exports.createFinalOrder = async (req, res) => {
       return res.status(400).json({ success: false, message: 'Invalid signature' });
     }
 
-    // Check if order already exists to prevent duplicates from webhook
     const existingOrder = await Order.findOne({ razorpayOrderId: razorpay_order_id });
     if (existingOrder) {
       return res.status(200).json({ success: true, message: 'Order already exists' });
@@ -72,7 +69,6 @@ exports.createFinalOrder = async (req, res) => {
 
     const products = await Product.find({ _id: { $in: cart.map(i => i.product) } }).populate('shop');
     
-    // Logic to create a single order (or multiple if needed)
     const shopGroups = {};
     for (const item of cart) {
       const product = products.find(p => p._id.toString() === item.product);
@@ -111,7 +107,6 @@ exports.createFinalOrder = async (req, res) => {
   }
 };
 
-// Razorpay webhook handler
 exports.handleWebhook = async (req, res) => {
   try {
     const rawBody = req.body;
@@ -131,7 +126,6 @@ exports.handleWebhook = async (req, res) => {
       const existingOrder = await Order.findOne({ razorpayOrderId });
       
       if (existingOrder) {
-        // If order exists, just update its status if necessary
         if (existingOrder.paymentStatus !== 'completed') {
           existingOrder.paymentStatus = 'completed';
           existingOrder.razorpayPaymentId = paymentId;
@@ -139,16 +133,11 @@ exports.handleWebhook = async (req, res) => {
           console.log(`Webhook: Updated order ${existingOrder._id} to completed.`);
         }
       } else {
-        // Fallback: If the order does not exist (frontend call failed), create it here.
         const orderDetails = await instance.orders.fetch(razorpayOrderId);
-        const receipt = orderDetails.receipt; // Use receipt to get customer/cart data
-        // You would need logic here to re-create the order based on the receipt or other data.
-        // For simplicity, we'll just log an error.
+        const receipt = orderDetails.receipt;
         console.error(`Webhook: Order with ID ${razorpayOrderId} not found. Manual intervention may be needed.`);
       }
     } else if (event.event === 'payment.failed') {
-      // In this new flow, we don't need to do anything for failed payments
-      // because no order was created in the first place.
       console.log(`Webhook: Payment failed for Razorpay order ${event.payload.payment.entity.order_id}. No action needed.`);
     }
 

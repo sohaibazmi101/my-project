@@ -11,6 +11,8 @@ const app = express();
 
 app.use(cors());
 
+// This middleware must be placed before any routes that require JSON parsing.
+// The webhook route is a special case and has its middleware handled directly in the router.
 app.use(express.json());
 
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
