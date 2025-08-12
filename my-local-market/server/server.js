@@ -11,12 +11,17 @@ const app = express();
 
 app.use(cors());
 
-// This middleware must be placed before any routes that require JSON parsing.
-// The webhook route is a special case and has its middleware handled directly in the router.
+// ✅ Payment routes BEFORE express.json(), so raw body works for webhook
+const paymentRoutes = require('./routes/paymentRoutes');
+app.use('/api', paymentRoutes);
+
+// Standard JSON body parser (after webhook route)
 app.use(express.json());
 
+// Static uploads
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
+// Other routes
 const sellerRoutes = require('./routes/sellerRoutes');
 const productRoutes = require('./routes/productRoutes');
 const shopRoutes = require('./routes/shopRoutes');
@@ -25,7 +30,6 @@ const publicRoutes = require('./routes/publicRoutes');
 const customerRoutes = require('./routes/customerRoutes');
 const cartRoutes = require('./routes/cartRoutes');
 const categoryRoutes = require('./routes/categoryRoutes');
-const paymentRoutes = require('./routes/paymentRoutes');
 
 app.use('/api/cart', cartRoutes);
 app.use('/api/customers', customerRoutes);
@@ -35,13 +39,12 @@ app.use('/api', shopRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api', publicRoutes);
 app.use('/api/categories', categoryRoutes);
-app.use('/api', paymentRoutes);
 
 app.get('/api/ping', (req, res) => {
   res.json({ message: 'Server is live' });
 });
 
-app.use((req, res, next) => {
+app.use((req, res) => {
   res.status(404).json({ message: 'Route not found' });
 });
 
