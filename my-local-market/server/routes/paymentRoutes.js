@@ -11,4 +11,6 @@ router.post(
   paymentController.handleWebhook
 );
 
+router.post('/payments/verify', verifyCustomer, paymentController.verifyPayment);
+
 module.exports = router;

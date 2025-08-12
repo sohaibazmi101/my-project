@@ -123,7 +123,7 @@ exports.getAllOrdersForAdmin = async (req, res) => {
  */
 
 exports.getSellerOrders = async (req, res) => {
-  const sellerId = req.seller._id;
+  const sellerId = req.seller;
 
   try {
     const sellerShops = await Shop.find({ sellerId }).select('_id');
