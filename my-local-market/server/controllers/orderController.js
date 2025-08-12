@@ -19,7 +19,7 @@ exports.getCustomerOrders = async (req, res) => {
 exports.placeOrder = async (req, res) => {
   try {
     const customerId = req.customer._id;
-    const { cart, shippingAddress, customerInfo } = req.body;
+    const { cart, shippingAddress, customerInfo, paymentMethod } = req.body;
 
     if (!cart || !Array.isArray(cart) || cart.length === 0) {
       return res.status(400).json({ message: 'Cart is empty or invalid' });
@@ -27,34 +27,33 @@ exports.placeOrder = async (req, res) => {
     if (!shippingAddress || !customerInfo) {
       return res.status(400).json({ message: 'Shipping address and customer info required' });
     }
+    if (!paymentMethod || !['Cash on Delivery', 'UPI'].includes(paymentMethod)) {
+      return res.status(400).json({ message: 'Valid payment method required' });
+    }
 
     const customer = await Customer.findById(customerId);
     if (!customer) {
       return res.status(404).json({ message: 'Customer not found' });
     }
 
-    const isPrepaid = cart.some(item => item.paymentMethod !== 'cod');
-    if (isPrepaid) {
-      return res.status(400).json({
-        message: 'Prepaid orders must be created via /customers/create-payment endpoint'
-      });
-    }
-
+    // Fetch all products in one query
     const productIds = cart.map(item => item.product);
     const products = await Product.find({ _id: { $in: productIds } }).populate('shop');
     const productMap = new Map(products.map(p => [p._id.toString(), p]));
 
+    // Group items by shop
     const shopGroups = {};
     const orderedProductIds = new Set();
+
     for (const item of cart) {
       const product = productMap.get(item.product);
       if (!product) continue;
+
       const shopId = product.shop._id.toString();
       if (!shopGroups[shopId]) {
         shopGroups[shopId] = {
           shop: product.shop,
           items: [],
-          paymentMethod: 'cod',
         };
       }
       shopGroups[shopId].items.push({ product, quantity: item.quantity });
@@ -62,12 +61,14 @@ exports.placeOrder = async (req, res) => {
     }
 
     const createdOrders = [];
+
     for (const shopId in shopGroups) {
-      const { shop, items, paymentMethod } = shopGroups[shopId];
+      const { shop, items } = shopGroups[shopId];
       const orderProducts = items.map(i => ({
         product: i.product._id,
         quantity: i.quantity,
       }));
+
       const totalAmount = items.reduce((sum, i) => sum + i.product.price * i.quantity, 0);
 
       const order = new Order({
@@ -75,17 +76,16 @@ exports.placeOrder = async (req, res) => {
         shop: shop._id,
         products: orderProducts,
         totalAmount,
-        paymentMethod,
-        paymentStatus: 'pending',
-        shippingAddress,
-        customerInfo,
+        paymentMethod,            // use paymentMethod from req.body
+        paymentStatus: 'pending', // default to pending
       });
 
       await order.save();
       createdOrders.push(order);
     }
-    customer.cart = customer.cart.filter(item => !orderedProductIds.has(item.product.toString()));
-    await customer.save();
+
+    // Optionally clear ordered items from customer cart here
+    // ...
 
     res.status(201).json(createdOrders);
   } catch (err) {
@@ -93,6 +93,7 @@ exports.placeOrder = async (req, res) => {
     res.status(500).json({ message: 'Order placement failed' });
   }
 };
+
 
 
 /**
@@ -122,7 +123,7 @@ exports.getAllOrdersForAdmin = async (req, res) => {
  */
 
 exports.getSellerOrders = async (req, res) => {
-  const sellerId = req.seller; // sellerId is directly from authMiddleware
+  const sellerId = req.seller._id;
 
   try {
     const sellerShops = await Shop.find({ sellerId }).select('_id');

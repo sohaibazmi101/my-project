@@ -21,7 +21,6 @@ export default function ConfirmOrderModal({
     },
   };
 
-  // Manage quantity & paymentMethod internally (default 1 and 'cod')
   const [quantity, setQuantity] = useState(1);
   const [paymentMethod, setPaymentMethod] = useState('Cash on Delivery');
   const [editableDetails, setEditableDetails] = useState(confirmDetails || emptyDetails);
@@ -34,7 +33,6 @@ export default function ConfirmOrderModal({
     }
   }, [show, confirmDetails]);
 
-  // Determine if handling cart or single product
   const isCart = Array.isArray(cartItems) && cartItems.length > 0;
 
   // Calculate total amount
@@ -52,13 +50,11 @@ export default function ConfirmOrderModal({
         ? cartItems.map(item => ({
           product: item.product._id,
           quantity: item.quantity,
-          paymentMethod: paymentMethod,
         }))
         : [
           {
             product: product._id,
-            quantity: quantity,
-            paymentMethod: paymentMethod,
+            quantity,
           },
         ],
       totalAmount,
@@ -68,6 +64,7 @@ export default function ConfirmOrderModal({
         email: editableDetails.email,
         mobile: editableDetails.mobile,
       },
+      paymentMethod, // from local state
     };
 
     onConfirmOrder(orderData);
@@ -180,7 +177,6 @@ export default function ConfirmOrderModal({
               }
               required
             />
-
             <div className="card mt-3">
               <div className="card-body">
                 <h5 className="card-title">Order Summary</h5>
@@ -216,7 +212,6 @@ export default function ConfirmOrderModal({
                 </ul>
               </div>
             </div>
-
             <div className="mt-3">
               <label className="form-label">Select Payment Method</label>
               <div className="form-check">
@@ -247,9 +242,7 @@ export default function ConfirmOrderModal({
                   Cash on Delivery (COD)
                 </label>
               </div>
-
             </div>
-
             <div className="d-flex justify-content-between mt-3">
               <button type="submit" className="btn btn-success">
                 Confirm & Buy

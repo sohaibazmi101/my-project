@@ -6,6 +6,7 @@ import ProductCarousel from './components/ProductCarousel';
 import ProductDetails from './components/ProductDetails';
 import MissingDetailsModal from './components/MissingDetailsModal';
 import ConfirmOrderModal from './components/ConfirmOrderModal';
+import { placeOrder } from '../services/orderService';
 
 export default function ProductView() {
   const { id } = useParams();
@@ -161,26 +162,25 @@ export default function ProductView() {
   // Confirm order handler: accepts order data from ConfirmOrderModal
   const [orderLoading, setOrderLoading] = useState(false);
 
+  // inside ProductView component...
+
   const handleConfirmOrder = async (orderData) => {
     try {
       setOrderLoading(true);
+      console.log('Payment method:', orderData.paymentMethod);
 
-      console.log("Order payload:", orderData);
-
-      await api.post('/customers/orders', orderData, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-
+      await placeOrder(orderData, token);
       alert('Order placed successfully!');
       setShowConfirmModal(false);
       navigate('/customer/orders');
     } catch (err) {
       console.error('Order placement failed:', err);
-      alert('Failed to place order. Please try again.');
+      alert(err.message || 'Failed to place order. Please try again.');
     } finally {
       setOrderLoading(false);
     }
   };
+
 
   const handleUpdateDetails = async (e) => {
     e.preventDefault();
