@@ -4,7 +4,7 @@ const RAZORPAY_KEY = import.meta.env.VITE_RAZORPAY_KEY_ID || '';
 
 /**
  * Place order with Razorpay payment
- * @param {Object} orderData - { cart (array) or single product array, totalAmount, shippingAddress, customerInfo, paymentMethod }
+ * @param {Object} orderData - { cart (array), totalAmount, shippingAddress, customerInfo, paymentMethod }
  * @param {string} token - Customer token for authorization
  * @returns {Promise<void>}
  */
@@ -16,7 +16,6 @@ export async function placeOrderWithRazorpay(orderData, token) {
         '/payments/create-payment',
         {
             cart: orderData.cart, // send cart array here
-            // you can send other fields if needed
         },
         {
             headers: { Authorization: `Bearer ${token}` },
@@ -29,7 +28,7 @@ export async function placeOrderWithRazorpay(orderData, token) {
     const paymentResult = await new Promise((resolve, reject) => {
         const options = {
             key: RAZORPAY_KEY,
-            amount: Math.round(orderData.totalAmount * 100), // ensure integer amount in paise
+            amount: Math.round(orderData.totalAmount * 100), // paise integer
             currency: 'INR',
             name: 'Your Shop Name',
             description: 'Order Payment',
@@ -94,10 +93,8 @@ export async function placeOrder(orderData, token) {
     if (!token) throw new Error('User not authenticated');
 
     if (orderData.paymentMethod === 'UPI') {
-        // Razorpay flow
         await placeOrderWithRazorpay(orderData, token);
     } else if (orderData.paymentMethod === 'Cash on Delivery') {
-        // COD flow
         await placeOrderCOD(orderData, token);
     } else {
         throw new Error('Unsupported payment method');

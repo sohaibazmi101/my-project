@@ -28,7 +28,6 @@ exports.createPayment = async (req, res) => {
     const shopGroups = {};
     let totalCartAmount = 0;
 
-    // Fetch all product IDs in one query
     const productIds = cart.map(i => i.product);
     const products = await Product.find({ _id: { $in: productIds } }).populate('shop');
 
@@ -43,12 +42,10 @@ exports.createPayment = async (req, res) => {
       totalCartAmount += product.price * item.quantity;
     }
 
-    // Round to paise (integer)
-    totalCartAmount = Math.round(totalCartAmount * 100);
+    totalCartAmount = Math.round(totalCartAmount * 100); // paise
 
     const pendingOrders = [];
 
-    // Create DB orders (pending)
     for (const shopId in shopGroups) {
       const { shop, items } = shopGroups[shopId];
 
@@ -72,15 +69,13 @@ exports.createPayment = async (req, res) => {
       pendingOrders.push(order);
     }
 
-    // Create Razorpay order with exact amount in paise
     const razorpayOrder = await instance.orders.create({
-      amount: totalCartAmount, // amount in paise (integer)
+      amount: totalCartAmount, // paise
       currency: 'INR',
       receipt: pendingOrders.map(o => o._id.toString()).join(','),
       payment_capture: 1,
     });
 
-    // Save razorpayOrderId in DB
     await Order.updateMany(
       { _id: { $in: pendingOrders.map(o => o._id) } },
       { $set: { razorpayOrderId: razorpayOrder.id } }
@@ -89,7 +84,7 @@ exports.createPayment = async (req, res) => {
     res.status(200).json({
       success: true,
       orderId: razorpayOrder.id,
-      amount: totalCartAmount / 100, // send amount in rupees (for client)
+      amount: totalCartAmount / 100, // rupees
       currency: 'INR',
     });
 
@@ -112,7 +107,6 @@ exports.verifyPayment = async (req, res) => {
       return res.status(400).json({ success: false, message: 'Invalid signature' });
     }
 
-    // Mark matching orders as completed
     const orders = await Order.find({ razorpayOrderId: razorpay_order_id });
     for (const order of orders) {
       if (order.paymentStatus !== 'completed') {
@@ -131,16 +125,17 @@ exports.verifyPayment = async (req, res) => {
 // Razorpay webhook handler
 exports.handleWebhook = async (req, res) => {
   try {
-    // req.body is raw Buffer, pass it as string to hmac.update
+    const rawBody = req.rawBody || req.body; // Ensure raw Buffer or string
+
     const shasum = crypto.createHmac('sha256', process.env.RAZORPAY_WEBHOOK_SECRET);
-    shasum.update(req.rawBody || req.body); // Use req.rawBody if set, else fallback to req.body
+    shasum.update(rawBody);
     const digest = shasum.digest('hex');
 
     if (digest !== req.headers['x-razorpay-signature']) {
       return res.status(400).json({ message: 'Invalid webhook signature' });
     }
 
-    const event = JSON.parse(req.body.toString());
+    const event = JSON.parse(rawBody.toString());
 
     console.log('Webhook event received:', event.event);
 
