@@ -42,7 +42,16 @@ exports.createPayment = async (req, res) => {
       totalCartAmount += product.price * item.quantity;
     }
 
-    totalCartAmount = Math.round(totalCartAmount * 100); // paise
+    // Razorpay requires amount in paise as an integer
+    totalCartAmount = Math.round(totalCartAmount * 100); 
+
+    // --- NEW DEBUGGING LOGS ---
+    console.log(`Calculated total cart amount in paise: ${totalCartAmount}`);
+    if (totalCartAmount <= 0) {
+      console.error('Error: Total cart amount is zero or less. This will fail.');
+      return res.status(400).json({ message: 'Invalid cart amount for payment' });
+    }
+    // --- END NEW DEBUGGING LOGS ---
 
     const pendingOrders = [];
 
@@ -69,6 +78,11 @@ exports.createPayment = async (req, res) => {
       pendingOrders.push(order);
     }
 
+    // --- NEW DEBUGGING LOGS ---
+    console.log('Successfully created pending orders in DB.');
+    console.log(`Razorpay order creation payload: amount: ${totalCartAmount}, currency: 'INR', receipt: ${pendingOrders.map(o => o._id.toString()).join(',')}`);
+    // --- END NEW DEBUGGING LOGS ---
+    
     const razorpayOrder = await instance.orders.create({
       amount: totalCartAmount, // paise
       currency: 'INR',
