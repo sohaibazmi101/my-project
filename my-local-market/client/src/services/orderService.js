@@ -13,7 +13,7 @@ export async function placeOrderWithRazorpay(orderData, token) {
 
   // Step 1: Create order on backend
   const createOrderRes = await api.post(
-    '/payments/create-order',
+    '/payments/create-payment',
     {
       amount: orderData.totalAmount * 100, // amount in paise
     },

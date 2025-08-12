@@ -12,10 +12,13 @@ const instance = new Razorpay({
 // Create Razorpay order & pending DB orders
 exports.createPayment = async (req, res) => {
   try {
+    console.log('Reciewed Create payment request body:', req.body);
+    console.log('CustomerId:', req.customer._id);
     const { cart } = req.body; // [{ product: id, quantity: n }]
     const customerId = req.customer._id;
 
     if (!cart || !Array.isArray(cart) || cart.length === 0) {
+      console.log('Cart is Empty: or invalid: ',cart);
       return res.status(400).json({ message: 'Cart is empty or invalid' });
     }
 
