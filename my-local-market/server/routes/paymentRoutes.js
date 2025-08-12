@@ -3,14 +3,19 @@ const router = express.Router();
 const paymentController = require('../controllers/paymentController');
 const verifyCustomer = require('../middleware/verifyCustomer');
 
-router.post('/payments/create-payment', verifyCustomer, paymentController.createPayment);
+// NEW ROUTE: Only creates a Razorpay order ID. No database order is created yet.
+router.post('/payments/create-razorpay-order', verifyCustomer, paymentController.createRazorpayOrder);
 
-// The `express.raw` middleware is now handled in server.js, so remove it here.
+// NEW ROUTE: Creates the final order in the database after a successful payment.
+// This route verifies the payment signature from the frontend before creating the order.
+router.post('/payments/create-final-order', verifyCustomer, paymentController.createFinalOrder);
+
+// The webhook handler, now with its specific middleware applied directly.
+// This is a much cleaner way to handle it than in server.js.
 router.post(
   '/payments/webhook',
+  express.raw({ type: 'application/json' }),
   paymentController.handleWebhook
 );
-
-router.post('/payments/verify', verifyCustomer, paymentController.verifyPayment);
 
 module.exports = router;

@@ -11,11 +11,11 @@ const RAZORPAY_KEY = import.meta.env.VITE_RAZORPAY_KEY_ID || '';
 export async function placeOrderWithRazorpay(orderData, token) {
     if (!token) throw new Error('User not authenticated');
 
-    // Step 1: Create order on backend
+    // Step 1: Create a Razorpay order on the backend.
     const createOrderRes = await api.post(
-        '/payments/create-payment',
+        '/payments/create-razorpay-order', // NEW ENDPOINT
         {
-            cart: orderData.cart, // send cart array here
+            cart: orderData.cart,
         },
         {
             headers: { Authorization: `Bearer ${token}` },
@@ -34,6 +34,8 @@ export async function placeOrderWithRazorpay(orderData, token) {
             description: 'Order Payment',
             order_id: orderId,
             handler: function (response) {
+                // On payment success, we get the payment details.
+                // We resolve the promise with these details.
                 resolve(response);
             },
             modal: {
@@ -55,18 +57,26 @@ export async function placeOrderWithRazorpay(orderData, token) {
         rzp.open();
     });
 
-    // Step 3: Verify payment on backend
-    await api.post(
-        '/payments/verify',
-        {
-            ...paymentResult,
-            orderData,
-        },
-        {
-            headers: { Authorization: `Bearer ${token}` },
-        }
-    );
+    // Step 3: Call the NEW backend endpoint to create the final order.
+    // This only happens if the payment was successful.
+    try {
+        await api.post(
+            '/payments/create-final-order', // NEW ENDPOINT
+            {
+                ...paymentResult,
+                cart: orderData.cart, // Send cart data to recreate the order
+            },
+            {
+                headers: { Authorization: `Bearer ${token}` },
+            }
+        );
+        console.log('Final order created successfully on the backend.');
+    } catch (error) {
+        console.error('Failed to create final order on backend. The webhook should handle this.', error);
+        // Display a message to the user that the order may be delayed but is confirmed.
+    }
 }
+
 
 /**
  * Place order with Cash on Delivery

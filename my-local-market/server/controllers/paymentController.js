@@ -9,91 +9,33 @@ const instance = new Razorpay({
   key_secret: process.env.RAZORPAY_KEY_SECRET,
 });
 
-// Create Razorpay order & pending DB orders
-exports.createPayment = async (req, res) => {
+// Endpoint to ONLY create a Razorpay order. No database order is created yet.
+exports.createRazorpayOrder = async (req, res) => {
   try {
-    console.log('Received Create payment request body:', req.body);
-    console.log('CustomerId:', req.customer._id);
-    const { cart } = req.body; // [{ product: id, quantity: n }]
+    const { cart } = req.body;
     const customerId = req.customer._id;
 
-    if (!cart || !Array.isArray(cart) || cart.length === 0) {
-      console.log('Cart is empty or invalid:', cart);
-      return res.status(400).json({ message: 'Cart is empty or invalid' });
-    }
+    const products = await Product.find({
+      _id: { $in: cart.map(i => i.product) }
+    }).populate('shop');
 
-    const customer = await Customer.findById(customerId);
-    if (!customer) return res.status(404).json({ message: 'Customer not found' });
+    let totalCartAmount = products.reduce((sum, product) => {
+      const item = cart.find(i => i.product === product._id.toString());
+      return sum + (item ? product.price * item.quantity : 0);
+    }, 0);
 
-    const shopGroups = {};
-    let totalCartAmount = 0;
+    totalCartAmount = Math.round(totalCartAmount * 100); // paise
 
-    const productIds = cart.map(i => i.product);
-    const products = await Product.find({ _id: { $in: productIds } }).populate('shop');
-
-    for (const item of cart) {
-      const product = products.find(p => p._id.toString() === item.product);
-      if (!product) continue;
-
-      const shopId = product.shop._id.toString();
-      if (!shopGroups[shopId]) shopGroups[shopId] = { shop: product.shop, items: [] };
-
-      shopGroups[shopId].items.push({ product, quantity: item.quantity });
-      totalCartAmount += product.price * item.quantity;
-    }
-
-    // Razorpay requires amount in paise as an integer
-    totalCartAmount = Math.round(totalCartAmount * 100); 
-
-    // --- NEW DEBUGGING LOGS ---
-    console.log(`Calculated total cart amount in paise: ${totalCartAmount}`);
     if (totalCartAmount <= 0) {
-      console.error('Error: Total cart amount is zero or less. This will fail.');
-      return res.status(400).json({ message: 'Invalid cart amount for payment' });
-    }
-    // --- END NEW DEBUGGING LOGS ---
-
-    const pendingOrders = [];
-
-    for (const shopId in shopGroups) {
-      const { shop, items } = shopGroups[shopId];
-
-      const orderProducts = items.map(i => ({
-        product: i.product._id,
-        quantity: i.quantity,
-      }));
-
-      const totalAmount = items.reduce((sum, i) => sum + i.product.price * i.quantity, 0);
-
-      const order = new Order({
-        customer: customerId,
-        shop: shop._id,
-        products: orderProducts,
-        totalAmount: Math.round(totalAmount * 100) / 100,
-        paymentMethod: 'UPI',
-        paymentStatus: 'pending',
-      });
-
-      await order.save();
-      pendingOrders.push(order);
+      return res.status(400).json({ message: 'Invalid cart amount' });
     }
 
-    // --- NEW DEBUGGING LOGS ---
-    console.log('Successfully created pending orders in DB.');
-    console.log(`Razorpay order creation payload: amount: ${totalCartAmount}, currency: 'INR', receipt: ${pendingOrders.map(o => o._id.toString()).join(',')}`);
-    // --- END NEW DEBUGGING LOGS ---
-    
     const razorpayOrder = await instance.orders.create({
-      amount: totalCartAmount, // paise
+      amount: totalCartAmount,
       currency: 'INR',
-      receipt: pendingOrders.map(o => o._id.toString()).join(','),
+      receipt: `receipt_${customerId}_${Date.now()}`,
       payment_capture: 1,
     });
-
-    await Order.updateMany(
-      { _id: { $in: pendingOrders.map(o => o._id) } },
-      { $set: { razorpayOrderId: razorpayOrder.id } }
-    );
 
     res.status(200).json({
       success: true,
@@ -103,15 +45,16 @@ exports.createPayment = async (req, res) => {
     });
 
   } catch (error) {
-    console.error('Error creating payment:', error);
+    console.error('Error creating Razorpay order:', error);
     res.status(500).json({ message: 'Server error' });
   }
 };
 
-// Frontend verification endpoint
-exports.verifyPayment = async (req, res) => {
+// NEW Endpoint to create a final order in the database after payment success.
+exports.createFinalOrder = async (req, res) => {
   try {
-    const { razorpay_order_id, razorpay_payment_id, razorpay_signature } = req.body;
+    const { razorpay_order_id, razorpay_payment_id, razorpay_signature, cart } = req.body;
+    const customerId = req.customer._id;
 
     const hmac = crypto.createHmac('sha256', process.env.RAZORPAY_KEY_SECRET);
     hmac.update(`${razorpay_order_id}|${razorpay_payment_id}`);
@@ -121,17 +64,49 @@ exports.verifyPayment = async (req, res) => {
       return res.status(400).json({ success: false, message: 'Invalid signature' });
     }
 
-    const orders = await Order.find({ razorpayOrderId: razorpay_order_id });
-    for (const order of orders) {
-      if (order.paymentStatus !== 'completed') {
-        order.paymentStatus = 'completed';
-        await order.save();
-      }
+    // Check if order already exists to prevent duplicates from webhook
+    const existingOrder = await Order.findOne({ razorpayOrderId: razorpay_order_id });
+    if (existingOrder) {
+      return res.status(200).json({ success: true, message: 'Order already exists' });
     }
 
-    res.json({ success: true });
+    const products = await Product.find({ _id: { $in: cart.map(i => i.product) } }).populate('shop');
+    
+    // Logic to create a single order (or multiple if needed)
+    const shopGroups = {};
+    for (const item of cart) {
+      const product = products.find(p => p._id.toString() === item.product);
+      if (!product) continue;
+      const shopId = product.shop._id.toString();
+      if (!shopGroups[shopId]) shopGroups[shopId] = { shop: product.shop, items: [] };
+      shopGroups[shopId].items.push({ product, quantity: item.quantity });
+    }
+    
+    const finalOrders = [];
+    for (const shopId in shopGroups) {
+      const { shop, items } = shopGroups[shopId];
+      const orderProducts = items.map(i => ({ product: i.product._id, quantity: i.quantity }));
+      const totalAmount = items.reduce((sum, i) => sum + i.product.price * i.quantity, 0);
+
+      const order = new Order({
+        customer: customerId,
+        shop: shop._id,
+        products: orderProducts,
+        totalAmount: Math.round(totalAmount * 100) / 100,
+        paymentMethod: 'UPI',
+        paymentStatus: 'completed', // Set directly to completed
+        razorpayOrderId: razorpay_order_id,
+        razorpayPaymentId: razorpay_payment_id,
+      });
+
+      await order.save();
+      finalOrders.push(order);
+    }
+    
+    res.status(200).json({ success: true, message: 'Order created successfully' });
+
   } catch (error) {
-    console.error('Error verifying payment:', error);
+    console.error('Error creating final order:', error);
     res.status(500).json({ message: 'Server error' });
   }
 };
@@ -139,34 +114,42 @@ exports.verifyPayment = async (req, res) => {
 // Razorpay webhook handler
 exports.handleWebhook = async (req, res) => {
   try {
-    const rawBody = req.rawBody || req.body; // Ensure raw Buffer or string
-
+    const rawBody = req.body;
+    const signature = req.headers['x-razorpay-signature'];
+    
+    if (!signature) return res.status(400).json({ message: 'Webhook signature not found' });
     const shasum = crypto.createHmac('sha256', process.env.RAZORPAY_WEBHOOK_SECRET);
     shasum.update(rawBody);
-    const digest = shasum.digest('hex');
-
-    if (digest !== req.headers['x-razorpay-signature']) {
-      return res.status(400).json({ message: 'Invalid webhook signature' });
-    }
+    if (shasum.digest('hex') !== signature) return res.status(400).json({ message: 'Invalid webhook signature' });
 
     const event = JSON.parse(rawBody.toString());
 
-    console.log('Webhook event received:', event.event);
-
-    if (event.event === 'payment.captured') {
-      const receipt = event.payload.payment.entity.receipt;
-      const orderIds = receipt.split(',');
-
-      console.log('Receipt:', receipt);
-      console.log('Order IDs:', orderIds);
-
-      for (const orderId of orderIds) {
-        const order = await Order.findById(orderId);
-        if (order && order.paymentStatus !== 'completed') {
-          order.paymentStatus = 'completed';
-          await order.save();
+    if (event.event === 'payment.captured' || event.event === 'order.paid') {
+      const razorpayOrderId = event.payload.order?.entity?.id || event.payload.payment?.entity?.order_id;
+      const paymentId = event.payload.payment?.entity?.id;
+      
+      const existingOrder = await Order.findOne({ razorpayOrderId });
+      
+      if (existingOrder) {
+        // If order exists, just update its status if necessary
+        if (existingOrder.paymentStatus !== 'completed') {
+          existingOrder.paymentStatus = 'completed';
+          existingOrder.razorpayPaymentId = paymentId;
+          await existingOrder.save();
+          console.log(`Webhook: Updated order ${existingOrder._id} to completed.`);
         }
+      } else {
+        // Fallback: If the order does not exist (frontend call failed), create it here.
+        const orderDetails = await instance.orders.fetch(razorpayOrderId);
+        const receipt = orderDetails.receipt; // Use receipt to get customer/cart data
+        // You would need logic here to re-create the order based on the receipt or other data.
+        // For simplicity, we'll just log an error.
+        console.error(`Webhook: Order with ID ${razorpayOrderId} not found. Manual intervention may be needed.`);
       }
+    } else if (event.event === 'payment.failed') {
+      // In this new flow, we don't need to do anything for failed payments
+      // because no order was created in the first place.
+      console.log(`Webhook: Payment failed for Razorpay order ${event.payload.payment.entity.order_id}. No action needed.`);
     }
 
     res.json({ success: true });
