@@ -18,7 +18,7 @@ exports.createPayment = async (req, res) => {
     const customerId = req.customer._id;
 
     if (!cart || !Array.isArray(cart) || cart.length === 0) {
-      console.log('Cart is Empty: or invalid: ',cart);
+      console.log('Cart is Empty: or invalid: ', cart);
       return res.status(400).json({ message: 'Cart is empty or invalid' });
     }
 
@@ -140,9 +140,15 @@ exports.handleWebhook = async (req, res) => {
     }
 
     const event = JSON.parse(req.body.toString());
+
+    console.log('Webhook event received:', event.event);
+
     if (event.event === 'payment.captured') {
       const receipt = event.payload.payment.entity.receipt;
       const orderIds = receipt.split(',');
+
+      console.log('Receipt:', receipt);
+      console.log('Order IDs:', orderIds);
 
       for (const orderId of orderIds) {
         const order = await Order.findById(orderId);
