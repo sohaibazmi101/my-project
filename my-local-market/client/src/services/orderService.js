@@ -15,7 +15,7 @@ export async function placeOrderWithRazorpay(orderData, token) {
     const createOrderRes = await api.post(
         '/payments/create-payment',
         {
-            cart: orderData.cart,                // send cart array here
+            cart: orderData.cart, // send cart array here
             // you can send other fields if needed
         },
         {
@@ -29,7 +29,7 @@ export async function placeOrderWithRazorpay(orderData, token) {
     const paymentResult = await new Promise((resolve, reject) => {
         const options = {
             key: RAZORPAY_KEY,
-            amount: orderData.totalAmount * 100,
+            amount: Math.round(orderData.totalAmount * 100), // ensure integer amount in paise
             currency: 'INR',
             name: 'Your Shop Name',
             description: 'Order Payment',

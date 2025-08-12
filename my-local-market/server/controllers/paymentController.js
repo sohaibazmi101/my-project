@@ -12,13 +12,13 @@ const instance = new Razorpay({
 // Create Razorpay order & pending DB orders
 exports.createPayment = async (req, res) => {
   try {
-    console.log('Reciewed Create payment request body:', req.body);
+    console.log('Received Create payment request body:', req.body);
     console.log('CustomerId:', req.customer._id);
     const { cart } = req.body; // [{ product: id, quantity: n }]
     const customerId = req.customer._id;
 
     if (!cart || !Array.isArray(cart) || cart.length === 0) {
-      console.log('Cart is Empty: or invalid: ', cart);
+      console.log('Cart is empty or invalid:', cart);
       return res.status(400).json({ message: 'Cart is empty or invalid' });
     }
 
@@ -43,8 +43,8 @@ exports.createPayment = async (req, res) => {
       totalCartAmount += product.price * item.quantity;
     }
 
-    // Round to paise
-    totalCartAmount = Math.round(totalCartAmount * 100) / 100;
+    // Round to paise (integer)
+    totalCartAmount = Math.round(totalCartAmount * 100);
 
     const pendingOrders = [];
 
@@ -72,9 +72,9 @@ exports.createPayment = async (req, res) => {
       pendingOrders.push(order);
     }
 
-    // Create Razorpay order
+    // Create Razorpay order with exact amount in paise
     const razorpayOrder = await instance.orders.create({
-      amount: Math.round(totalCartAmount * 100), // in paise
+      amount: totalCartAmount, // amount in paise (integer)
       currency: 'INR',
       receipt: pendingOrders.map(o => o._id.toString()).join(','),
       payment_capture: 1,
@@ -89,7 +89,7 @@ exports.createPayment = async (req, res) => {
     res.status(200).json({
       success: true,
       orderId: razorpayOrder.id,
-      amount: totalCartAmount,
+      amount: totalCartAmount / 100, // send amount in rupees (for client)
       currency: 'INR',
     });
 
@@ -131,8 +131,9 @@ exports.verifyPayment = async (req, res) => {
 // Razorpay webhook handler
 exports.handleWebhook = async (req, res) => {
   try {
+    // req.body is raw Buffer, pass it as string to hmac.update
     const shasum = crypto.createHmac('sha256', process.env.RAZORPAY_WEBHOOK_SECRET);
-    shasum.update(req.body); // req.body must be raw Buffer
+    shasum.update(req.rawBody || req.body); // Use req.rawBody if set, else fallback to req.body
     const digest = shasum.digest('hex');
 
     if (digest !== req.headers['x-razorpay-signature']) {
