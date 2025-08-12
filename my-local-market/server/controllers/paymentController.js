@@ -12,8 +12,18 @@ const instance = new Razorpay({
 // Create Razorpay Order (no DB order yet)
 exports.createRazorpayOrder = async (req, res) => {
   try {
+    // Defensive check to avoid "Cannot destructure" crash
+    console.log('[DEBUG] req.body in backend:', req.body);
+
+    if (!req.body || !req.body.cart) {
+      console.warn('[payment] createRazorpayOrder called with empty body');
+      return res.status(400).json({ message: 'Missing cart in request body' });
+    }
+
     const { cart } = req.body;
     const customerId = req.customer._id;
+
+    console.log('[payment] createRazorpayOrder - customer:', customerId, 'cart length:', cart.length);
 
     const products = await Product.find({
       _id: { $in: cart.map(i => i.product) }
@@ -30,7 +40,7 @@ exports.createRazorpayOrder = async (req, res) => {
       return res.status(400).json({ message: 'Invalid cart amount' });
     }
 
-    // ✅ Short receipt ID to avoid 40 char limit
+    // Shorten receipt to avoid Razorpay 40-char limit
     const shortCustomerId = customerId.toString().substring(0, 8);
     const receiptId = `rcpt_${shortCustomerId}_${Date.now()}`;
 
@@ -40,6 +50,8 @@ exports.createRazorpayOrder = async (req, res) => {
       receipt: receiptId,
       payment_capture: 1,
     });
+
+    console.log('[payment] Razorpay order created:', razorpayOrder.id);
 
     res.status(200).json({
       success: true,
@@ -57,26 +69,40 @@ exports.createRazorpayOrder = async (req, res) => {
 // Create final DB order after payment success
 exports.createFinalOrder = async (req, res) => {
   try {
+    if (!req.body) {
+      console.warn('[payment] createFinalOrder called with empty body');
+      return res.status(400).json({ message: 'Missing request body' });
+    }
+
     const { razorpay_order_id, razorpay_payment_id, razorpay_signature, cart } = req.body;
+
+    if (!razorpay_order_id || !razorpay_payment_id || !razorpay_signature) {
+      console.warn('[payment] createFinalOrder missing payment fields', req.body);
+      return res.status(400).json({ success: false, message: 'Missing payment verification fields' });
+    }
+
     const customerId = req.customer._id;
 
+    // Verify signature
     const hmac = crypto.createHmac('sha256', process.env.RAZORPAY_KEY_SECRET);
     hmac.update(`${razorpay_order_id}|${razorpay_payment_id}`);
     const generatedSignature = hmac.digest('hex');
 
     if (generatedSignature !== razorpay_signature) {
+      console.warn('[payment] Invalid signature for order:', razorpay_order_id);
       return res.status(400).json({ success: false, message: 'Invalid signature' });
     }
 
     const existingOrder = await Order.findOne({ razorpayOrderId: razorpay_order_id });
     if (existingOrder) {
+      console.log('[payment] Order already exists, skipping creation:', existingOrder._id);
       return res.status(200).json({ success: true, message: 'Order already exists' });
     }
 
-    const products = await Product.find({ _id: { $in: cart.map(i => i.product) } }).populate('shop');
+    const products = await Product.find({ _id: { $in: (cart || []).map(i => i.product) } }).populate('shop');
 
     const shopGroups = {};
-    for (const item of cart) {
+    for (const item of (cart || [])) {
       const product = products.find(p => p._id.toString() === item.product);
       if (!product) continue;
       const shopId = product.shop._id.toString();
@@ -84,6 +110,7 @@ exports.createFinalOrder = async (req, res) => {
       shopGroups[shopId].items.push({ product, quantity: item.quantity });
     }
 
+    const finalOrders = [];
     for (const shopId in shopGroups) {
       const { shop, items } = shopGroups[shopId];
       const orderProducts = items.map(i => ({ product: i.product._id, quantity: i.quantity }));
@@ -101,6 +128,8 @@ exports.createFinalOrder = async (req, res) => {
       });
 
       await order.save();
+      finalOrders.push(order);
+      console.log('[payment] Created DB order from final endpoint:', order._id);
     }
 
     res.status(200).json({ success: true, message: 'Order created successfully' });
@@ -117,7 +146,6 @@ exports.handleWebhook = async (req, res) => {
     const signature = req.headers['x-razorpay-signature'];
     if (!signature) return res.status(400).json({ message: 'Webhook signature not found' });
 
-    // ✅ Ensure raw body is string for HMAC
     const rawBodyString = req.body instanceof Buffer
       ? req.body.toString('utf8')
       : JSON.stringify(req.body);
@@ -127,6 +155,7 @@ exports.handleWebhook = async (req, res) => {
     const digest = shasum.digest('hex');
 
     if (digest !== signature) {
+      console.warn('[payment] Invalid webhook signature');
       return res.status(400).json({ message: 'Invalid webhook signature' });
     }
 

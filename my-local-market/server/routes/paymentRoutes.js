@@ -3,13 +3,22 @@ const router = express.Router();
 const paymentController = require('../controllers/paymentController');
 const verifyCustomer = require('../middleware/verifyCustomer');
 
-// Create Razorpay Order ID
-router.post('/payments/create-razorpay-order', verifyCustomer, paymentController.createRazorpayOrder);
+// Ensure JSON parsing for these two routes while preserving raw body for webhook
+router.post(
+  '/payments/create-razorpay-order',
+  express.json(),              // <-- parse JSON for this route only
+  verifyCustomer,
+  paymentController.createRazorpayOrder
+);
 
-// Create DB order after payment success
-router.post('/payments/create-final-order', verifyCustomer, paymentController.createFinalOrder);
+router.post(
+  '/payments/create-final-order',
+  express.json(),              // <-- parse JSON for this route only
+  verifyCustomer,
+  paymentController.createFinalOrder
+);
 
-// Webhook route (raw body preserved)
+// Webhook route must use raw body
 router.post(
   '/payments/webhook',
   express.raw({ type: 'application/json' }),
