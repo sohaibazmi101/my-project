@@ -53,8 +53,9 @@ export default function AdminOrdersPage() {
                 <th scope="col">Shop Code</th>
                 <th scope="col">Product Codes</th>
                 <th scope="col">Total Amount</th>
-                <th scope="col">Payment Method</th> {/* NEW: Added header */}
-                <th scope="col">Status</th>
+                <th scope="col">Payment Method</th>
+                <th scope="col">Payment Status</th>
+                <th scope="col">Order Status</th>
               </tr>
             </thead>
             <tbody>
@@ -68,7 +69,8 @@ export default function AdminOrdersPage() {
                     {order.products.map(item => item.product?.productCode).join(', ')}
                   </td>
                   <td>₹{order.totalAmount.toFixed(2)}</td>
-                  <td>{order.paymentMethod}</td> {/* NEW: Display payment method */}
+                  <td>{order.paymentMethod}</td>
+                  <td>{order.paymentStatus}</td>
                   <td>
                     <span className={`badge ${
                       order.status === 'Delivered' ? 'bg-success' :

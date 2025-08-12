@@ -142,7 +142,7 @@ exports.getSellerOrders = async (req, res) => {
 
 exports.updateOrderStatus = async (req, res) => {
   try {
-    const sellerId = req.seller._id;
+    const sellerId = req.seller;
     const { orderId } = req.params;
     const { status } = req.body;
 
