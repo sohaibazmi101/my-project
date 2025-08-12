@@ -3,13 +3,11 @@ const router = express.Router();
 const paymentController = require('../controllers/paymentController');
 const verifyCustomer = require('../middleware/verifyCustomer');
 
-// Step 1: Create order (frontend calls this before payment)
-router.post('/customers/create-payment', verifyCustomer, paymentController.createPayment);
+router.post('/payments/create-payment', verifyCustomer, paymentController.createPayment);
 
-// Step 2: Webhook from Razorpay after payment is completed
 router.post(
-  '/payment/webhook',
-  express.raw({ type: 'application/json' }), // Keep raw body for signature verification
+  '/payments/webhook',
+  express.raw({ type: 'application/json' }),
   paymentController.handleWebhook
 );
 
