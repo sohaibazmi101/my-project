@@ -140,3 +140,33 @@ exports.getSellerOrders = async (req, res) => {
   }
 };
 
+exports.updateOrderStatus = async (req, res) => {
+  try {
+    const sellerId = req.seller._id;
+    const { orderId } = req.params;
+    const { status } = req.body;
+
+    const validStatuses = ['Pending', 'Processing', 'Shipped', 'Delivered', 'Cancelled'];
+    if (!validStatuses.includes(status)) {
+      return res.status(400).json({ message: 'Invalid order status.' });
+    }
+
+    const order = await Order.findById(orderId);
+    if (!order) {
+      return res.status(404).json({ message: 'Order not found.' });
+    }
+
+    const shop = await Shop.findOne({ _id: order.shop, sellerId });
+    if (!shop) {
+      return res.status(403).json({ message: 'Unauthorized to update this order.' });
+    }
+
+    order.status = status;
+    await order.save();
+
+    res.json({ message: 'Order status updated successfully.', order });
+  } catch (error) {
+    console.error('Error updating order status:', error);
+    res.status(500).json({ message: 'Server error.' });
+  }
+};

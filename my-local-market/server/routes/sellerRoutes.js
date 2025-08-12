@@ -9,7 +9,7 @@ const uploadKycDocs = require('../middleware/uploadKycDocs');
 // Controllers
 const { registerSeller, getSellerProfile } = require('../controllers/sellerController');
 const { loginSeller } = require('../controllers/authController');
-const { getSellerOrders } = require('../controllers/orderController');
+const { getSellerOrders, updateOrderStatus } = require('../controllers/orderController');
 const { getPendingKycs, updateKycStatus, createShopForSeller } = require('../controllers/sellerController');
 
 // @route   POST /api/seller/register
@@ -36,5 +36,6 @@ router.put('/:sellerId/kyc', adminAuth, updateKycStatus);
 // @route   GET /api/seller/orders
 // @desc    Get all orders for logged-in seller
 router.get('/orders', sellerAuth, getSellerOrders);
+router.put('/orders/:orderId/status', sellerAuth, updateOrderStatus);
 
 module.exports = router;
