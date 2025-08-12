@@ -11,6 +11,13 @@ const app = express();
 
 // Middleware
 app.use(cors());
+
+// IMPORTANT: This must come BEFORE app.use(express.json())
+// Razorpay webhook is handled here with express.raw
+const paymentRoutes = require('./routes/paymentRoutes');
+app.use('/api', paymentRoutes);
+
+// General purpose body parsers for all other routes
 app.use(express.json());
 
 // Static folder for local uploads (if any)
@@ -25,7 +32,6 @@ const publicRoutes = require('./routes/publicRoutes');
 const customerRoutes = require('./routes/customerRoutes');
 const cartRoutes = require('./routes/cartRoutes');
 const categoryRoutes = require('./routes/categoryRoutes');
-const paymentRoutes = require('./routes/paymentRoutes');
 
 // API route mounting
 app.use('/api/cart', cartRoutes);
@@ -36,7 +42,7 @@ app.use('/api', shopRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api', publicRoutes);
 app.use('/api/categories', categoryRoutes);
-app.use('/api', paymentRoutes);
+
 
 app.get('/api/ping', (req, res) => {
   res.json({ message: 'Server is live' });
