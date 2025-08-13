@@ -14,7 +14,7 @@ export default function ConfirmOrderModal({
   const emptyDetails = {
     name: '',
     email: '',
-    mobile: '',
+    phone: '',
     address: { street: '', city: '', state: '', pincode: '' },
   };
 
@@ -103,7 +103,7 @@ export default function ConfirmOrderModal({
         customerInfo: {
           name: editableDetails.name,
           email: editableDetails.email,
-          mobile: editableDetails.mobile,
+          phone: editableDetails.phone,
         },
         paymentMethod,
         customerLat: customerCoords.lat,
@@ -141,7 +141,7 @@ export default function ConfirmOrderModal({
                 </>
               )}
               <input type="text" className="form-control mb-2" placeholder="Mobile"
-                value={editableDetails?.mobile || ''} onChange={e => setEditableDetails({ ...editableDetails, mobile: e.target.value })} required />
+                value={editableDetails?.phone || ''} onChange={e => setEditableDetails({ ...editableDetails, phone: e.target.value })} required />
               <input type="text" className="form-control mb-2" placeholder="Street"
                 value={editableDetails?.address?.street || ''} onChange={e => setEditableDetails({ ...editableDetails, address: { ...editableDetails.address, street: e.target.value } })} required />
               <input type="text" className="form-control mb-2" placeholder="City"
