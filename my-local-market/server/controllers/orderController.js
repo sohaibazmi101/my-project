@@ -21,6 +21,8 @@ exports.getCustomerOrders = async (req, res) => {
 // Calculate order summary (replaces old calculateOrder)
 exports.calculateOrder = async (req, res) => {
   try {
+    console.log("===== /calculate-order request received =====");
+    console.log("Request body:", req.body);
     const { cart, productId, quantity, customerLat, customerLon } = req.body;
 
     if ((!cart || cart.length === 0) && !productId) {
