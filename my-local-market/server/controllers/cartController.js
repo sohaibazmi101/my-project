@@ -44,16 +44,27 @@ exports.addToCart = async (req, res) => {
 // Get cart
 exports.getCart = async (req, res) => {
   try {
-    const customer = await Customer.findById(req.customer._id).populate('cart.product');
+    const customer = await Customer.findById(req.customer._id)
+      .populate({
+        path: 'cart.product',
+        populate: {
+          path: 'shop',
+          model: 'Shop',
+          select: 'name _id', // only send name and id to frontend
+        },
+      });
+
     if (!customer) {
       return res.status(404).json({ message: 'Customer not found' });
     }
+
     res.json({ cart: customer.cart });
   } catch (err) {
     console.error('Get cart error:', err);
     res.status(500).json({ message: 'Server error' });
   }
 };
+
 
 // Remove item from cart
 exports.removeFromCart = async (req, res) => {
