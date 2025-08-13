@@ -1,9 +1,7 @@
 const Razorpay = require('razorpay');
 const crypto = require('crypto');
 const Order = require('../models/Order');
-const Product = require('../models/Product');
-const Customer = require('../models/Customer');
-const { calculateOrder } = require('./orderController'); // reuse calculateOrder
+const { calculateOrderSummary } = require('../utils/orderUtils');
 
 const instance = new Razorpay({
   key_id: process.env.RAZORPAY_KEY_ID,
@@ -16,34 +14,20 @@ exports.createRazorpayOrder = async (req, res) => {
     const { cart, productId, quantity, customerLat, customerLon } = req.body;
     const customerId = req.customer._id;
 
-    // Reuse calculateOrder logic to get validated order summary
-    const fakeReq = { body: { cart, productId, quantity, customerLat, customerLon } };
-    const fakeRes = {
-      status: (code) => ({ json: (data) => ({ code, data }) }),
-      json: (data) => data
-    };
+    // Calculate validated order summary
+    const orderSummary = await calculateOrderSummary({ cart, productId, quantity, customerLat, customerLon });
 
-    const calcResult = await calculateOrder(fakeReq, fakeRes);
-
-    // Ensure calcResult has orderSummary
-    let orderSummary;
-    if (calcResult?.orderSummary) {
-      orderSummary = calcResult.orderSummary;
-    } else if (calcResult?.code && calcResult.data?.orderSummary) {
-      orderSummary = calcResult.data.orderSummary;
-    } else {
+    if (!orderSummary || orderSummary.length === 0) {
       return res.status(400).json({ message: 'Unable to calculate order for payment' });
     }
 
     // Compute total amount for Razorpay (sum of all shop totals)
-    const totalAmount = Math.round(
-      orderSummary.reduce((sum, shopOrder) => sum + shopOrder.totalAmount, 0) * 100
-    ); // paise
+    const totalAmount = Math.round(orderSummary.reduce((sum, shopOrder) => sum + shopOrder.totalAmount, 0) * 100); // paise
 
     if (totalAmount <= 0) return res.status(400).json({ message: 'Invalid order amount' });
 
     // Create Razorpay order
-    const receiptId = `rcpt_${customerId.toString().substring(0,8)}_${Date.now()}`;
+    const receiptId = `rcpt_${customerId.toString().substring(0, 8)}_${Date.now()}`;
     const razorpayOrder = await instance.orders.create({
       amount: totalAmount,
       currency: 'INR',
@@ -136,7 +120,7 @@ exports.handleWebhook = async (req, res) => {
       const razorpayOrderId = event.payload.order?.entity?.id || event.payload.payment?.entity?.order_id;
       const paymentId = event.payload.payment?.entity?.id;
 
-      const orders = await Order.find({ razorpayOrderId: razorpayOrderId });
+      const orders = await Order.find({ razorpayOrderId });
       for (let o of orders) {
         if (o.paymentStatus !== 'completed') {
           o.paymentStatus = 'completed';

@@ -18,7 +18,7 @@ export default function ConfirmOrderModal({
   };
 
   const [quantity, setQuantity] = useState(1);
-  const [paymentMethod, setPaymentMethod] = useState('Cash on Delivery');
+  const [paymentMethod, setPaymentMethod] = useState('UPI'); // default to UPI
   const [editableDetails, setEditableDetails] = useState(confirmDetails || emptyDetails);
   const [customerCoords, setCustomerCoords] = useState({ lat: null, lng: null });
   const [orderSummary, setOrderSummary] = useState([]);
@@ -31,7 +31,7 @@ export default function ConfirmOrderModal({
     if (show) {
       setEditableDetails(confirmDetails || emptyDetails);
       setQuantity(1);
-      setPaymentMethod('Cash on Delivery');
+      setPaymentMethod('UPI'); // reset to UPI on open
       setErrorMessage('');
       setOrderSummary([]);
       setCustomerCoords({ lat: null, lng: null });
@@ -51,18 +51,29 @@ export default function ConfirmOrderModal({
     }
   }, [show, confirmDetails]);
 
-  // Fetch order summary once customer coordinates are ready
+  // Fetch order summary whenever relevant dependencies change
   useEffect(() => {
     if (show && customerCoords.lat && customerCoords.lng) {
       fetchOrderSummary();
     }
-  }, [show, customerCoords, quantity, cartItems]);
+  }, [show, customerCoords, quantity, cartItems, paymentMethod]); // include paymentMethod
 
   const fetchOrderSummary = async () => {
     try {
       const payload = isCart
-        ? { cart: cartItems.map(i => ({ product: i.product._id, quantity: i.quantity })), customerLat: customerCoords.lat, customerLon: customerCoords.lng }
-        : { productId: product._id, quantity, customerLat: customerCoords.lat, customerLon: customerCoords.lng };
+        ? { 
+            cart: cartItems.map(i => ({ product: i.product._id, quantity: i.quantity })), 
+            customerLat: customerCoords.lat, 
+            customerLon: customerCoords.lng,
+            paymentMethod
+          }
+        : { 
+            productId: product._id, 
+            quantity, 
+            customerLat: customerCoords.lat, 
+            customerLon: customerCoords.lng,
+            paymentMethod
+          };
 
       const { data } = await api.post('/customers/calculate-order', payload);
       setOrderSummary(data.orderSummary);
@@ -197,7 +208,6 @@ export default function ConfirmOrderModal({
         </div>
       </div>
 
-      {/* Error Modal */}
       <ErrorModal show={showErrorModal} message={errorMessage} onClose={() => setShowErrorModal(false)} />
     </>
   );

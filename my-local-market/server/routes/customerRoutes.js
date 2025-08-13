@@ -16,16 +16,15 @@ const {
   calculateOrder,
 } = require('../controllers/orderController');
 
-// --- Public Routes (No Auth Needed) ---
+// --- Public Routes ---
 router.post('/google-login', googleLoginCustomer);
 
-// --- Protected Routes (Auth Needed) ---
+// --- Protected Routes ---
 router.use(verifyCustomer);
 
 router.get('/profile', getCustomerProfile);
-router.patch('/profile', updateProfile); // add this
+router.patch('/profile', updateProfile); // can use PATCH or PUT
 router.put('/profile', updateProfile);
-
 
 router.post('/recently-viewed', addRecentlyViewed);
 router.get('/recently-viewed', getRecentlyViewed);

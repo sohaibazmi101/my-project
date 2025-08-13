@@ -2,7 +2,9 @@ const Order = require('../models/Order');
 const Product = require('../models/Product');
 const Customer = require('../models/Customer');
 const Shop = require('../models/Shop');
+const { calculateOrderSummary } = require('../utils/orderUtils'); // your utility function
 
+// Get all orders for a specific customer
 exports.getCustomerOrders = async (req, res) => {
   try {
     const customerId = req.customer._id;
@@ -16,24 +18,7 @@ exports.getCustomerOrders = async (req, res) => {
   }
 };
 
-const haversineDistance = (lat1, lon1, lat2, lon2) => {
-  const toRad = (value) => (value * Math.PI) / 180;
-
-  const R = 6371;
-  const dLat = toRad(lat2 - lat1);
-  const dLon = toRad(lon2 - lon1);
-
-  const a =
-    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
-    Math.cos(toRad(lat1)) *
-      Math.cos(toRad(lat2)) *
-      Math.sin(dLon / 2) *
-      Math.sin(dLon / 2);
-
-  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-  return R * c; // Distance in km
-};
-
+// Calculate order summary (replaces old calculateOrder)
 exports.calculateOrder = async (req, res) => {
   try {
     const { cart, productId, quantity, customerLat, customerLon } = req.body;
@@ -41,68 +26,12 @@ exports.calculateOrder = async (req, res) => {
     if ((!cart || cart.length === 0) && !productId) {
       return res.status(400).json({ message: 'No products provided' });
     }
+
     if (typeof customerLat !== 'number' || typeof customerLon !== 'number') {
       return res.status(400).json({ message: 'Customer coordinates required' });
     }
 
-    let items = [];
-    if (cart && cart.length > 0) {
-      const productIds = cart.map(i => i.product);
-      const products = await Product.find({ _id: { $in: productIds } }).populate('shop');
-      const productMap = new Map(products.map(p => [p._id.toString(), p]));
-      for (const i of cart) {
-        const product = productMap.get(i.product);
-        if (product) items.push({ product, quantity: i.quantity });
-      }
-    } else {
-      const product = await Product.findById(productId).populate('shop');
-      if (!product) return res.status(404).json({ message: 'Product not found' });
-      items.push({ product, quantity });
-    }
-
-    const shopGroups = {};
-    for (const item of items) {
-      const shopId = item.product.shop._id.toString();
-      if (!shopGroups[shopId]) shopGroups[shopId] = { shop: item.product.shop, items: [] };
-      shopGroups[shopId].items.push(item);
-    }
-
-    const orderSummary = [];
-
-    for (const shopId in shopGroups) {
-      const { shop, items } = shopGroups[shopId];
-
-      const dist = haversineDistance(customerLat, customerLon, shop.latitude, shop.longitude);
-
-      if (dist > 15) {
-        return res.status(400).json({
-          message: `Distance from shop ${shop.name} is ${dist.toFixed(2)} km, beyond delivery range.`,
-        });
-      }
-
-      const itemsTotal = items.reduce((sum, i) => sum + i.product.price * i.quantity, 0);
-      const deliveryCharge = dist * 10; // ₹10 per km
-      const subTotal = itemsTotal + deliveryCharge;
-      const platformFee = subTotal * 0.05; // 5%
-      const totalAmount = itemsTotal + deliveryCharge + platformFee;
-
-      orderSummary.push({
-        shopId,
-        shopName: shop.name,
-        items: items.map(i => ({
-          productId: i.product._id,
-          name: i.product.name,
-          price: i.product.price,
-          quantity: i.quantity,
-          subtotal: i.product.price * i.quantity,
-        })),
-        distance: dist,
-        deliveryCharge,
-        platformFee,
-        totalAmount,
-      });
-    }
-
+    const orderSummary = await calculateOrderSummary({ cart, productId, quantity, customerLat, customerLon });
     res.json({ orderSummary });
   } catch (err) {
     console.error(err);
@@ -110,6 +39,7 @@ exports.calculateOrder = async (req, res) => {
   }
 };
 
+// Place order (COD or Razorpay)
 exports.placeOrder = async (req, res) => {
   try {
     const customerId = req.customer._id;
@@ -129,78 +59,43 @@ exports.placeOrder = async (req, res) => {
     }
 
     const customer = await Customer.findById(customerId);
-    if (!customer) {
-      return res.status(404).json({ message: 'Customer not found' });
+    if (!customer) return res.status(404).json({ message: 'Customer not found' });
+
+    // Use orderUtils to calculate summary
+    const orderSummary = await calculateOrderSummary({ cart, customerLat, customerLon });
+    if (!orderSummary || orderSummary.length === 0) {
+      return res.status(400).json({ message: 'Unable to calculate order summary' });
     }
 
-    const productIds = cart.map(item => item.product);
-    const products = await Product.find({ _id: { $in: productIds } }).populate('shop');
-    const productMap = new Map(products.map(p => [p._id.toString(), p]));
-
-    const shopGroups = {};
-
-    // Group products by shop
-    for (const item of cart) {
-      const product = productMap.get(item.product);
-      if (!product) continue;
-
-      const shopId = product.shop._id.toString();
-      if (!shopGroups[shopId]) {
-        shopGroups[shopId] = {
-          shop: product.shop,
-          items: [],
-        };
-      }
-      shopGroups[shopId].items.push({ product, quantity: item.quantity });
+    // Compare frontend total if provided
+    const backendTotal = orderSummary.reduce((sum, shopOrder) => sum + shopOrder.totalAmount, 0);
+    if (frontendTotal && Math.abs(frontendTotal - backendTotal) > 0.01) {
+      return res.status(400).json({ message: 'Price mismatch. Please refresh and try again.' });
     }
 
+    // Save orders in DB grouped by shop
     const createdOrders = [];
-    let backendTotal = 0;
-
-    for (const shopId in shopGroups) {
-      const { shop, items } = shopGroups[shopId];
-      const dist = haversineDistance(customerLat, customerLon, shop.latitude, shop.longitude);
-
-      if (dist > 15) {
-        return res.status(400).json({
-          message: `Distance from shop ${shop.name} is ${dist.toFixed(2)} km, which is beyond delivery range.`,
-        });
-      }
-
-      const itemsTotal = items.reduce((sum, i) => sum + i.product.price * i.quantity, 0);
-      const deliveryCharge = dist * 10; // ₹10 per km
-      const subTotal = itemsTotal + deliveryCharge;
-      const platformFee = subTotal * 0.05; // 5%
-      const totalAmount = itemsTotal + deliveryCharge + platformFee;
-
-      backendTotal += totalAmount;
-
-      const orderProducts = items.map(i => ({
-        product: i.product._id,
+    for (const shopOrder of orderSummary) {
+      const orderProducts = shopOrder.items.map(i => ({
+        product: i.productId,
         quantity: i.quantity,
       }));
 
       const order = new Order({
         customer: customerId,
-        shop: shop._id,
+        shop: shopOrder.shopId,
         products: orderProducts,
-        totalAmount,
-        deliveryCharge,
-        platformFee,
+        totalAmount: shopOrder.totalAmount,
+        deliveryCharge: shopOrder.deliveryCharge,
+        platformFee: shopOrder.platformFee,
         paymentMethod,
-        paymentStatus: 'pending',
+        paymentStatus: paymentMethod === 'UPI' ? 'pending' : 'pending',
         customerLat,
         customerLon,
       });
 
       await order.save();
       createdOrders.push(order);
-    }
-
-    if (frontendTotal && Math.abs(frontendTotal - backendTotal) > 0.01) {
-      return res.status(400).json({
-        message: 'Price mismatch. Please refresh and try again.',
-      });
     }
 
     res.status(201).json(createdOrders);
@@ -210,7 +105,7 @@ exports.placeOrder = async (req, res) => {
   }
 };
 
-
+// Get all orders for admin
 exports.getAllOrdersForAdmin = async (req, res) => {
   try {
     const orders = await Order.find()
@@ -224,9 +119,9 @@ exports.getAllOrdersForAdmin = async (req, res) => {
   }
 };
 
+// Get all orders for seller
 exports.getSellerOrders = async (req, res) => {
   const sellerId = req.seller;
-
   try {
     const sellerShops = await Shop.find({ sellerId }).select('_id');
     const shopIds = sellerShops.map(shop => shop._id);
@@ -242,6 +137,7 @@ exports.getSellerOrders = async (req, res) => {
   }
 };
 
+// Update order status
 exports.updateOrderStatus = async (req, res) => {
   try {
     const sellerId = req.seller;
@@ -249,19 +145,13 @@ exports.updateOrderStatus = async (req, res) => {
     const { status } = req.body;
 
     const validStatuses = ['Pending', 'Processing', 'Shipped', 'Delivered', 'Cancelled'];
-    if (!validStatuses.includes(status)) {
-      return res.status(400).json({ message: 'Invalid order status.' });
-    }
+    if (!validStatuses.includes(status)) return res.status(400).json({ message: 'Invalid order status.' });
 
     const order = await Order.findById(orderId);
-    if (!order) {
-      return res.status(404).json({ message: 'Order not found.' });
-    }
+    if (!order) return res.status(404).json({ message: 'Order not found.' });
 
     const shop = await Shop.findOne({ _id: order.shop, sellerId });
-    if (!shop) {
-      return res.status(403).json({ message: 'Unauthorized to update this order.' });
-    }
+    if (!shop) return res.status(403).json({ message: 'Unauthorized to update this order.' });
 
     order.status = status;
     await order.save();
