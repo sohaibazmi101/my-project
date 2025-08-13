@@ -1,3 +1,4 @@
+// ConfirmOrderModal.js
 import React, { useState, useEffect } from 'react';
 import api from '../../services/api';
 import ErrorModal from '../../components/ErrorModal';
@@ -18,7 +19,7 @@ export default function ConfirmOrderModal({
   };
 
   const [quantity, setQuantity] = useState(1);
-  const [paymentMethod, setPaymentMethod] = useState('UPI'); // default to UPI
+  const [paymentMethod, setPaymentMethod] = useState('UPI');
   const [editableDetails, setEditableDetails] = useState(confirmDetails || emptyDetails);
   const [customerCoords, setCustomerCoords] = useState({ lat: null, lng: null });
   const [orderSummary, setOrderSummary] = useState([]);
@@ -26,12 +27,11 @@ export default function ConfirmOrderModal({
   const [showErrorModal, setShowErrorModal] = useState(false);
   const isCart = Array.isArray(cartItems) && cartItems.length > 0;
 
-  // Fetch customer geolocation when modal shows
   useEffect(() => {
     if (show) {
       setEditableDetails(confirmDetails || emptyDetails);
       setQuantity(1);
-      setPaymentMethod('UPI'); // reset to UPI on open
+      setPaymentMethod('UPI');
       setErrorMessage('');
       setOrderSummary([]);
       setCustomerCoords({ lat: null, lng: null });
@@ -51,26 +51,25 @@ export default function ConfirmOrderModal({
     }
   }, [show, confirmDetails]);
 
-  // Fetch order summary whenever relevant dependencies change
   useEffect(() => {
     if (show && customerCoords.lat && customerCoords.lng) {
       fetchOrderSummary();
     }
-  }, [show, customerCoords, quantity, cartItems, paymentMethod]); // include paymentMethod
+  }, [show, customerCoords, quantity, cartItems, paymentMethod]);
 
   const fetchOrderSummary = async () => {
     try {
       const payload = isCart
-        ? { 
-            cart: cartItems.map(i => ({ product: i.product._id, quantity: i.quantity })), 
-            customerLat: customerCoords.lat, 
+        ? {
+            cart: cartItems.map(i => ({ product: i.product._id, quantity: i.quantity })),
+            customerLat: customerCoords.lat,
             customerLon: customerCoords.lng,
             paymentMethod
           }
-        : { 
-            productId: product._id, 
-            quantity, 
-            customerLat: customerCoords.lat, 
+        : {
+            productId: product._id,
+            quantity,
+            customerLat: customerCoords.lat,
             customerLon: customerCoords.lng,
             paymentMethod
           };
@@ -95,6 +94,9 @@ export default function ConfirmOrderModal({
     }
 
     try {
+      // Pass the orderSummary and totalAmount to the parent component
+      const totalAmount = orderSummary.reduce((sum, shopOrder) => sum + shopOrder.totalAmount, 0);
+
       const orderData = {
         cart: isCart ? cartItems.map(i => ({ product: i.product._id, quantity: i.quantity })) : [{ product: product._id, quantity }],
         shippingAddress: editableDetails.address,
@@ -106,6 +108,8 @@ export default function ConfirmOrderModal({
         paymentMethod,
         customerLat: customerCoords.lat,
         customerLon: customerCoords.lng,
+        orderSummary, // Pass the orderSummary here
+        totalAmount,  // Pass the calculated total amount
       };
 
       await onConfirmOrder(orderData);
@@ -116,6 +120,7 @@ export default function ConfirmOrderModal({
   };
 
   return (
+    // ... the rest of your modal's JSX remains the same
     <>
       <div className="modal d-block bg-dark bg-opacity-50" tabIndex="-1" role="dialog">
         <div className="modal-dialog modal-dialog-centered" role="document">

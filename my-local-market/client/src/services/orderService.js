@@ -1,7 +1,7 @@
+// orderService.js
 import api from './api';
 
 const RAZORPAY_KEY = import.meta.env.VITE_RAZORPAY_KEY_ID || '';
-
 
 export async function placeOrderWithRazorpay(orderData, token) {
     if (!token) throw new Error('User not authenticated');
@@ -14,9 +14,8 @@ export async function placeOrderWithRazorpay(orderData, token) {
         console.log('[DEBUG] Sending payload to backend to create Razorpay order...');
         const payload = {
             cart: orderData.cart,
-            productId: orderData.productId,
-            quantity: orderData.quantity,
-            paymentMethod: orderData.paymentMethod,
+            productId: orderData.productId, // This is for single item orders
+            quantity: orderData.quantity, // This is for single item orders
             customerLat: orderData.customerLat,
             customerLon: orderData.customerLon,
         };
@@ -34,12 +33,12 @@ export async function placeOrderWithRazorpay(orderData, token) {
         throw err;
     }
 
-    const { orderId, amount, currency } = createOrderRes.data;
+    const { orderId, amount, currency, orderSummary } = createOrderRes.data;
 
     const paymentResult = await new Promise((resolve, reject) => {
         const options = {
             key: RAZORPAY_KEY,
-            amount: Math.round(orderData.totalAmount * 100), // paise integer
+            amount: Math.round(amount * 100), // Use the amount from the backend response
             currency: currency || 'INR',
             name: 'Your Shop Name',
             description: 'Order Payment',
@@ -71,12 +70,8 @@ export async function placeOrderWithRazorpay(orderData, token) {
         console.log('[DEBUG] Sending payment result to backend to create final DB order...');
         const finalPayload = {
             ...paymentResult,
-            cart: orderData.cart,
-            productId: orderData.productId,
-            quantity: orderData.quantity,
+            orderSummary: orderSummary, // Pass the orderSummary from the first backend call
             paymentMethod: orderData.paymentMethod,
-            customerLat: orderData.customerLat,
-            customerLon: orderData.customerLon,
         };
         console.log('[DEBUG] Payload to /payments/create-final-order:', JSON.stringify(finalPayload, null, 2));
 
@@ -89,6 +84,7 @@ export async function placeOrderWithRazorpay(orderData, token) {
     } catch (error) {
         console.error('[ERROR] Failed to create final order on backend:', error?.response?.data || error.message);
         console.warn('[DEBUG] The webhook should still handle order creation if backend call fails.');
+        throw error;
     }
 }
 
@@ -108,6 +104,7 @@ export async function placeOrder(orderData, token) {
     console.log('[DEBUG] Placing order with method:', orderData.paymentMethod);
 
     if (orderData.paymentMethod === 'UPI') {
+        // We no longer need to calculate totalAmount here, as it is handled in placeOrderWithRazorpay
         await placeOrderWithRazorpay(orderData, token);
     } else if (orderData.paymentMethod === 'Cash on Delivery') {
         await placeOrderCOD(orderData, token);
