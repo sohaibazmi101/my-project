@@ -3,84 +3,72 @@ const crypto = require('crypto');
 const Order = require('../models/Order');
 const Product = require('../models/Product');
 const Customer = require('../models/Customer');
+const { calculateOrder } = require('./orderController'); // reuse calculateOrder
 
 const instance = new Razorpay({
   key_id: process.env.RAZORPAY_KEY_ID,
   key_secret: process.env.RAZORPAY_KEY_SECRET,
 });
 
-// Create Razorpay Order (no DB order yet)
+// Create Razorpay Order (pre-payment)
 exports.createRazorpayOrder = async (req, res) => {
   try {
-    // Defensive check to avoid "Cannot destructure" crash
-    console.log('[DEBUG] req.body in backend:', req.body);
-
-    if (!req.body || !req.body.cart) {
-      console.warn('[payment] createRazorpayOrder called with empty body');
-      return res.status(400).json({ message: 'Missing cart in request body' });
-    }
-
-    const { cart } = req.body;
+    const { cart, productId, quantity, customerLat, customerLon } = req.body;
     const customerId = req.customer._id;
 
-    console.log('[payment] createRazorpayOrder - customer:', customerId, 'cart length:', cart.length);
+    // Reuse calculateOrder logic to get validated order summary
+    const fakeReq = { body: { cart, productId, quantity, customerLat, customerLon } };
+    const fakeRes = {
+      status: (code) => ({ json: (data) => ({ code, data }) }),
+      json: (data) => data
+    };
 
-    const products = await Product.find({
-      _id: { $in: cart.map(i => i.product) }
-    }).populate('shop');
+    const calcResult = await calculateOrder(fakeReq, fakeRes);
 
-    let totalCartAmount = products.reduce((sum, product) => {
-      const item = cart.find(i => i.product === product._id.toString());
-      return sum + (item ? product.price * item.quantity : 0);
-    }, 0);
-
-    totalCartAmount = Math.round(totalCartAmount * 100); // paise
-
-    if (totalCartAmount <= 0) {
-      return res.status(400).json({ message: 'Invalid cart amount' });
+    // Ensure calcResult has orderSummary
+    let orderSummary;
+    if (calcResult?.orderSummary) {
+      orderSummary = calcResult.orderSummary;
+    } else if (calcResult?.code && calcResult.data?.orderSummary) {
+      orderSummary = calcResult.data.orderSummary;
+    } else {
+      return res.status(400).json({ message: 'Unable to calculate order for payment' });
     }
 
-    // Shorten receipt to avoid Razorpay 40-char limit
-    const shortCustomerId = customerId.toString().substring(0, 8);
-    const receiptId = `rcpt_${shortCustomerId}_${Date.now()}`;
+    // Compute total amount for Razorpay (sum of all shop totals)
+    const totalAmount = Math.round(
+      orderSummary.reduce((sum, shopOrder) => sum + shopOrder.totalAmount, 0) * 100
+    ); // paise
 
+    if (totalAmount <= 0) return res.status(400).json({ message: 'Invalid order amount' });
+
+    // Create Razorpay order
+    const receiptId = `rcpt_${customerId.toString().substring(0,8)}_${Date.now()}`;
     const razorpayOrder = await instance.orders.create({
-      amount: totalCartAmount,
+      amount: totalAmount,
       currency: 'INR',
       receipt: receiptId,
       payment_capture: 1,
     });
 
-    console.log('[payment] Razorpay order created:', razorpayOrder.id);
-
     res.status(200).json({
       success: true,
       orderId: razorpayOrder.id,
-      amount: totalCartAmount / 100,
+      amount: totalAmount / 100,
       currency: 'INR',
+      orderSummary, // send order details back to frontend
     });
 
-  } catch (error) {
-    console.error('Error creating Razorpay order:', error);
+  } catch (err) {
+    console.error('Razorpay order creation failed:', err);
     res.status(500).json({ message: 'Server error' });
   }
 };
 
-// Create final DB order after payment success
+// Create final DB orders after payment success
 exports.createFinalOrder = async (req, res) => {
   try {
-    if (!req.body) {
-      console.warn('[payment] createFinalOrder called with empty body');
-      return res.status(400).json({ message: 'Missing request body' });
-    }
-
-    const { razorpay_order_id, razorpay_payment_id, razorpay_signature, cart } = req.body;
-
-    if (!razorpay_order_id || !razorpay_payment_id || !razorpay_signature) {
-      console.warn('[payment] createFinalOrder missing payment fields', req.body);
-      return res.status(400).json({ success: false, message: 'Missing payment verification fields' });
-    }
-
+    const { razorpay_order_id, razorpay_payment_id, razorpay_signature, orderSummary } = req.body;
     const customerId = req.customer._id;
 
     // Verify signature
@@ -89,38 +77,28 @@ exports.createFinalOrder = async (req, res) => {
     const generatedSignature = hmac.digest('hex');
 
     if (generatedSignature !== razorpay_signature) {
-      console.warn('[payment] Invalid signature for order:', razorpay_order_id);
       return res.status(400).json({ success: false, message: 'Invalid signature' });
     }
 
+    // Prevent duplicate orders
     const existingOrder = await Order.findOne({ razorpayOrderId: razorpay_order_id });
-    if (existingOrder) {
-      console.log('[payment] Order already exists, skipping creation:', existingOrder._id);
-      return res.status(200).json({ success: true, message: 'Order already exists' });
-    }
+    if (existingOrder) return res.status(200).json({ success: true, message: 'Order already exists' });
 
-    const products = await Product.find({ _id: { $in: (cart || []).map(i => i.product) } }).populate('shop');
-
-    const shopGroups = {};
-    for (const item of (cart || [])) {
-      const product = products.find(p => p._id.toString() === item.product);
-      if (!product) continue;
-      const shopId = product.shop._id.toString();
-      if (!shopGroups[shopId]) shopGroups[shopId] = { shop: product.shop, items: [] };
-      shopGroups[shopId].items.push({ product, quantity: item.quantity });
-    }
-
+    // Save DB orders per shop
     const finalOrders = [];
-    for (const shopId in shopGroups) {
-      const { shop, items } = shopGroups[shopId];
-      const orderProducts = items.map(i => ({ product: i.product._id, quantity: i.quantity }));
-      const totalAmount = items.reduce((sum, i) => sum + i.product.price * i.quantity, 0);
+    for (const shopOrder of orderSummary) {
+      const orderProducts = shopOrder.items.map(i => ({
+        product: i.productId,
+        quantity: i.quantity
+      }));
 
       const order = new Order({
         customer: customerId,
-        shop: shop._id,
+        shop: shopOrder.shopId,
         products: orderProducts,
-        totalAmount: Math.round(totalAmount * 100) / 100,
+        totalAmount: shopOrder.totalAmount,
+        deliveryCharge: shopOrder.deliveryCharge,
+        platformFee: shopOrder.platformFee,
         paymentMethod: 'UPI',
         paymentStatus: 'completed',
         razorpayOrderId: razorpay_order_id,
@@ -129,61 +107,51 @@ exports.createFinalOrder = async (req, res) => {
 
       await order.save();
       finalOrders.push(order);
-      console.log('[payment] Created DB order from final endpoint:', order._id);
     }
 
-    res.status(200).json({ success: true, message: 'Order created successfully' });
+    res.status(200).json({ success: true, message: 'Order created successfully', orders: finalOrders });
 
-  } catch (error) {
-    console.error('Error creating final order:', error);
+  } catch (err) {
+    console.error('Final order creation failed:', err);
     res.status(500).json({ message: 'Server error' });
   }
 };
 
-// Razorpay Webhook
+// Razorpay Webhook to update payment status
 exports.handleWebhook = async (req, res) => {
   try {
     const signature = req.headers['x-razorpay-signature'];
-    if (!signature) return res.status(400).json({ message: 'Webhook signature not found' });
+    if (!signature) return res.status(400).json({ message: 'Webhook signature missing' });
 
-    const rawBodyString = req.body instanceof Buffer
-      ? req.body.toString('utf8')
-      : JSON.stringify(req.body);
-
+    const rawBody = req.body instanceof Buffer ? req.body.toString('utf8') : JSON.stringify(req.body);
     const shasum = crypto.createHmac('sha256', process.env.RAZORPAY_WEBHOOK_SECRET);
-    shasum.update(rawBodyString);
+    shasum.update(rawBody);
     const digest = shasum.digest('hex');
 
-    if (digest !== signature) {
-      console.warn('[payment] Invalid webhook signature');
-      return res.status(400).json({ message: 'Invalid webhook signature' });
-    }
+    if (digest !== signature) return res.status(400).json({ message: 'Invalid webhook signature' });
 
-    const event = JSON.parse(rawBodyString);
+    const event = JSON.parse(rawBody);
 
     if (event.event === 'payment.captured' || event.event === 'order.paid') {
       const razorpayOrderId = event.payload.order?.entity?.id || event.payload.payment?.entity?.order_id;
       const paymentId = event.payload.payment?.entity?.id;
 
-      const existingOrder = await Order.findOne({ razorpayOrderId });
-      if (existingOrder) {
-        if (existingOrder.paymentStatus !== 'completed') {
-          existingOrder.paymentStatus = 'completed';
-          existingOrder.razorpayPaymentId = paymentId;
-          await existingOrder.save();
-          console.log(`Webhook: Updated order ${existingOrder._id} to completed.`);
+      const orders = await Order.find({ razorpayOrderId: razorpayOrderId });
+      for (let o of orders) {
+        if (o.paymentStatus !== 'completed') {
+          o.paymentStatus = 'completed';
+          o.razorpayPaymentId = paymentId;
+          await o.save();
         }
-      } else {
-        const orderDetails = await instance.orders.fetch(razorpayOrderId);
-        console.error(`Webhook: Order with ID ${razorpayOrderId} not found. Receipt: ${orderDetails.receipt}`);
       }
     } else if (event.event === 'payment.failed') {
-      console.log(`Webhook: Payment failed for Razorpay order ${event.payload.payment.entity.order_id}.`);
+      console.log(`Webhook: Payment failed for Razorpay order ${event.payload.payment.entity.order_id}`);
     }
 
     res.json({ success: true });
-  } catch (error) {
-    console.error('Error in webhook:', error);
+
+  } catch (err) {
+    console.error('Webhook error:', err);
     res.status(500).json({ message: 'Server error' });
   }
 };
