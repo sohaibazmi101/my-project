@@ -12,6 +12,7 @@ export default function CartPage() {
   const [selectedSection, setSelectedSection] = useState(null);
   const [showMissingModal, setShowMissingModal] = useState(false);
   const [showConfirmModal, setShowConfirmModal] = useState(false);
+  const [userDetails, setUserDetails] = useState(null); // For passing to modal
   const navigate = useNavigate();
 
   // Fetch cart
@@ -20,8 +21,12 @@ export default function CartPage() {
       try {
         const { data } = await api.get('/cart');
         setCart(data.cart);
+
+        // Fetch user details for ConfirmOrderModal
+        const userRes = await api.get('/customers/profile');
+        setUserDetails(userRes.data);
       } catch (err) {
-        console.error('Error fetching cart:', err);
+        console.error('Error fetching cart or user details:', err);
       } finally {
         setLoading(false);
       }
@@ -45,8 +50,15 @@ export default function CartPage() {
 
   const handlePlaceOrder = (shopId) => {
     setSelectedSection(shopId);
+
     // Example check: if user missing address or other info
-    const missingDetails = false; // Replace with actual logic
+    const missingDetails =
+      !userDetails?.address?.street ||
+      !userDetails?.address?.city ||
+      !userDetails?.address?.state ||
+      !userDetails?.address?.pincode ||
+      !userDetails?.phone;
+
     if (missingDetails) {
       setShowMissingModal(true);
     } else {
@@ -54,26 +66,9 @@ export default function CartPage() {
     }
   };
 
-  const confirmOrder = async () => {
-    if (!selectedSection) return;
-
-    const section = groupedCart[selectedSection];
-    const orderPayload = {
-      shop: section.shop._id,
-      products: section.items.map(i => ({
-        product: i.product._id,
-        quantity: i.quantity
-      })),
-      totalAmount: section.items.reduce(
-        (sum, i) => sum + i.product.price * i.quantity,
-        0
-      ),
-      paymentMethod: 'Cash on Delivery', // Or integrate Razorpay
-      shippingAddress: {}, // Fill from user profile
-    };
-
+  const confirmOrder = async (orderData) => {
     try {
-      await placeOrder(orderPayload);
+      await placeOrder(orderData);
       navigate('/customer/orders');
     } catch (err) {
       console.error('Order placement error:', err);
@@ -83,7 +78,6 @@ export default function CartPage() {
   };
 
   if (loading) return <p>Loading...</p>;
-
   if (!cart.length) return <p>Your cart is empty.</p>;
 
   return (
@@ -116,13 +110,33 @@ export default function CartPage() {
       ))}
 
       {showMissingModal && (
-        <MissingDetailsModal onClose={() => setShowMissingModal(false)} />
+        <MissingDetailsModal
+          show={showMissingModal}
+          onClose={() => setShowMissingModal(false)}
+          phone={userDetails?.phone || ''}
+          address={userDetails?.address || { street: '', city: '', state: '', pincode: '' }}
+          onMobileChange={(e) => setUserDetails({ ...userDetails, phone: e.target.value })}
+          onAddressChange={(field, value) =>
+            setUserDetails({
+              ...userDetails,
+              address: { ...userDetails.address, [field]: value },
+            })
+          }
+          onSaveAndContinue={(e) => {
+            e.preventDefault();
+            setShowMissingModal(false);
+            setShowConfirmModal(true);
+          }}
+        />
       )}
 
-      {showConfirmModal && (
+      {showConfirmModal && selectedSection && (
         <ConfirmOrderModal
-          onConfirm={confirmOrder}
+          show={showConfirmModal}
           onClose={() => setShowConfirmModal(false)}
+          cartItems={groupedCart[selectedSection].items}
+          confirmDetails={userDetails}
+          onConfirmOrder={confirmOrder}
         />
       )}
     </div>
