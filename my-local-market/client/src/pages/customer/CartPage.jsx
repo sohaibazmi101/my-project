@@ -18,7 +18,7 @@ export default function CartPage() {
   useEffect(() => {
     const fetchCart = async () => {
       try {
-        const { data } = await api.get('/customers/cart');
+        const { data } = await api.get('/cart');
         setCart(data.cart);
       } catch (err) {
         console.error('Error fetching cart:', err);
