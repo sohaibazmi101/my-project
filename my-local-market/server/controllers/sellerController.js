@@ -64,7 +64,7 @@ exports.registerSeller = async (req, res) => {
 
 exports.createShopForSeller = async (req, res) => {
   try {
-    const { sellerId, shopName, description, address, category, whatsapp, location, banner } = req.body;
+    const { sellerId, shopName, description, address, category, whatsapp, location, banner, latitude, longitude } = req.body;
 
     const seller = await Seller.findById(sellerId);
     if (!seller) return res.status(404).json({ message: 'Seller not found' });
@@ -93,6 +93,8 @@ exports.createShopForSeller = async (req, res) => {
       category,
       whatsapp,
       location,
+      latitude,    // <-- Save latitude
+      longitude,   // <-- Save longitude
       banner: banner || '',
       featuredProducts: [],
       newProducts: [],

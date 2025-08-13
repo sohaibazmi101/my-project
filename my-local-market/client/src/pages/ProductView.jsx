@@ -6,6 +6,7 @@ import ProductCarousel from './components/ProductCarousel';
 import ProductDetails from './components/ProductDetails';
 import MissingDetailsModal from './components/MissingDetailsModal';
 import ConfirmOrderModal from './components/ConfirmOrderModal';
+import ErrorModal from '../components/ErrorModal';
 import { placeOrder } from '../services/orderService';
 
 export default function ProductView() {
@@ -20,7 +21,6 @@ export default function ProductView() {
   const [missingDetailsModal, setMissingDetailsModal] = useState(false);
   const [showConfirmModal, setShowConfirmModal] = useState(false);
 
-  // States for missing info modal (phone/address)
   const [missingMobile, setMissingMobile] = useState('');
   const [missingAddress, setMissingAddress] = useState({
     street: '',
@@ -36,6 +36,10 @@ export default function ProductView() {
     mobile: '',
     address: { street: '', city: '', state: '', pincode: '' },
   });
+
+  // State for error modal
+  const [errorMessage, setErrorMessage] = useState('');
+  const [showError, setShowError] = useState(false);
 
   // Fetch product details and save recently viewed product
   const fetchProduct = useCallback(async () => {
@@ -86,7 +90,8 @@ export default function ProductView() {
   // Add product to cart (quantity fixed 1 here)
   const handleAddToCart = async () => {
     if (!token) {
-      alert('Please login as customer to add items to cart.');
+      setErrorMessage('Please login as customer to add items to cart.');
+      setShowError(true);
       return;
     }
     if (!product) return;
@@ -102,7 +107,8 @@ export default function ProductView() {
       checkIfInCart();
     } catch (err) {
       console.error('Add to cart failed:', err?.response?.data || err);
-      alert(err?.response?.data?.message || 'Add to cart failed');
+      setErrorMessage(err?.response?.data?.message || 'Add to cart failed');
+      setShowError(true);
     } finally {
       setLoading(false);
     }
@@ -155,37 +161,39 @@ export default function ProductView() {
       setShowConfirmModal(true);
     } catch (err) {
       console.error('Error fetching customer profile:', err);
-      alert('Something went wrong. Please try again.');
+      setErrorMessage('Something went wrong. Please try again.');
+      setShowError(true);
     }
   };
 
   // Confirm order handler: accepts order data from ConfirmOrderModal
   const [orderLoading, setOrderLoading] = useState(false);
 
-  // inside ProductView component...
-
   const handleConfirmOrder = async (orderData) => {
     try {
       setOrderLoading(true);
-      console.log('Payment method:', orderData.paymentMethod);
-
       await placeOrder(orderData, token);
       alert('Order placed successfully!');
       setShowConfirmModal(false);
       navigate('/customer/orders');
     } catch (err) {
-      console.error('Order placement failed:', err);
-      alert(err.message || 'Failed to place order. Please try again.');
+      // Show error modal instead of alert
+      const message =
+        err.response?.data?.message ||
+        err.message ||
+        'Failed to place order. Please try again.';
+      setErrorMessage(message);
+      setShowError(true);
     } finally {
       setOrderLoading(false);
     }
   };
 
-
   const handleUpdateDetails = async (e) => {
     e.preventDefault();
     if (!token) {
-      alert('Please login first.');
+      setErrorMessage('Please login first.');
+      setShowError(true);
       return;
     }
 
@@ -193,7 +201,7 @@ export default function ProductView() {
       await api.patch(
         '/customers/profile',
         {
-          mobile: missingMobile,
+          phone: missingMobile,
           address: missingAddress,
         },
         { headers: { Authorization: `Bearer ${token}` } }
@@ -202,7 +210,8 @@ export default function ProductView() {
       handleBuyNow(); // retry buy now flow after updating details
     } catch (err) {
       console.error('Profile update failed:', err);
-      alert('Failed to update profile. Please try again.');
+      setErrorMessage('Failed to update profile. Please try again.');
+      setShowError(true);
     }
   };
 
@@ -228,7 +237,7 @@ export default function ProductView() {
       <MissingDetailsModal
         show={missingDetailsModal}
         onClose={() => setMissingDetailsModal(false)}
-        mobile={missingMobile}
+        phone={missingMobile}
         address={missingAddress}
         onMobileChange={(e) => setMissingMobile(e.target.value)}
         onAddressChange={(key, value) =>
@@ -244,6 +253,12 @@ export default function ProductView() {
         confirmDetails={confirmDetails}
         onConfirmOrder={handleConfirmOrder}
         totalAmount={product.price * 1} // initial quantity 1 for single product
+      />
+
+      <ErrorModal
+        show={showError}
+        message={errorMessage}
+        onClose={() => setShowError(false)}
       />
 
       {orderLoading && (

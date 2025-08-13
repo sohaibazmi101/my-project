@@ -35,7 +35,7 @@ export default function UpdateCustomerProfile() {
   const handleUpdate = async (e) => {
     e.preventDefault();
     try {
-      await api.put('/customers', {
+      await api.put('/customers/profile', {
         name: form.name,
         phone: form.phone,
         address: {

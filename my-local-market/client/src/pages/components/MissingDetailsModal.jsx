@@ -3,7 +3,7 @@ import React from 'react';
 export default function MissingDetailsModal({
   show,
   onClose,
-  mobile,
+  phone,
   address,
   onMobileChange,
   onAddressChange,
@@ -21,7 +21,7 @@ export default function MissingDetailsModal({
               type="text"
               className="form-control mb-2"
               placeholder="Mobile Number"
-              value={mobile}
+              value={phone}
               onChange={onMobileChange}
               required
             />

@@ -22,6 +22,8 @@ export default function ManageShop() {
     whatsapp: '',
     location: '',
     banner: '',
+    latitude: null,    // Added latitude
+    longitude: null,   // Added longitude
   });
 
   const token = localStorage.getItem('token');
@@ -55,6 +57,10 @@ export default function ManageShop() {
       // Normalize product IDs to strings for comparison
       shop.featuredProducts = (shop.featuredProducts || []).map(id => id.toString());
       shop.newProducts = (shop.newProducts || []).map(id => id.toString());
+
+      // Normalize lat/lng to null if missing
+      shop.latitude = shop.latitude ?? null;
+      shop.longitude = shop.longitude ?? null;
 
       const normalizedProducts = (products || []).map(p => ({
         ...p,
@@ -100,8 +106,9 @@ export default function ManageShop() {
         address: newShopData.address,
         category: newShopData.category,
         whatsapp: newShopData.whatsapp,
-        location: newShopData.location,
         banner: newShopData.banner,
+        latitude: newShopData.latitude,
+        longitude: newShopData.longitude,
       };
       const res = await api.post('/sellers/create-shop', payload, {
         headers: { Authorization: `Bearer ${token}` }
@@ -159,8 +166,9 @@ export default function ManageShop() {
       await api.put(`/shops/${shop._id}/update`, {
         name: shop.name,
         description: shop.description,
-        location: shop.location,
-        banner
+        banner,
+        latitude: shop.latitude,
+        longitude: shop.longitude,
       }, {
         headers: { Authorization: `Bearer ${token}` }
       });
@@ -233,6 +241,7 @@ export default function ManageShop() {
         onChange={handleCreateShopChange}
         onBannerUpload={handleBannerUpload}
         onSubmit={handleCreateShopSubmit}
+        setNewShopData={setNewShopData}
       />
     );
   }
@@ -247,6 +256,7 @@ export default function ManageShop() {
         onInputChange={handleInputChange}
         onBannerUpload={handleBannerUpload}
         onSave={handleShopSave}
+        setShop={setShop}
       />
 
       <hr />

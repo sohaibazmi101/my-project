@@ -16,10 +16,103 @@ exports.getCustomerOrders = async (req, res) => {
   }
 };
 
+const haversineDistance = (lat1, lon1, lat2, lon2) => {
+  const toRad = (value) => (value * Math.PI) / 180;
+
+  const R = 6371;
+  const dLat = toRad(lat2 - lat1);
+  const dLon = toRad(lon2 - lon1);
+
+  const a =
+    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+    Math.cos(toRad(lat1)) *
+      Math.cos(toRad(lat2)) *
+      Math.sin(dLon / 2) *
+      Math.sin(dLon / 2);
+
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  return R * c; // Distance in km
+};
+
+exports.calculateOrder = async (req, res) => {
+  try {
+    const { cart, productId, quantity, customerLat, customerLon } = req.body;
+
+    if ((!cart || cart.length === 0) && !productId) {
+      return res.status(400).json({ message: 'No products provided' });
+    }
+    if (typeof customerLat !== 'number' || typeof customerLon !== 'number') {
+      return res.status(400).json({ message: 'Customer coordinates required' });
+    }
+
+    let items = [];
+    if (cart && cart.length > 0) {
+      const productIds = cart.map(i => i.product);
+      const products = await Product.find({ _id: { $in: productIds } }).populate('shop');
+      const productMap = new Map(products.map(p => [p._id.toString(), p]));
+      for (const i of cart) {
+        const product = productMap.get(i.product);
+        if (product) items.push({ product, quantity: i.quantity });
+      }
+    } else {
+      const product = await Product.findById(productId).populate('shop');
+      if (!product) return res.status(404).json({ message: 'Product not found' });
+      items.push({ product, quantity });
+    }
+
+    const shopGroups = {};
+    for (const item of items) {
+      const shopId = item.product.shop._id.toString();
+      if (!shopGroups[shopId]) shopGroups[shopId] = { shop: item.product.shop, items: [] };
+      shopGroups[shopId].items.push(item);
+    }
+
+    const orderSummary = [];
+
+    for (const shopId in shopGroups) {
+      const { shop, items } = shopGroups[shopId];
+
+      const dist = haversineDistance(customerLat, customerLon, shop.latitude, shop.longitude);
+
+      if (dist > 15) {
+        return res.status(400).json({
+          message: `Distance from shop ${shop.name} is ${dist.toFixed(2)} km, beyond delivery range.`,
+        });
+      }
+
+      const itemsTotal = items.reduce((sum, i) => sum + i.product.price * i.quantity, 0);
+      const deliveryCharge = dist * 10; // ₹10 per km
+      const platformFee = itemsTotal * 0.05; // 5%
+      const totalAmount = itemsTotal + deliveryCharge + platformFee;
+
+      orderSummary.push({
+        shopId,
+        shopName: shop.name,
+        items: items.map(i => ({
+          productId: i.product._id,
+          name: i.product.name,
+          price: i.product.price,
+          quantity: i.quantity,
+          subtotal: i.product.price * i.quantity,
+        })),
+        distance: dist,
+        deliveryCharge,
+        platformFee,
+        totalAmount,
+      });
+    }
+
+    res.json({ orderSummary });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: 'Failed to calculate order' });
+  }
+};
+
 exports.placeOrder = async (req, res) => {
   try {
     const customerId = req.customer._id;
-    const { cart, shippingAddress, customerInfo, paymentMethod } = req.body;
+    const { cart, shippingAddress, customerInfo, paymentMethod, customerLat, customerLon, frontendTotal } = req.body;
 
     if (!cart || !Array.isArray(cart) || cart.length === 0) {
       return res.status(400).json({ message: 'Cart is empty or invalid' });
@@ -30,21 +123,22 @@ exports.placeOrder = async (req, res) => {
     if (!paymentMethod || !['Cash on Delivery', 'UPI'].includes(paymentMethod)) {
       return res.status(400).json({ message: 'Valid payment method required' });
     }
+    if (typeof customerLat !== 'number' || typeof customerLon !== 'number') {
+      return res.status(400).json({ message: 'Customer latitude and longitude required' });
+    }
 
     const customer = await Customer.findById(customerId);
     if (!customer) {
       return res.status(404).json({ message: 'Customer not found' });
     }
 
-    // Fetch all products in one query
     const productIds = cart.map(item => item.product);
     const products = await Product.find({ _id: { $in: productIds } }).populate('shop');
     const productMap = new Map(products.map(p => [p._id.toString(), p]));
 
-    // Group items by shop
     const shopGroups = {};
-    const orderedProductIds = new Set();
 
+    // Group products by shop
     for (const item of cart) {
       const product = productMap.get(item.product);
       if (!product) continue;
@@ -57,35 +151,55 @@ exports.placeOrder = async (req, res) => {
         };
       }
       shopGroups[shopId].items.push({ product, quantity: item.quantity });
-      orderedProductIds.add(item.product.toString());
     }
 
     const createdOrders = [];
+    let backendTotal = 0;
 
     for (const shopId in shopGroups) {
       const { shop, items } = shopGroups[shopId];
+      const dist = haversineDistance(customerLat, customerLon, shop.latitude, shop.longitude);
+
+      if (dist > 15) {
+        return res.status(400).json({
+          message: `Distance from shop ${shop.name} is ${dist.toFixed(2)} km, which is beyond delivery range.`,
+        });
+      }
+
+      const itemsTotal = items.reduce((sum, i) => sum + i.product.price * i.quantity, 0);
+      const deliveryCharge = dist * 10; // ₹10 per km
+      const platformFee = itemsTotal * 0.05; // 5%
+      const totalAmount = itemsTotal + deliveryCharge + platformFee;
+
+      backendTotal += totalAmount;
+
       const orderProducts = items.map(i => ({
         product: i.product._id,
         quantity: i.quantity,
       }));
-
-      const totalAmount = items.reduce((sum, i) => sum + i.product.price * i.quantity, 0);
 
       const order = new Order({
         customer: customerId,
         shop: shop._id,
         products: orderProducts,
         totalAmount,
-        paymentMethod,            // use paymentMethod from req.body
-        paymentStatus: 'pending', // default to pending
+        deliveryCharge,
+        platformFee,
+        paymentMethod,
+        paymentStatus: 'pending',
+        customerLat,
+        customerLon,
       });
 
       await order.save();
       createdOrders.push(order);
     }
 
-    // Optionally clear ordered items from customer cart here
-    // ...
+    if (frontendTotal && Math.abs(frontendTotal - backendTotal) > 0.01) {
+      return res.status(400).json({
+        message: 'Price mismatch. Please refresh and try again.',
+      });
+    }
 
     res.status(201).json(createdOrders);
   } catch (err) {
@@ -95,19 +209,11 @@ exports.placeOrder = async (req, res) => {
 };
 
 
-
-/**
- * @desc Get all orders for the admin dashboard
- * @route GET /api/admin/orders
- * @access Private/Admin
- */
 exports.getAllOrdersForAdmin = async (req, res) => {
   try {
     const orders = await Order.find()
       .populate('customer', 'name email')
-      // CHANGED: Populate the shopCode field
       .populate('shop', 'name shopCode')
-      // CHANGED: Populate the productCode field
       .populate('products.product', 'name price productCode');
     res.status(200).json(orders);
   } catch (err) {
@@ -115,12 +221,6 @@ exports.getAllOrdersForAdmin = async (req, res) => {
     res.status(500).json({ message: 'Server error' });
   }
 };
-
-/**
- * @desc Get orders for a specific seller dashboard
- * @route GET /api/seller/orders
- * @access Private/Seller
- */
 
 exports.getSellerOrders = async (req, res) => {
   const sellerId = req.seller;

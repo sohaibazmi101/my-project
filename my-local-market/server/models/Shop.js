@@ -1,5 +1,4 @@
 const mongoose = require('mongoose');
-
 const shopSchema = new mongoose.Schema({
   sellerId: {
     type: mongoose.Schema.Types.ObjectId,
@@ -19,6 +18,8 @@ const shopSchema = new mongoose.Schema({
   category: { type: String },
   whatsapp: { type: String },
   location: { type: String },
+  latitude: { type: Number, required: false },
+  longitude: { type: Number, required: false },
   banner: { type: String }, 
   featuredProducts: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Product' }],
   newProducts: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Product' }],

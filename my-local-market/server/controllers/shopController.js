@@ -20,11 +20,11 @@ exports.getMyShop = async (req, res) => {
 
 exports.updateShopDetails = async (req, res) => {
   try {
-    const { description, banner, name } = req.body;
+    const { description, banner, name, latitude, longitude } = req.body;
 
     const updated = await Shop.findOneAndUpdate(
       { sellerId: req.seller },
-      { $set: { description, banner, name } },
+      { $set: { description, banner, name, latitude, longitude } },
       { new: true, upsert: true }
     );
 

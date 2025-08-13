@@ -1,4 +1,5 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
+import LocationPicker from '../../location/LocationPicker';
 
 export default function CreateShopForm({
   newShopData,
@@ -8,12 +9,48 @@ export default function CreateShopForm({
   onChange,
   onBannerUpload,
   onSubmit,
+  setNewShopData,
 }) {
+  const [searchQuery, setSearchQuery] = useState('');
+  const [searchCenter, setSearchCenter] = useState(null);
+
+  const setLatitude = (lat) =>
+    setNewShopData((prev) => ({ ...prev, latitude: lat }));
+  const setLongitude = (lng) =>
+    setNewShopData((prev) => ({ ...prev, longitude: lng }));
+
+  const handleSearch = async (e) => {
+    e.preventDefault();
+    if (!searchQuery) return;
+
+    try {
+      const res = await fetch(
+        `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(
+          searchQuery
+        )}`
+      );
+      const data = await res.json();
+
+      if (data && data.length > 0) {
+        const lat = parseFloat(data[0].lat);
+        const lon = parseFloat(data[0].lon);
+        setSearchCenter([lat, lon]);
+        setLatitude(lat);
+        setLongitude(lon);
+      } else {
+        alert('Location not found');
+      }
+    } catch (error) {
+      console.error('Geocoding error:', error);
+      alert('Failed to search location');
+    }
+  };
+
   return (
     <div className="container mt-5">
       <h2>Create Your Shop</h2>
       <form onSubmit={onSubmit}>
-
+        {/* Shop Name */}
         <div className="mb-3">
           <label className="form-label">Shop Name</label>
           <input
@@ -26,6 +63,7 @@ export default function CreateShopForm({
           />
         </div>
 
+        {/* Description */}
         <div className="mb-3">
           <label className="form-label">Description</label>
           <textarea
@@ -37,6 +75,7 @@ export default function CreateShopForm({
           />
         </div>
 
+        {/* Address */}
         <div className="mb-3">
           <label className="form-label">Address</label>
           <input
@@ -48,6 +87,7 @@ export default function CreateShopForm({
           />
         </div>
 
+        {/* Category */}
         <div className="mb-3">
           <label className="form-label">Category</label>
           <select
@@ -58,12 +98,15 @@ export default function CreateShopForm({
             required
           >
             <option value="">Select Category</option>
-            {categories.map(cat => (
-              <option key={cat._id} value={cat._id}>{cat.name}</option>
+            {categories.map((cat) => (
+              <option key={cat._id} value={cat._id}>
+                {cat.name}
+              </option>
             ))}
           </select>
         </div>
 
+        {/* WhatsApp Number */}
         <div className="mb-3">
           <label className="form-label">WhatsApp Number</label>
           <input
@@ -75,17 +118,25 @@ export default function CreateShopForm({
           />
         </div>
 
+        {/* Location picker */}
         <div className="mb-3">
-          <label className="form-label">Location</label>
-          <input
-            type="text"
-            className="form-control"
-            name="location"
-            value={newShopData.location}
-            onChange={onChange}
+          <label className="form-label">Select Shop Location on Map</label>
+          <LocationPicker
+            latitude={newShopData.latitude}
+            longitude={newShopData.longitude}
+            setLatitude={setLatitude}
+            setLongitude={setLongitude}
+            searchCenter={searchCenter}
           />
+          {newShopData.latitude && newShopData.longitude && (
+            <p>
+              Selected Coordinates: {newShopData.latitude.toFixed(5)},{' '}
+              {newShopData.longitude.toFixed(5)}
+            </p>
+          )}
         </div>
 
+        {/* Shop Banner */}
         <div className="mb-3">
           <label className="form-label">Shop Banner (optional)</label>
           <input

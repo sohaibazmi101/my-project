@@ -1,4 +1,5 @@
 import { Routes, Route } from 'react-router-dom';
+import 'leaflet/dist/leaflet.css';
 import Home from './pages/Home';
 import Login from './pages/seller/Login';
 import Register from './pages/seller/Register';

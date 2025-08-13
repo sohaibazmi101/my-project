@@ -27,6 +27,22 @@ const orderSchema = new mongoose.Schema({
         type: Number,
         required: true,
     },
+    deliveryCharge: {
+        type: Number,
+        default: 0,
+    },
+    platformFee: {
+        type: Number,
+        default: 0,
+    },
+    latitude: {
+        type: Number,
+        required: false,
+    },
+    longitude: {
+        type: Number,
+        required: false,
+    },
     orderNumber: {
         type: String,
         unique: true,
@@ -47,6 +63,7 @@ const orderSchema = new mongoose.Schema({
         default: 'pending',
     },
 }, { timestamps: true });
+
 orderSchema.pre('save', async function(next) {
     if (this.isNew) {
         try {
