@@ -232,6 +232,24 @@ export default function Account() {
                             <FaChevronRight className="text-muted" />
                         </Link>
                     </li>
+                    <li className="mb-2">
+                        <Link to="/deliveylogin" className="d-flex justify-content-between align-items-center p-2 rounded" style={linkStyle}>
+                            <div className="d-flex align-items-center">
+                                <FaSignInAlt className="me-2 text-info" />
+                                Delivery Boy Login
+                            </div>
+                            <FaChevronRight className="text-muted" />
+                        </Link>
+                    </li>
+                    <li className="mb-2">
+                        <Link to="/deliveryregister" className="d-flex justify-content-between align-items-center p-2 rounded" style={linkStyle}>
+                            <div className="d-flex align-items-center">
+                                <FaStore className="me-2 text-info" />
+                                Delivery Boy Register
+                            </div>
+                            <FaChevronRight className="text-muted" />
+                        </Link>
+                    </li>
                 </ul>
             </div>
         </div>

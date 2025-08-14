@@ -11,7 +11,6 @@ const app = express();
 
 app.use(cors());
 
-// ✅ Payment routes BEFORE express.json(), so raw body works for webhook
 const paymentRoutes = require('./routes/paymentRoutes');
 app.use('/api', paymentRoutes);
 
@@ -30,7 +29,9 @@ const publicRoutes = require('./routes/publicRoutes');
 const customerRoutes = require('./routes/customerRoutes');
 const cartRoutes = require('./routes/cartRoutes');
 const categoryRoutes = require('./routes/categoryRoutes');
+const deliveryRoutes = require('./routes/deliveryRoutes');
 
+app.use('/api/delivery', deliveryRoutes);
 app.use('/api/cart', cartRoutes);
 app.use('/api/customers', customerRoutes);
 app.use('/api/sellers', sellerRoutes);

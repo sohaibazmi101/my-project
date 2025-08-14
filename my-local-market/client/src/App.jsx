@@ -46,6 +46,8 @@ import ShippingAndDelivery from './pages/users/ShippingAndDelivery';
 import AdminOrdersPage from './pages/admin/AdminOrdersPage';
 import SellerOrdersPage from './pages/seller/SellerOrdersPage';
 import AdminKycDashboard from './pages/admin/AdminKycDashboard';
+import DeliveryBoyLogin from './pages/deliveryboy/DeliveryBoyLogin';
+import DeliveryBoyRegister from './pages/deliveryboy/DeliveryBoyRegister';
 
 
 function AppContent() {
@@ -76,6 +78,8 @@ function AppContent() {
         <Route path="/about" element={<AboutUs />} />
         <Route path="/refund" element={<CancellationAndRefund />} />
         <Route path="/shipping" element={<ShippingAndDelivery />} />
+        <Route path="/deliveylogin" element={<DeliveryBoyLogin />} />
+        <Route path="/deliveryregister" element={<DeliveryBoyRegister />} />
 
         {/* Seller Dashboard Routes (protected) */}
         <Route

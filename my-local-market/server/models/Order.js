@@ -35,13 +35,9 @@ const orderSchema = new mongoose.Schema({
         type: Number,
         default: 0,
     },
-    latitude: {
-        type: Number,
-        required: false,
-    },
-    longitude: {
-        type: Number,
-        required: false,
+    customerLocation: {
+        lat: Number,
+        lon: Number,
     },
     orderNumber: {
         type: String,
@@ -54,16 +50,28 @@ const orderSchema = new mongoose.Schema({
     },
     status: {
         type: String,
-        enum: ['Pending', 'Processing', 'Shipped', 'Delivered', 'Cancelled'],
+        enum: ['Pending', 'PickedUp', 'Delivered', 'Cancelled'],
         default: 'Pending',
     },
     paymentStatus: {
         type: String,
-        enum: ['pending', 'completed', 'failed'],
+        enum: ['pending', 'success', 'failed'],
         default: 'pending',
+    },
+    deliveryBoys: [{
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'DeliveryBoy',
+    }],
+    assignedDeliveryBoy: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'DeliveryBoy',
+    },
+    secretCode: {
+        type: String, // 6-digit code
     },
 }, { timestamps: true });
 
+// Auto-generate orderNumber
 orderSchema.pre('save', async function(next) {
     if (this.isNew) {
         try {
@@ -75,6 +83,10 @@ orderSchema.pre('save', async function(next) {
                 nextNumber = lastNumber + 1;
             }
             this.orderNumber = `ORD${nextNumber}`;
+
+            // Generate 6-digit secret code
+            this.secretCode = Math.floor(100000 + Math.random() * 900000).toString();
+
             next();
         } catch (err) {
             next(err);
