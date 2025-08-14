@@ -61,19 +61,18 @@ export default function ConfirmOrderModal({
     try {
       const payload = isCart
         ? {
-            cart: cartItems.map(i => ({ product: i.product._id, quantity: i.quantity })),
-            customerLat: customerCoords.lat,
-            customerLon: customerCoords.lng,
-            paymentMethod
-          }
+          cart: cartItems.map(i => ({ product: i.product._id, quantity: i.quantity })),
+          customerLat: customerCoords.lat,
+          customerLon: customerCoords.lng,
+          paymentMethod
+        }
         : {
-            productId: product._id,
-            quantity,
-            customerLat: customerCoords.lat,
-            customerLon: customerCoords.lng,
-            paymentMethod
-          };
-
+          productId: product._id,
+          quantity,
+          customerLat: customerCoords.lat,
+          customerLon: customerCoords.lng,
+          paymentMethod
+        };
       const { data } = await api.post('/customers/calculate-order', payload);
       setOrderSummary(data.orderSummary);
     } catch (err) {
@@ -176,7 +175,7 @@ export default function ConfirmOrderModal({
                             <span>₹{shopOrder.deliveryCharge.toFixed(2)}</span>
                           </li>
                           <li className="list-group-item d-flex justify-content-between">
-                            <span>Platform Fee:</span>
+                            <span>GST:</span>
                             <span>₹{shopOrder.platformFee.toFixed(2)}</span>
                           </li>
                           <li className="list-group-item d-flex justify-content-between fw-bold">

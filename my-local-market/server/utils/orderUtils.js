@@ -67,7 +67,7 @@ async function calculateOrderSummary({ cart, productId, quantity, customerLat, c
     const itemsTotal = items.reduce((sum, i) => sum + i.product.price * i.quantity, 0);
     const deliveryCharge = dist * 10; // ₹10 per km
     const subTotal = itemsTotal + deliveryCharge;
-    const platformFee = subTotal * 0.05; // 5%
+    const platformFee = subTotal * 0.02; // 5%
     const totalAmount = itemsTotal + deliveryCharge + platformFee;
 
     orderSummary.push({

@@ -7,6 +7,7 @@ import ProductDetails from './components/ProductDetails';
 import MissingDetailsModal from './components/MissingDetailsModal';
 import ConfirmOrderModal from './components/ConfirmOrderModal';
 import ErrorModal from '../components/ErrorModal';
+import SuccessModal from '../components/SuccessModal'; // new success modal
 import { placeOrder } from '../services/orderService';
 
 export default function ProductView() {
@@ -29,19 +30,21 @@ export default function ProductView() {
     pincode: '',
   });
 
-  // Store confirmed customer details fetched from backend, to prefill modal form
   const [confirmDetails, setConfirmDetails] = useState({
     name: '',
     email: '',
-    mobile: '',
+    phone: '',
     address: { street: '', city: '', state: '', pincode: '' },
   });
 
-  // State for error modal
   const [errorMessage, setErrorMessage] = useState('');
   const [showError, setShowError] = useState(false);
 
-  // Fetch product details and save recently viewed product
+  const [successMessage, setSuccessMessage] = useState('');
+  const [showSuccess, setShowSuccess] = useState(false);
+
+  const [orderLoading, setOrderLoading] = useState(false);
+
   const fetchProduct = useCallback(async () => {
     try {
       const res = await api.get(`/products/${id}`);
@@ -64,7 +67,6 @@ export default function ProductView() {
     }
   }, [id, token]);
 
-  // Check if product is already in cart
   const checkIfInCart = useCallback(async () => {
     if (!token) return setIsInCart(false);
     try {
@@ -72,8 +74,7 @@ export default function ProductView() {
         headers: { Authorization: `Bearer ${token}` },
       });
       const cartItems = res.data?.cart || [];
-      const found = cartItems.find((item) => item?.product?._id === id);
-      setIsInCart(!!found);
+      setIsInCart(cartItems.some((item) => item?.product?._id === id));
     } catch (err) {
       console.error('Failed to check cart:', err);
       setIsInCart(false);
@@ -82,12 +83,9 @@ export default function ProductView() {
 
   useEffect(() => {
     fetchProduct();
-    if (token) {
-      checkIfInCart();
-    }
+    if (token) checkIfInCart();
   }, [id, token, fetchProduct, checkIfInCart]);
 
-  // Add product to cart (quantity fixed 1 here)
   const handleAddToCart = async () => {
     if (!token) {
       setErrorMessage('Please login as customer to add items to cart.');
@@ -103,7 +101,6 @@ export default function ProductView() {
         { productId: product._id, quantity: 1 },
         { headers: { Authorization: `Bearer ${token}` } }
       );
-      alert('Product added to cart!');
       checkIfInCart();
     } catch (err) {
       console.error('Add to cart failed:', err?.response?.data || err);
@@ -114,7 +111,6 @@ export default function ProductView() {
     }
   };
 
-  // Buy Now clicked: fetch profile, check for missing info, open modal
   const handleBuyNow = async () => {
     if (!token) {
       setShowLoginModal(true);
@@ -126,7 +122,6 @@ export default function ProductView() {
         headers: { Authorization: `Bearer ${token}` },
       });
 
-      // Check missing phone or address
       if (
         !customer.phone ||
         !customer.address?.street ||
@@ -145,11 +140,10 @@ export default function ProductView() {
         return;
       }
 
-      // Prefill confirmDetails for ConfirmOrderModal
       setConfirmDetails({
         name: customer.name || '',
         email: customer.email || '',
-        mobile: customer.phone || '',
+        phone: customer.phone || '',
         address: {
           street: customer.address?.street || '',
           city: customer.address?.city || '',
@@ -166,23 +160,21 @@ export default function ProductView() {
     }
   };
 
-  // Confirm order handler: accepts order data from ConfirmOrderModal
-  const [orderLoading, setOrderLoading] = useState(false);
-
   const handleConfirmOrder = async (orderData) => {
     try {
       setOrderLoading(true);
-      await placeOrder(orderData, token);
-      alert('Order placed successfully!');
-      setShowConfirmModal(false);
-      navigate('/customer/orders');
+      const result = await placeOrder(orderData, token);
+
+      if (result.success) {
+        setSuccessMessage(result.message);
+        setShowSuccess(true);
+        setShowConfirmModal(false);
+      } else {
+        setErrorMessage(result.message);
+        setShowError(true);
+      }
     } catch (err) {
-      // Show error modal instead of alert
-      const message =
-        err.response?.data?.message ||
-        err.message ||
-        'Failed to place order. Please try again.';
-      setErrorMessage(message);
+      setErrorMessage(err.message || 'Failed to place order.');
       setShowError(true);
     } finally {
       setOrderLoading(false);
@@ -200,14 +192,11 @@ export default function ProductView() {
     try {
       await api.patch(
         '/customers/profile',
-        {
-          phone: missingMobile,
-          address: missingAddress,
-        },
+        { phone: missingMobile, address: missingAddress },
         { headers: { Authorization: `Bearer ${token}` } }
       );
       setMissingDetailsModal(false);
-      handleBuyNow(); // retry buy now flow after updating details
+      handleBuyNow();
     } catch (err) {
       console.error('Profile update failed:', err);
       setErrorMessage('Failed to update profile. Please try again.');
@@ -252,7 +241,7 @@ export default function ProductView() {
         product={product}
         confirmDetails={confirmDetails}
         onConfirmOrder={handleConfirmOrder}
-        totalAmount={product.price * 1} // initial quantity 1 for single product
+        totalAmount={product.price * 1}
       />
 
       <ErrorModal
@@ -260,6 +249,16 @@ export default function ProductView() {
         message={errorMessage}
         onClose={() => setShowError(false)}
       />
+
+      <SuccessModal
+        show={showSuccess}
+        message={successMessage}
+        onClose={() => {
+          setShowSuccess(false);
+          navigate('/customer/orders');
+        }}
+      />
+
 
       {orderLoading && (
         <div className="position-fixed top-50 start-50 translate-middle p-3 bg-white shadow rounded">
