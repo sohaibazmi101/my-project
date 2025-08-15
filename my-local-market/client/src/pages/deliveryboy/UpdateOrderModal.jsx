@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import api from '../services/api';
+import api from '../../services/api';
 
 export default function UpdateOrderModal({ show, order, onClose, refreshOrders }) {
   const [status, setStatus] = useState(order.status);

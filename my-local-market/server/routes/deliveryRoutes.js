@@ -1,21 +1,25 @@
 const express = require('express');
 const router = express.Router();
-const { registerDeliveryBoy, loginDeliveryBoy } = require('../controllers/deliveryController');
-const deliveryAuth = require('../middleware/deliveryAuth'); // for protected routes later
+const { registerDeliveryBoy,
+     loginDeliveryBoy, 
+     getAllDeliveryBoys,
+     getDeliveryBoyProfile,
+     toggleAvailability
+     } = require('../controllers/deliveryController');
+const deliveryAuth = require('../middleware/deliveryAuth');
+const authMiddleware = require('../middleware/authMiddleware');
 
-// @route   POST /api/delivery/register
-// @desc    Register a new delivery boy
-// @access  Public
+// Register
 router.post('/register', registerDeliveryBoy);
 
-// @route   POST /api/delivery/login
-// @desc    Login delivery boy
-// @access  Public
+// Login
 router.post('/login', loginDeliveryBoy);
 
-// Example of a protected route (can be used later)
-// router.get('/dashboard', deliveryAuth, (req, res) => {
-//   res.json({ message: `Welcome, ${req.deliveryBoy.name}` });
-// });
+router.get('/db-profile', deliveryAuth, getDeliveryBoyProfile);
+
+router.patch('/availability', deliveryAuth, toggleAvailability);
+
+// Get all delivery boys (for seller)
+router.get('/deliveryboy/all', authMiddleware, getAllDeliveryBoys);
 
 module.exports = router;

@@ -48,6 +48,8 @@ import SellerOrdersPage from './pages/seller/SellerOrdersPage';
 import AdminKycDashboard from './pages/admin/AdminKycDashboard';
 import DeliveryBoyLogin from './pages/deliveryboy/DeliveryBoyLogin';
 import DeliveryBoyRegister from './pages/deliveryboy/DeliveryBoyRegister';
+import DeliveryBoyDashboard from './pages/deliveryboy/DeliveryBoyDashboard';
+import ManageDeliveryBoys from './pages/seller/components/ManageDeliveryBoys';
 
 
 function AppContent() {
@@ -79,6 +81,8 @@ function AppContent() {
         <Route path="/refund" element={<CancellationAndRefund />} />
         <Route path="/shipping" element={<ShippingAndDelivery />} />
         <Route path="/deliveylogin" element={<DeliveryBoyLogin />} />
+        <Route path="/deliveyboy/login" element={<DeliveryBoyLogin />} />
+        <Route path="/deliveryboy/dashboard" element={<DeliveryBoyDashboard />} />
         <Route path="/deliveryregister" element={<DeliveryBoyRegister />} />
 
         {/* Seller Dashboard Routes (protected) */}
@@ -119,6 +123,14 @@ function AppContent() {
           element={
             <SellerProtectedRoute>
               <SellerOrdersPage />
+            </SellerProtectedRoute>
+          }
+        />
+        <Route
+          path="/sellers/manage-db"
+          element={
+            <SellerProtectedRoute>
+              <ManageDeliveryBoys />
             </SellerProtectedRoute>
           }
         />

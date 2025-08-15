@@ -5,6 +5,8 @@ const jwt = require('jsonwebtoken');
 // Register new delivery boy
 exports.registerDeliveryBoy = async (req, res) => {
   try {
+    console.log('Request body:', req.body);
+
     const { name, email, password, phone } = req.body;
 
     // Check if email already exists
@@ -56,5 +58,65 @@ exports.loginDeliveryBoy = async (req, res) => {
   } catch (err) {
     console.error('Delivery boy login error:', err);
     res.status(500).json({ message: 'Server error', error: err.message });
+  }
+};
+
+exports.getDeliveryBoyProfile = async (req, res) => {
+  try {
+    const deliveryBoyId = req.deliveryBoy._id;
+
+    const deliveryBoy = await DeliveryBoy.findById(deliveryBoyId)
+      .select('-password -__v');
+
+    if (!deliveryBoy) {
+      return res.status(404).json({ message: 'Delivery boy not found' });
+    }
+
+    res.status(200).json(deliveryBoy);
+  } catch (err) {
+    console.error('Get delivery boy profile error:', err);
+    res.status(500).json({ message: 'Server error', error: err.message });
+  }
+};
+
+exports.getAllDeliveryBoys = async (req, res) => {
+  try {
+    const deliveryBoys = await DeliveryBoy.find({});
+    res.status(200).json({ deliveryBoys });
+  } catch (err) {
+    console.error('Error fetching delivery boys:', err);
+    res.status(500).json({ message: 'Server error' });
+  }
+};
+
+
+exports.toggleAvailability = async (req, res) => {
+  try {
+    console.log("Incoming request body:", req.body);
+    const deliveryBoyId = req.deliveryBoy._id;
+
+    // Toggle status directly in DB
+    const updatedDeliveryBoy = await DeliveryBoy.findById(deliveryBoyId);
+    if (!updatedDeliveryBoy) {
+      return res.status(404).json({ message: "Delivery boy not found" });
+    }
+
+    const newStatus = !updatedDeliveryBoy.isActive;
+
+    const result = await DeliveryBoy.findByIdAndUpdate(
+      deliveryBoyId,
+      { isActive: newStatus },
+      { new: true }
+    );
+
+    console.log("Updated DB record:", result);
+
+    res.json({
+      message: "Status updated successfully",
+      isActive: result.isActive
+    });
+  } catch (error) {
+    console.error("Error toggling status:", error);
+    res.status(500).json({ message: "Server error" });
   }
 };

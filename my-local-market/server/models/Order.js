@@ -67,7 +67,7 @@ const orderSchema = new mongoose.Schema({
         ref: 'DeliveryBoy',
     },
     secretCode: {
-        type: String, // 6-digit code
+        type: String,
     },
 }, { timestamps: true });
 

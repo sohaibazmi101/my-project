@@ -30,6 +30,7 @@ const customerRoutes = require('./routes/customerRoutes');
 const cartRoutes = require('./routes/cartRoutes');
 const categoryRoutes = require('./routes/categoryRoutes');
 const deliveryRoutes = require('./routes/deliveryRoutes');
+const orderRoutes = require('./routes/orderRoutes')
 
 app.use('/api/delivery', deliveryRoutes);
 app.use('/api/cart', cartRoutes);
@@ -40,6 +41,7 @@ app.use('/api', shopRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api', publicRoutes);
 app.use('/api/categories', categoryRoutes);
+app.use('/api', orderRoutes);
 
 app.get('/api/ping', (req, res) => {
   res.json({ message: 'Server is live' });

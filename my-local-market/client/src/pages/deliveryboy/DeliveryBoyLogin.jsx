@@ -28,7 +28,8 @@ export default function DeliveryBoyLogin() {
       localStorage.setItem('deliveryBoy', JSON.stringify(deliveryBoy));
 
       // Redirect to dashboard
-      navigate('/delivery/dashboard');
+      alert('Logged In');
+      navigate('/deliveryboy/dashboard');
     } catch (err) {
       console.error('Login failed:', err);
       setErrorMessage(err.response?.data?.message || 'Login failed');

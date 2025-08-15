@@ -141,6 +141,17 @@ export default function Dashboard() {
             Go to Shop Settings
           </button>
         </section>
+
+        <section>
+          <h4>Manage And Assign Delivery Boys</h4>
+          <p className="text-muted mb-2">Customize your shop banner, description, and featured products.</p>
+          <button
+            className="btn btn-primary w-100"
+            onClick={() => navigate('/sellers/manage-db')}
+          >
+            Manage Delivery Boys
+          </button>
+        </section>
       </div>
     </div>
   );

@@ -28,7 +28,10 @@ const shopSchema = new mongoose.Schema({
     min: 1,
     unique: true, 
     sparse: true,
-  }
+  },
+  assignedDeliveryBoys: [
+    { type: mongoose.Schema.Types.ObjectId, ref: 'DeliveryBoy' }
+  ],
 }, {
   timestamps: true,
 });

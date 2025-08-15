@@ -148,7 +148,7 @@ exports.updateOrderStatus = async (req, res) => {
     const { orderId } = req.params;
     const { status } = req.body;
 
-    const validStatuses = ['Pending', 'Processing', 'Shipped', 'Delivered', 'Cancelled'];
+    const validStatuses = ['Pending', 'PickedUp', 'Delivered', 'Cancelled'];
     if (!validStatuses.includes(status)) return res.status(400).json({ message: 'Invalid order status.' });
 
     const order = await Order.findById(orderId);
@@ -167,49 +167,21 @@ exports.updateOrderStatus = async (req, res) => {
   }
 };
 
-// Shop owner assigns delivery boys to an order
-exports.assignDeliveryBoys = async (req, res) => {
-    const { orderId } = req.params;
-    const { deliveryBoyIds } = req.body; // array of delivery boy IDs
-
-    if (!Array.isArray(deliveryBoyIds) || deliveryBoyIds.length === 0) {
-        return res.status(400).json({ message: 'Provide at least one delivery boy ID' });
-    }
-
-    try {
-        const order = await Order.findById(orderId);
-        if (!order) return res.status(404).json({ message: 'Order not found' });
-
-        // Verify that the delivery boys exist
-        const validDeliveryBoys = await DeliveryBoy.find({ _id: { $in: deliveryBoyIds } });
-        if (validDeliveryBoys.length !== deliveryBoyIds.length) {
-            return res.status(400).json({ message: 'Some delivery boys are invalid' });
-        }
-
-        order.deliveryBoys = deliveryBoyIds;
-        await order.save();
-
-        res.json({ message: 'Delivery boys assigned successfully', order });
-    } catch (err) {
-        console.error(err);
-        res.status(500).json({ message: 'Server error' });
-    }
-};
-
 exports.getAvailableOrdersForDeliveryBoy = async (req, res) => {
-    const deliveryBoyId = req.deliveryBoy._id; // assume authenticated delivery boy
+    const deliveryBoyId = req.deliveryBoy._id; // authenticated delivery boy
+
     try {
         const orders = await Order.find({
-            deliveryBoys: deliveryBoyId,
-            status: { $in: ['Pending', 'Processing', 'Shipped'] },
-            assignedDeliveryBoy: null, // only unassigned orders
+            deliveryBoys: deliveryBoyId,       // delivery boy is linked to shop
+            status: 'Pending',                 // only pending orders can be picked
+            assignedDeliveryBoy: null          // not yet assigned to any delivery boy
         })
         .populate('customer', 'name phone address latitude longitude')
         .populate('shop', 'name');
 
         res.json({ orders });
     } catch (err) {
-        console.error(err);
+        console.error('Error fetching available orders:', err);
         res.status(500).json({ message: 'Server error' });
     }
 };
@@ -218,55 +190,78 @@ exports.pickOrder = async (req, res) => {
     const deliveryBoyId = req.deliveryBoy._id;
     const { orderId } = req.params;
 
+    console.log('Incoming pick order request:', {
+        deliveryBoyId,
+        orderId
+    });
+
     try {
         const order = await Order.findById(orderId);
 
-        if (!order) return res.status(404).json({ message: 'Order not found' });
+        if (!order) {
+            console.warn(`Order not found: ${orderId}`);
+            return res.status(404).json({ message: 'Order not found' });
+        }
+
         if (!order.deliveryBoys.includes(deliveryBoyId)) {
+            console.warn(`Delivery boy ${deliveryBoyId} is not in allowed deliveryBoys for order ${orderId}`);
             return res.status(403).json({ message: 'You are not assigned to this order' });
         }
+
         if (order.assignedDeliveryBoy) {
+            console.warn(`Order ${orderId} already picked by ${order.assignedDeliveryBoy}`);
             return res.status(400).json({ message: 'Order already picked by another delivery boy' });
         }
 
+        // Generate a 6-digit secret code
         const secretCode = Math.floor(100000 + Math.random() * 900000).toString();
 
         order.assignedDeliveryBoy = deliveryBoyId;
         order.secretCode = secretCode;
-        order.status = 'Processing'; // update status
+        order.status = 'Processing';
         await order.save();
 
-        res.json({ message: 'Order picked successfully', order, secretCode });
+        console.log(`Order ${orderId} successfully picked by ${deliveryBoyId} with secret code ${secretCode}`);
+
+        res.json({
+            message: 'Order picked successfully',
+            order,
+            secretCode
+        });
     } catch (err) {
-        console.error(err);
+        console.error('Error in pickOrder:', err);
         res.status(500).json({ message: 'Server error' });
     }
 };
 
-// Update order status and optionally payment status
-exports.updateOrderStatus = async (req, res) => {
-    const deliveryBoyId = req.deliveryBoy._id;
-    const { orderId } = req.params;
-    const { status, paymentStatus, secretCode } = req.body;
 
-    try {
-        const order = await Order.findById(orderId);
 
-        if (!order) return res.status(404).json({ message: 'Order not found' });
-        if (order.assignedDeliveryBoy.toString() !== deliveryBoyId.toString()) {
-            return res.status(403).json({ message: 'You are not assigned to this order' });
-        }
-        if (order.secretCode !== secretCode) {
-            return res.status(400).json({ message: 'Invalid secret code' });
-        }
+// // Update order status and optionally payment status
+// exports.updateOrderStatus = async (req, res) => {
+//     const deliveryBoyId = req.deliveryBoy._id;
+//     const { orderId } = req.params;
+//     const { status, paymentStatus, secretCode } = req.body;
 
-        if (status) order.status = status;
-        if (paymentStatus) order.paymentStatus = paymentStatus;
+//     try {
+//         const order = await Order.findById(orderId);
 
-        await order.save();
-        res.json({ message: 'Order updated successfully', order });
-    } catch (err) {
-        console.error(err);
-        res.status(500).json({ message: 'Server error' });
-    }
-};
+//         if (!order) return res.status(404).json({ message: 'Order not found' });
+//         if (order.assignedDeliveryBoy.toString() !== deliveryBoyId.toString()) {
+//             return res.status(403).json({ message: 'You are not assigned to this order' });
+//         }
+//         if (order.secretCode !== secretCode) {
+//             return res.status(400).json({ message: 'Invalid secret code' });
+//         }
+
+//         if (status) order.status = status;
+//         if (paymentStatus) order.paymentStatus = paymentStatus;
+
+//         await order.save();
+//         res.json({ message: 'Order updated successfully', order });
+//     } catch (err) {
+//         console.error(err);
+//         res.status(500).json({ message: 'Server error' });
+//     }
+// };
+// // 
+

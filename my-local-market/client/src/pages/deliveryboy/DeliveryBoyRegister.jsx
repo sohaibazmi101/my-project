@@ -5,7 +5,7 @@ import { useNavigate } from 'react-router-dom';
 export default function DeliveryBoyRegister() {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
-  const [mobile, setMobile] = useState('');
+  const [phone, setPhone] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
@@ -14,7 +14,7 @@ export default function DeliveryBoyRegister() {
   const handleRegister = async (e) => {
     e.preventDefault();
     setErrorMessage('');
-    if (!name || !email || !mobile) {
+    if (!name || !email || !phone) {
       setErrorMessage('Please fill all required fields');
       return;
     }
@@ -24,11 +24,11 @@ export default function DeliveryBoyRegister() {
       const res = await api.post('/delivery/register', {
         name,
         email,
-        mobile,
+        phone,
         password,
       });
       alert('Delivery boy registered successfully!');
-      navigate('/delivery/login'); // redirect to login page
+      navigate('/deliveryboy/login');
     } catch (err) {
       console.error('Registration failed:', err);
       setErrorMessage(err.response?.data?.message || 'Registration failed');
@@ -65,12 +65,12 @@ export default function DeliveryBoyRegister() {
         </div>
 
         <div className="mb-3">
-          <label className="form-label">Mobile *</label>
+          <label className="form-label">Phone Number *</label>
           <input
             type="text"
             className="form-control"
-            value={mobile}
-            onChange={(e) => setMobile(e.target.value)}
+            value={phone}
+            onChange={(e) => setPhone(e.target.value)}
             required
           />
         </div>
