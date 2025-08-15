@@ -84,6 +84,7 @@ export async function placeOrderWithRazorpay(orderData, token) {
 export async function placeOrderCOD(orderData, token) {
     if (!token) throw new Error('User not authenticated');
     try {
+        console.log('Order Data is Sending to Backend via COD: ',orderData);
         await api.post('/customers/orders', orderData, {
             headers: { Authorization: `Bearer ${token}` },
         });

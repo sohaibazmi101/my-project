@@ -87,6 +87,10 @@ exports.createFinalOrder = async (req, res) => {
         paymentStatus: 'completed',
         razorpayOrderId: razorpay_order_id,
         razorpayPaymentId: razorpay_payment_id,
+        customerLocation: {
+          lat: customerLat,
+          lon: customerLon,
+        }
       });
 
       await order.save();

@@ -60,7 +60,7 @@ async function calculateOrderSummary({ cart, productId, quantity, customerLat, c
 
     const dist = haversineDistance(customerLat, customerLon, shop.latitude, shop.longitude);
 
-    if (dist > 15) {
+    if (dist > 1500) {
       throw new Error(`Distance from shop ${shop.name} is ${dist.toFixed(2)} km, beyond delivery range.`);
     }
 

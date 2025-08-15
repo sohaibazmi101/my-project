@@ -94,8 +94,10 @@ exports.placeOrder = async (req, res) => {
         platformFee: shopOrder.platformFee,
         paymentMethod,
         paymentStatus: paymentMethod === 'UPI' ? 'pending' : 'pending',
-        customerLat,
-        customerLon,
+        customerLocation: {
+          lat: customerLat,
+          lon: customerLon,
+        }
       });
 
       await order.save();
@@ -167,29 +169,28 @@ exports.updateOrderStatus = async (req, res) => {
   }
 };
 
-
 exports.getAvailableOrdersForDeliveryBoy = async (req, res) => {
-    const deliveryBoyId = req.deliveryBoy._id;
+  const deliveryBoyId = req.deliveryBoy._id;
 
-    try {
-        // 1. Find all shops where this delivery boy is assigned
-        const shops = await Shop.find({ assignedDeliveryBoys: deliveryBoyId }).select('_id');
-        const shopIds = shops.map(shop => shop._id);
+  try {
+    // 1. Find all shops where this delivery boy is assigned
+    const shops = await Shop.find({ assignedDeliveryBoys: deliveryBoyId }).select('_id');
+    const shopIds = shops.map(shop => shop._id);
 
-        // 2. Find all pending orders from these shops that are not yet assigned
-        const orders = await Order.find({
-            shop: { $in: shopIds },
-            status: 'Pending',
-            assignedDeliveryBoy: null
-        })
-        .populate('customer', 'name phone address')
-        .populate('shop', 'name');
+    // 2. Find all pending orders from these shops that are not yet assigned
+    const orders = await Order.find({
+      shop: { $in: shopIds },
+      status: 'Pending',
+      assignedDeliveryBoy: null
+    })
+      .populate('customer', 'name phone address')
+      .populate('shop', 'name');
 
-        res.json({ orders });
-    } catch (err) {
-        console.error('Error fetching available orders:', err);
-        res.status(500).json({ message: 'Server error' });
-    }
+    res.json({ orders });
+  } catch (err) {
+    console.error('Error fetching available orders:', err);
+    res.status(500).json({ message: 'Server error' });
+  }
 };
 
 exports.pickOrder = async (req, res) => {
@@ -197,40 +198,40 @@ exports.pickOrder = async (req, res) => {
   const { orderId } = req.params;
 
   try {
-      // Fetch order along with the shop's assigned delivery boys
-      const order = await Order.findById(orderId).populate('shop', 'assignedDeliveryBoys name');
+    // Fetch order along with the shop's assigned delivery boys
+    const order = await Order.findById(orderId).populate('shop', 'assignedDeliveryBoys name');
 
-      if (!order) {
-          console.warn(`Order not found: ${orderId}`);
-          return res.status(404).json({ message: 'Order not found' });
-      }
+    if (!order) {
+      console.warn(`Order not found: ${orderId}`);
+      return res.status(404).json({ message: 'Order not found' });
+    }
 
-      // Verify delivery boy is assigned to the shop
-      const isAssignedToShop = order.shop.assignedDeliveryBoys.some(
-          (id) => id.equals(deliveryBoyId)
-      );
+    // Verify delivery boy is assigned to the shop
+    const isAssignedToShop = order.shop.assignedDeliveryBoys.some(
+      (id) => id.equals(deliveryBoyId)
+    );
 
-      if (!isAssignedToShop) {
-          console.warn(`Delivery boy ${deliveryBoyId} not assigned to shop ${order.shop.name}`);
-          return res.status(403).json({ message: 'You are not assigned to this shop' });
-      }
+    if (!isAssignedToShop) {
+      console.warn(`Delivery boy ${deliveryBoyId} not assigned to shop ${order.shop.name}`);
+      return res.status(403).json({ message: 'You are not assigned to this shop' });
+    }
 
-      if (order.assignedDeliveryBoy) {
-          console.warn(`Order ${orderId} already picked by ${order.assignedDeliveryBoy}`);
-          return res.status(400).json({ message: 'Order already picked by another delivery boy' });
-      }
+    if (order.assignedDeliveryBoy) {
+      console.warn(`Order ${orderId} already picked by ${order.assignedDeliveryBoy}`);
+      return res.status(400).json({ message: 'Order already picked by another delivery boy' });
+    }
 
-      // Assign the delivery boy and update status
-      order.assignedDeliveryBoy = deliveryBoyId;
-      order.status = 'PickedUp';
-      await order.save();
+    // Assign the delivery boy and update status
+    order.assignedDeliveryBoy = deliveryBoyId;
+    order.status = 'PickedUp';
+    await order.save();
 
-      console.log(`Order ${orderId} picked by delivery boy ${deliveryBoyId}`);
-      res.json({ message: 'Order picked successfully', order });
+    console.log(`Order ${orderId} picked by delivery boy ${deliveryBoyId}`);
+    res.json({ message: 'Order picked successfully', order });
 
   } catch (err) {
-      console.error('Error picking order:', err);
-      res.status(500).json({ message: 'Server error' });
+    console.error('Error picking order:', err);
+    res.status(500).json({ message: 'Server error' });
   }
 };
 
@@ -243,8 +244,8 @@ exports.getPickedOrders = async (req, res) => {
       assignedDeliveryBoy: deliveryBoyId,
       status: 'PickedUp'
     })
-    .populate('shop', 'name')
-    .populate('customer', 'name phone address lat lon');
+      .populate('shop', 'name')
+      .populate('customer', 'name phone address'); // only customer fields
 
     res.json({ orders });
   } catch (err) {
@@ -252,6 +253,7 @@ exports.getPickedOrders = async (req, res) => {
     res.status(500).json({ message: 'Server error' });
   }
 };
+
 
 
 exports.updateOrderStatusByDeliveryBoy = async (req, res) => {

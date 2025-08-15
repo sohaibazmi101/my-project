@@ -68,14 +68,14 @@ export default function PickedOrdersModal({ show, orders, onClose, refreshOrders
                                             <td>{order.customer?.name}</td>
                                             <td>{order.customer?.phone || 'N/A'}</td>
                                             <td>{formatAddress(order.customer?.address)}
-                                            <a
-    href={`https://www.google.com/maps/dir/?api=1&destination=${order.lat},${order.lon}`}
-    target="_blank"
-    rel="noopener noreferrer"
-    className="btn btn-info btn-sm"
-  >
-    Directions
-  </a>
+                                                <a
+                                                    href={`https://www.google.com/maps/dir/?api=1&destination=${order.customerLocation.lat},${order.customerLocation.lon}`}
+                                                    target="_blank"
+                                                    rel="noopener noreferrer"
+                                                    className="btn btn-info btn-sm"
+                                                >
+                                                    Directions
+                                                </a>
                                             </td>
                                             <td>{order.totalAmount.toFixed(2)}</td>
                                             <td>{order.status}</td>
