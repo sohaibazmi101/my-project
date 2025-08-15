@@ -21,7 +21,7 @@ export default function ConfirmOrderModal({
   const [quantity, setQuantity] = useState(1);
   const [paymentMethod, setPaymentMethod] = useState('UPI');
   const [editableDetails, setEditableDetails] = useState(confirmDetails || emptyDetails);
-  const [customerCoords, setCustomerCoords] = useState({ lat: null, lng: null });
+  const [customerCoords, setCustomerCoords] = useState({ lat: null, lon: null });
   const [orderSummary, setOrderSummary] = useState([]);
   const [errorMessage, setErrorMessage] = useState('');
   const [showErrorModal, setShowErrorModal] = useState(false);
@@ -34,25 +34,25 @@ export default function ConfirmOrderModal({
       setPaymentMethod('UPI');
       setErrorMessage('');
       setOrderSummary([]);
-      setCustomerCoords({ lat: null, lng: null });
+      setCustomerCoords({ lat: null, lon: null });
 
       if (navigator.geolocation) {
         navigator.geolocation.getCurrentPosition(
-          (pos) => setCustomerCoords({ lat: pos.coords.latitude, lng: pos.coords.longitude }),
+          (pos) => setCustomerCoords({ lat: pos.coords.latitude, lon: pos.coords.longitude }),
           () => {
-            setCustomerCoords({ lat: null, lng: null });
+            setCustomerCoords({ lat: null, lon: null });
             setErrorMessage('Geolocation access denied. Cannot calculate delivery.');
           }
         );
       } else {
-        setCustomerCoords({ lat: null, lng: null });
+        setCustomerCoords({ lat: null, lon: null });
         setErrorMessage('Geolocation not supported by your browser.');
       }
     }
   }, [show, confirmDetails]);
 
   useEffect(() => {
-    if (show && customerCoords.lat && customerCoords.lng) {
+    if (show && customerCoords.lat && customerCoords.lon) {
       fetchOrderSummary();
     }
   }, [show, customerCoords, quantity, cartItems, paymentMethod]);
@@ -63,14 +63,14 @@ export default function ConfirmOrderModal({
         ? {
           cart: cartItems.map(i => ({ product: i.product._id, quantity: i.quantity })),
           customerLat: customerCoords.lat,
-          customerLon: customerCoords.lng,
+          customerLon: customerCoords.lon,
           paymentMethod
         }
         : {
           productId: product._id,
           quantity,
           customerLat: customerCoords.lat,
-          customerLon: customerCoords.lng,
+          customerLon: customerCoords.lon,
           paymentMethod
         };
       const { data } = await api.post('/customers/calculate-order', payload);
@@ -106,7 +106,7 @@ export default function ConfirmOrderModal({
         },
         paymentMethod,
         customerLat: customerCoords.lat,
-        customerLon: customerCoords.lng,
+        customerLon: customerCoords.lon,
         orderSummary, // Pass the orderSummary here
         totalAmount,  // Pass the calculated total amount
       };

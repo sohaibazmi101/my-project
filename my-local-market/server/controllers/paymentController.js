@@ -40,7 +40,7 @@ exports.createRazorpayOrder = async (req, res) => {
 
 exports.createFinalOrder = async (req, res) => {
   try {
-    const { razorpay_order_id, razorpay_payment_id, razorpay_signature, orderSummary } = req.body;
+    const { razorpay_order_id, razorpay_payment_id, razorpay_signature, orderSummary, customerLat, customerLon } = req.body;
     const customerId = req.customer._id;
     const hmac = crypto.createHmac('sha256', process.env.RAZORPAY_KEY_SECRET);
     hmac.update(`${razorpay_order_id}|${razorpay_payment_id}`);
@@ -64,7 +64,7 @@ exports.createFinalOrder = async (req, res) => {
         deliveryCharge: shopOrder.deliveryCharge,
         platformFee: shopOrder.platformFee,
         paymentMethod: 'UPI',
-        paymentStatus: 'completed',
+        paymentStatus: 'success',
         razorpayOrderId: razorpay_order_id,
         razorpayPaymentId: razorpay_payment_id,
         customerLocation: {
@@ -97,8 +97,8 @@ exports.handleWebhook = async (req, res) => {
       const paymentId = event.payload.payment?.entity?.id;
       const orders = await Order.find({ razorpayOrderId });
       for (let o of orders) {
-        if (o.paymentStatus !== 'completed') {
-          o.paymentStatus = 'completed';
+        if (o.paymentStatus !== 'success') {
+          o.paymentStatus = 'success';
           o.razorpayPaymentId = paymentId;
           await o.save();
         }

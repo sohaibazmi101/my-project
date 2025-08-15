@@ -35,6 +35,9 @@ const orderSchema = new mongoose.Schema({
         type: Number,
         default: 0,
     },
+    razorpayOrderId: { type: String },
+    razorpayPaymentId: { type: String },
+
     customerLocation: {
         lat: Number,
         lon: Number,
@@ -67,7 +70,7 @@ const orderSchema = new mongoose.Schema({
     },
 }, { timestamps: true });
 
-orderSchema.pre('save', async function(next) {
+orderSchema.pre('save', async function (next) {
     if (this.isNew) {
         try {
             const lastOrder = await this.constructor.findOne({}, {}, { sort: { 'createdAt': -1 } });
