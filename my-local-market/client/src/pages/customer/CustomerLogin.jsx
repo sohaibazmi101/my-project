@@ -26,6 +26,8 @@ export default function CustomerLogin() {
       setCustomer(res.data.customer);
       localStorage.removeItem('token');
       localStorage.removeItem('seller');
+      localStorage.removeItem('deliveryToken');
+      localStorage.removeItem('adminToken');
 
       alert('Logged in with Google!');
       navigate('/');
