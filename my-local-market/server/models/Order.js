@@ -58,10 +58,6 @@ const orderSchema = new mongoose.Schema({
         enum: ['pending', 'success', 'failed'],
         default: 'pending',
     },
-    deliveryBoys: [{
-        type: mongoose.Schema.Types.ObjectId,
-        ref: 'DeliveryBoy',
-    }],
     assignedDeliveryBoy: {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'DeliveryBoy',
@@ -71,7 +67,6 @@ const orderSchema = new mongoose.Schema({
     },
 }, { timestamps: true });
 
-// Auto-generate orderNumber
 orderSchema.pre('save', async function(next) {
     if (this.isNew) {
         try {

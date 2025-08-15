@@ -109,8 +109,6 @@ exports.toggleAvailability = async (req, res) => {
       { new: true }
     );
 
-    console.log("Updated DB record:", result);
-
     res.json({
       message: "Status updated successfully",
       isActive: result.isActive

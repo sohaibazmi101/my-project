@@ -167,16 +167,22 @@ exports.updateOrderStatus = async (req, res) => {
   }
 };
 
+
 exports.getAvailableOrdersForDeliveryBoy = async (req, res) => {
-    const deliveryBoyId = req.deliveryBoy._id; // authenticated delivery boy
+    const deliveryBoyId = req.deliveryBoy._id;
 
     try {
+        // 1. Find all shops where this delivery boy is assigned
+        const shops = await Shop.find({ assignedDeliveryBoys: deliveryBoyId }).select('_id');
+        const shopIds = shops.map(shop => shop._id);
+
+        // 2. Find all pending orders from these shops that are not yet assigned
         const orders = await Order.find({
-            deliveryBoys: deliveryBoyId,       // delivery boy is linked to shop
-            status: 'Pending',                 // only pending orders can be picked
-            assignedDeliveryBoy: null          // not yet assigned to any delivery boy
+            shop: { $in: shopIds },
+            status: 'Pending',
+            assignedDeliveryBoy: null
         })
-        .populate('customer', 'name phone address latitude longitude')
+        .populate('customer', 'name phone address')
         .populate('shop', 'name');
 
         res.json({ orders });
@@ -187,81 +193,112 @@ exports.getAvailableOrdersForDeliveryBoy = async (req, res) => {
 };
 
 exports.pickOrder = async (req, res) => {
-    const deliveryBoyId = req.deliveryBoy._id;
-    const { orderId } = req.params;
+  const deliveryBoyId = req.deliveryBoy._id;
+  const { orderId } = req.params;
 
-    console.log('Incoming pick order request:', {
-        deliveryBoyId,
-        orderId
-    });
+  try {
+      // Fetch order along with the shop's assigned delivery boys
+      const order = await Order.findById(orderId).populate('shop', 'assignedDeliveryBoys name');
 
-    try {
-        const order = await Order.findById(orderId);
+      if (!order) {
+          console.warn(`Order not found: ${orderId}`);
+          return res.status(404).json({ message: 'Order not found' });
+      }
 
-        if (!order) {
-            console.warn(`Order not found: ${orderId}`);
-            return res.status(404).json({ message: 'Order not found' });
-        }
+      // Verify delivery boy is assigned to the shop
+      const isAssignedToShop = order.shop.assignedDeliveryBoys.some(
+          (id) => id.equals(deliveryBoyId)
+      );
 
-        if (!order.deliveryBoys.includes(deliveryBoyId)) {
-            console.warn(`Delivery boy ${deliveryBoyId} is not in allowed deliveryBoys for order ${orderId}`);
-            return res.status(403).json({ message: 'You are not assigned to this order' });
-        }
+      if (!isAssignedToShop) {
+          console.warn(`Delivery boy ${deliveryBoyId} not assigned to shop ${order.shop.name}`);
+          return res.status(403).json({ message: 'You are not assigned to this shop' });
+      }
 
-        if (order.assignedDeliveryBoy) {
-            console.warn(`Order ${orderId} already picked by ${order.assignedDeliveryBoy}`);
-            return res.status(400).json({ message: 'Order already picked by another delivery boy' });
-        }
+      if (order.assignedDeliveryBoy) {
+          console.warn(`Order ${orderId} already picked by ${order.assignedDeliveryBoy}`);
+          return res.status(400).json({ message: 'Order already picked by another delivery boy' });
+      }
 
-        // Generate a 6-digit secret code
-        const secretCode = Math.floor(100000 + Math.random() * 900000).toString();
+      // Assign the delivery boy and update status
+      order.assignedDeliveryBoy = deliveryBoyId;
+      order.status = 'PickedUp';
+      await order.save();
 
-        order.assignedDeliveryBoy = deliveryBoyId;
-        order.secretCode = secretCode;
-        order.status = 'Processing';
-        await order.save();
+      console.log(`Order ${orderId} picked by delivery boy ${deliveryBoyId}`);
+      res.json({ message: 'Order picked successfully', order });
 
-        console.log(`Order ${orderId} successfully picked by ${deliveryBoyId} with secret code ${secretCode}`);
-
-        res.json({
-            message: 'Order picked successfully',
-            order,
-            secretCode
-        });
-    } catch (err) {
-        console.error('Error in pickOrder:', err);
-        res.status(500).json({ message: 'Server error' });
-    }
+  } catch (err) {
+      console.error('Error picking order:', err);
+      res.status(500).json({ message: 'Server error' });
+  }
 };
 
 
+exports.getPickedOrders = async (req, res) => {
+  const deliveryBoyId = req.deliveryBoy._id;
 
-// // Update order status and optionally payment status
-// exports.updateOrderStatus = async (req, res) => {
-//     const deliveryBoyId = req.deliveryBoy._id;
-//     const { orderId } = req.params;
-//     const { status, paymentStatus, secretCode } = req.body;
+  try {
+    const orders = await Order.find({
+      assignedDeliveryBoy: deliveryBoyId,
+      status: 'PickedUp'
+    })
+    .populate('shop', 'name')
+    .populate('customer', 'name phone address lat lon');
 
-//     try {
-//         const order = await Order.findById(orderId);
+    res.json({ orders });
+  } catch (err) {
+    console.error('Error fetching picked orders:', err);
+    res.status(500).json({ message: 'Server error' });
+  }
+};
 
-//         if (!order) return res.status(404).json({ message: 'Order not found' });
-//         if (order.assignedDeliveryBoy.toString() !== deliveryBoyId.toString()) {
-//             return res.status(403).json({ message: 'You are not assigned to this order' });
-//         }
-//         if (order.secretCode !== secretCode) {
-//             return res.status(400).json({ message: 'Invalid secret code' });
-//         }
 
-//         if (status) order.status = status;
-//         if (paymentStatus) order.paymentStatus = paymentStatus;
+exports.updateOrderStatusByDeliveryBoy = async (req, res) => {
+  const deliveryBoyId = req.deliveryBoy._id;
+  const { orderId } = req.params;
+  const { action, secretCode } = req.body; // action = 'Delivered' or 'Cancelled'
 
-//         await order.save();
-//         res.json({ message: 'Order updated successfully', order });
-//     } catch (err) {
-//         console.error(err);
-//         res.status(500).json({ message: 'Server error' });
-//     }
-// };
-// // 
+  if (!['Delivered', 'Cancelled'].includes(action)) {
+    return res.status(400).json({ message: 'Invalid action' });
+  }
 
+  try {
+    // Find order
+    const order = await Order.findById(orderId);
+
+    if (!order) return res.status(404).json({ message: 'Order not found' });
+
+    // Verify assigned delivery boy
+    if (!order.assignedDeliveryBoy || !order.assignedDeliveryBoy.equals(deliveryBoyId)) {
+      return res.status(403).json({ message: 'You are not assigned to this order' });
+    }
+
+    // Verify secret code
+    if (order.secretCode !== secretCode) {
+      return res.status(400).json({ message: 'Invalid secret code' });
+    }
+
+    // Only allow update if current status is PickedUp
+    if (order.status !== 'PickedUp') {
+      return res.status(400).json({ message: 'Order cannot be updated' });
+    }
+
+    // Update status
+    order.status = action;
+
+    // Update paymentStatus
+    if (action === 'Delivered' && order.paymentStatus === 'pending') {
+      order.paymentStatus = 'success';
+    } else if (action === 'Cancelled') {
+      order.paymentStatus = 'failed';
+    }
+
+    await order.save();
+
+    res.json({ message: `Order ${action} successfully`, order });
+  } catch (err) {
+    console.error('Error updating order status:', err);
+    res.status(500).json({ message: 'Server error' });
+  }
+};
