@@ -6,6 +6,7 @@ export default function PickedOrdersModal({ show, orders, onClose, refreshOrders
     const [selectedOrder, setSelectedOrder] = useState(null);
     const [actionType, setActionType] = useState('');
     const [showSecretModal, setShowSecretModal] = useState(false);
+    const [showLocationModal, setShowLocationModal] = useState(false);
 
     const handleActionClick = (order, type) => {
         setSelectedOrder(order);
@@ -28,13 +29,20 @@ export default function PickedOrdersModal({ show, orders, onClose, refreshOrders
         }
     };
 
-    if (!show) return null;
-
     const formatAddress = (address) => {
         if (!address) return 'N/A';
         const parts = [address.street, address.city, address.state, address.pincode].filter(Boolean);
         return parts.join(', ');
     };
+
+    const handleDirectionsClick = (order, e) => {
+        if (!order.customerLocation?.lat || !order.customerLocation?.lon) {
+            e.preventDefault(); // prevent opening link
+            setShowLocationModal(true);
+        }
+    };
+
+    if (!show) return null;
 
     return (
         <div className="modal show d-block" tabIndex="-1">
@@ -48,64 +56,72 @@ export default function PickedOrdersModal({ show, orders, onClose, refreshOrders
                         {orders.length === 0 ? (
                             <p>No picked orders.</p>
                         ) : (
-                            <table className="table table-bordered">
-                                <thead>
-                                    <tr>
-                                        <th>Shop</th>
-                                        <th>Customer</th>
-                                        <th>Phone</th>
-                                        <th>Address</th>
-                                        <th>Total</th>
-                                        <th>Status</th>
-                                        <th>Payment</th>
-                                        <th>Action</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {orders.map(order => (
-                                        <tr key={order._id}>
-                                            <td>{order.shop?.name}</td>
-                                            <td>{order.customer?.name}</td>
-                                            <td>{order.customer?.phone || 'N/A'}</td>
-                                            <td>{formatAddress(order.customer?.address)}
-                                                <a
-                                                    href={`https://www.google.com/maps/dir/?api=1&destination=${order.customerLocation.lat},${order.customerLocation.lon}`}
-                                                    target="_blank"
-                                                    rel="noopener noreferrer"
-                                                    className="btn btn-info btn-sm"
-                                                >
-                                                    Directions
-                                                </a>
-                                            </td>
-                                            <td>{order.totalAmount.toFixed(2)}</td>
-                                            <td>{order.status}</td>
-                                            <td>{order.paymentStatus}</td>
-                                            <td>
-                                                {order.status === 'PickedUp' && (
-                                                    <>
-                                                        <button
-                                                            className="btn btn-success btn-sm me-2"
-                                                            onClick={() => handleActionClick(order, 'Delivered')}
-                                                        >
-                                                            Delivered
-                                                        </button>
-                                                        <button
-                                                            className="btn btn-danger btn-sm"
-                                                            onClick={() => handleActionClick(order, 'Cancelled')}
-                                                        >
-                                                            Cancel
-                                                        </button>
-                                                    </>
-                                                )}
-                                            </td>
+                            <div className="table-responsive">
+                                <table className="table table-bordered table-striped">
+                                    <thead>
+                                        <tr>
+                                            <th>Shop</th>
+                                            <th>Customer</th>
+                                            <th>Phone</th>
+                                            <th>Address</th>
+                                            <th>Total</th>
+                                            <th>Status</th>
+                                            <th>Payment</th>
+                                            <th>Action</th>
                                         </tr>
-                                    ))}
-                                </tbody>
-                            </table>
+                                    </thead>
+                                    <tbody>
+                                        {orders.map(order => (
+                                            <tr key={order._id}>
+                                                <td>{order.shop?.name}</td>
+                                                <td>{order.customer?.name}</td>
+                                                <td>{order.customer?.phone || 'N/A'}</td>
+                                                <td>
+                                                    {formatAddress(order.customer?.address)}{' '}
+                                                    <a
+                                                        href={`https://www.google.com/maps/dir/?api=1&destination=${order.customerLocation?.lat},${order.customerLocation?.lon}`}
+                                                        target="_blank"
+                                                        rel="noopener noreferrer"
+                                                        className={`btn btn-info btn-sm ${!order.customerLocation?.lat ? 'disabled' : ''}`}
+                                                        onClick={(e) => {
+                                                            if (!order.customerLocation?.lat) e.preventDefault();
+                                                        }}
+                                                    >
+                                                        Directions
+                                                    </a>
+                                                </td>
+                                                <td>{order.totalAmount.toFixed(2)}</td>
+                                                <td>{order.status}</td>
+                                                <td>{order.paymentStatus}</td>
+                                                <td>
+                                                    {order.status === 'PickedUp' && (
+                                                        <>
+                                                            <button
+                                                                className="btn btn-success btn-sm me-2"
+                                                                onClick={() => handleActionClick(order, 'Delivered')}
+                                                            >
+                                                                Delivered
+                                                            </button>
+                                                            <button
+                                                                className="btn btn-danger btn-sm"
+                                                                onClick={() => handleActionClick(order, 'Cancelled')}
+                                                            >
+                                                                Cancel
+                                                            </button>
+                                                        </>
+                                                    )}
+                                                </td>
+                                            </tr>
+                                        ))}
+                                    </tbody>
+                                </table>
+                            </div>
+
                         )}
                     </div>
                 </div>
 
+                {/* Secret Code Modal */}
                 {selectedOrder && showSecretModal && (
                     <SecretCodeModal
                         show={showSecretModal}
@@ -114,6 +130,26 @@ export default function PickedOrdersModal({ show, orders, onClose, refreshOrders
                         onSubmit={handleSecretSubmit}
                         actionType={actionType}
                     />
+                )}
+
+                {/* Location Not Available Modal */}
+                {showLocationModal && (
+                    <div className="modal show d-block" tabIndex="-1">
+                        <div className="modal-dialog">
+                            <div className="modal-content">
+                                <div className="modal-header">
+                                    <h5 className="modal-title">Location Not Available</h5>
+                                    <button className="btn-close" onClick={() => setShowLocationModal(false)}></button>
+                                </div>
+                                <div className="modal-body">
+                                    <p>The customer's location data is not available.</p>
+                                </div>
+                                <div className="modal-footer">
+                                    <button className="btn btn-secondary" onClick={() => setShowLocationModal(false)}>Close</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 )}
             </div>
         </div>
