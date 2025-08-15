@@ -181,7 +181,6 @@ exports.assignDeliveryBoysToShop = async (req, res) => {
     res.status(200).json({ message: 'Delivery boys assigned successfully', shop });
   } catch (err) {
     console.error('Assign delivery boys error:', err);
-    console.log('Error in Backend: ',err)
     res.status(500).json({ message: 'Server error', error: err.message });
   }
 };

@@ -2,21 +2,12 @@ const DeliveryBoy = require('../models/DeliveryBoy');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 
-// Register new delivery boy
 exports.registerDeliveryBoy = async (req, res) => {
   try {
-    console.log('Request body:', req.body);
-
     const { name, email, password, phone } = req.body;
-
-    // Check if email already exists
     const existing = await DeliveryBoy.findOne({ email });
     if (existing) return res.status(400).json({ message: 'Email already registered' });
-
-    // Hash password
     const hashedPassword = await bcrypt.hash(password, 10);
-
-    // Create new delivery boy
     const newDeliveryBoy = new DeliveryBoy({
       name,
       email,
@@ -25,8 +16,6 @@ exports.registerDeliveryBoy = async (req, res) => {
     });
 
     await newDeliveryBoy.save();
-
-    // Generate JWT
     const token = jwt.sign({ id: newDeliveryBoy._id }, process.env.JWT_SECRET, {
       expiresIn: '7d',
     });
@@ -38,18 +27,13 @@ exports.registerDeliveryBoy = async (req, res) => {
   }
 };
 
-// Login delivery boy
 exports.loginDeliveryBoy = async (req, res) => {
   try {
     const { email, password } = req.body;
-
     const deliveryBoy = await DeliveryBoy.findOne({ email });
     if (!deliveryBoy) return res.status(400).json({ message: 'Invalid credentials' });
-
     const isMatch = await bcrypt.compare(password, deliveryBoy.password);
     if (!isMatch) return res.status(400).json({ message: 'Invalid credentials' });
-
-    // Generate JWT
     const token = jwt.sign({ id: deliveryBoy._id }, process.env.JWT_SECRET, {
       expiresIn: '7d',
     });
@@ -89,26 +73,19 @@ exports.getAllDeliveryBoys = async (req, res) => {
   }
 };
 
-
 exports.toggleAvailability = async (req, res) => {
   try {
-    console.log("Incoming request body:", req.body);
     const deliveryBoyId = req.deliveryBoy._id;
-
-    // Toggle status directly in DB
     const updatedDeliveryBoy = await DeliveryBoy.findById(deliveryBoyId);
     if (!updatedDeliveryBoy) {
       return res.status(404).json({ message: "Delivery boy not found" });
     }
-
     const newStatus = !updatedDeliveryBoy.isActive;
-
     const result = await DeliveryBoy.findByIdAndUpdate(
       deliveryBoyId,
       { isActive: newStatus },
       { new: true }
     );
-
     res.json({
       message: "Status updated successfully",
       isActive: result.isActive
