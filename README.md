@@ -37,6 +37,7 @@ flowchart LR
   BE -->|Payment| Razorpay[Razorpay API]
   BE -->|OTP Email| Brevo[Brevo API]
 
+```mermaid
 
 flowchart TB
   subgraph Browser[Browser]
@@ -82,6 +83,7 @@ flowchart TB
   Order <--> Payment
   Order --> Email
 
+```mermaid
 sequenceDiagram
   participant C as Customer
   participant FE as Frontend (React)
@@ -103,7 +105,7 @@ sequenceDiagram
   BE-->>FE: Order Confirmation
   FE-->>C: Show Confirmation + Map Link
 
-
+```mermaid
 erDiagram
   CUSTOMER {
     string id
@@ -148,6 +150,7 @@ erDiagram
     string phone
   }
 
+```mermaid
   CUSTOMER ||--o{ ORDER : places
   SELLER ||--o{ SHOP : owns
   SHOP ||--o{ PRODUCT : contains
