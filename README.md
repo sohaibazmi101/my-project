@@ -68,3 +68,48 @@ flowchart LR
   BE <---> Google
   BE <---> Cloud
   BE --> Brevo
+
+
+flowchart TB
+  subgraph Browser[Browser]
+    SPA[React App<br/>Routes: Home, Shop, Product, Cart, Checkout, Customer, Seller, Admin, DeliveryBoy]
+  end
+
+  subgraph Server[Backend: Node/Express]
+    Auth[Auth Controller<br/>Google Login, JWT Tokens]
+    Shop[Shop Controller<br/>CRUD, Banner Management]
+    Product[Product Controller<br/>CRUD, Multi-Image Upload]
+    Cart[Cart Service<br/>Single-shop check, Split logic]
+    Order[Order Service<br/>PlaceOrder, Split by shop, Razorpay Webhooks]
+    Delivery[Delivery Service<br/>Assign/track delivery boy]
+    Recent[Recently Viewed Service]
+  end
+
+  subgraph Data[Data Stores]
+    Mongo[(MongoDB Atlas)]
+    Cloud[Cloudinary]
+  end
+
+  subgraph Integrations[3rd Party]
+    OAuth[Google OAuth]
+    Payment[Razorpay]
+    Email[Brevo OTP]
+  end
+
+  SPA <--> Auth
+  SPA <--> Product
+  SPA <--> Shop
+  SPA <--> Cart
+  SPA <--> Order
+  SPA <--> Delivery
+
+  Auth <--> Mongo
+  Shop <--> Mongo
+  Product <--> Mongo
+  Cart <--> Mongo
+  Order <--> Mongo
+  Delivery <--> Mongo
+  Product <--> Cloud
+  Auth <--> OAuth
+  Order <--> Payment
+  Order --> Email
