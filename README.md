@@ -40,16 +40,16 @@ flowchart LR
 
 flowchart TB
   subgraph Browser[Browser]
-    SPA[React App<br/>Routes: Home, Shop, Product, Cart, Checkout, Customer, Seller, Admin, DeliveryBoy]
+    SPA[React App\nRoutes: Home, Shop, Product, Cart, Checkout, Customer, Seller, Admin, DeliveryBoy]
   end
 
   subgraph Server[Backend: Node/Express]
-    Auth[Auth Controller<br/>Google Login, JWT Tokens]
-    Shop[Shop Controller<br/>CRUD, Banner Management]
-    Product[Product Controller<br/>CRUD, Multi-Image Upload]
-    Cart[Cart Service<br/>Single-shop check, Split logic]
-    Order[Order Service<br/>PlaceOrder, Split by shop, Razorpay Webhooks]
-    Delivery[Delivery Service<br/>Assign/track delivery boy]
+    Auth[Auth Controller\nGoogle Login, JWT Tokens]
+    Shop[Shop Controller\nCRUD, Banner Management]
+    Product[Product Controller\nCRUD, Multi-Image Upload]
+    Cart[Cart Service\nSingle-shop check, Split logic]
+    Order[Order Service\nPlaceOrder, Split by shop, Razorpay Webhooks]
+    Delivery[Delivery Service\nAssign/track delivery boy]
     Recent[Recently Viewed Service]
   end
 
@@ -105,55 +105,61 @@ sequenceDiagram
   FE-->>C: Show Confirmation + Map Link
 
 
-erDiagram
-  CUSTOMER {
-    string id
-    string name
-    string email
-    string location
-  }
-  SELLER {
-    string id
-    string shopName
-    string bannerImage
-  }
-  SHOP {
-    string id
-    string name
-    string sellerId
-    string description
-  }
-  PRODUCT {
-    string id
-    string name
-    number price
-    string[] images
-    string shopId
-  }
-  ORDER {
-    string id
-    string customerId
-    string shopId
-    date date
-    string status
-  }
-  DELIVERY {
-    string id
-    string orderId
-    string deliveryBoyId
-    string status
-  }
-  DELIVERYBOY {
-    string id
-    string name
-    string phone
-  }
+flowchart TB
+  CUSTOMER -->|places| ORDER
+  SELLER -->|owns| SHOP
+  SHOP -->|contains| PRODUCT
+  SHOP -->|receives| ORDER
+  ORDER -->|assigned_to| DELIVERY
+  DELIVERYBOY -->|handles| DELIVERY
 
-  CUSTOMER ||--o{ ORDER : places
-  SELLER ||--o{ SHOP : owns
-  SHOP ||--o{ PRODUCT : contains
-  SHOP ||--o{ ORDER : receives
-  ORDER ||--o{ DELIVERY : assigned_to
-  DELIVERYBOY ||--o{ DELIVERY : handles
+  subgraph CUSTOMER [Customer]
+    C_ID[id]
+    C_Name[name]
+    C_Email[email]
+    C_Location[location]
+  end
+
+  subgraph SELLER [Seller]
+    S_ID[id]
+    S_ShopName[shopName]
+    S_Banner[bannerImage]
+  end
+
+  subgraph SHOP [Shop]
+    SH_ID[id]
+    SH_Name[name]
+    SH_SellerId[sellerId]
+    SH_Desc[description]
+  end
+
+  subgraph PRODUCT [Product]
+    P_ID[id]
+    P_Name[name]
+    P_Price[price]
+    P_Images[images]
+    P_ShopId[shopId]
+  end
+
+  subgraph ORDER [Order]
+    O_ID[id]
+    O_CustomerId[customerId]
+    O_ShopId[shopId]
+    O_Date[date]
+    O_Status[status]
+  end
+
+  subgraph DELIVERY [Delivery]
+    D_ID[id]
+    D_OrderId[orderId]
+    D_DeliveryBoyId[deliveryBoyId]
+    D_Status[status]
+  end
+
+  subgraph DELIVERYBOY [Delivery Boy]
+    DB_ID[id]
+    DB_Name[name]
+    DB_Phone[phone]
+  end
 
 
