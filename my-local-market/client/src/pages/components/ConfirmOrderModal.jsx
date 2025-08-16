@@ -2,6 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import api from '../../services/api';
 import ErrorModal from '../../components/ErrorModal';
+import OtpVerificationModal from './OtpVerificationModal';
 
 export default function ConfirmOrderModal({
   show,
@@ -26,6 +27,8 @@ export default function ConfirmOrderModal({
   const [errorMessage, setErrorMessage] = useState('');
   const [showErrorModal, setShowErrorModal] = useState(false);
   const isCart = Array.isArray(cartItems) && cartItems.length > 0;
+  const [showOtpModal, setShowOtpModal] = useState(false);
+  const [pendingOrderData, setPendingOrderData] = useState(null);
 
   useEffect(() => {
     if (show) {
@@ -92,6 +95,12 @@ export default function ConfirmOrderModal({
       return;
     }
 
+    if (!editableDetails.email) {
+      setErrorMessage('Please enter a valid email before confirming.');
+      setShowErrorModal(true);
+      return;
+    }
+
     try {
       // Pass the orderSummary and totalAmount to the parent component
       const totalAmount = orderSummary.reduce((sum, shopOrder) => sum + shopOrder.totalAmount, 0);
@@ -111,9 +120,11 @@ export default function ConfirmOrderModal({
         totalAmount,  // Pass the calculated total amount
       };
 
-      await onConfirmOrder(orderData);
+      await api.post('/otp/send-otp', { email: editableDetails.email });
+      setPendingOrderData(orderData);
+      setShowOtpModal(true);
     } catch (error) {
-      setErrorMessage(error.response?.data?.message || 'Failed to place order.');
+      setErrorMessage(error.response?.data?.message || 'Failed to send OTP.');
       setShowErrorModal(true);
     }
   };
@@ -211,6 +222,19 @@ export default function ConfirmOrderModal({
           </div>
         </div>
       </div>
+      <OtpVerificationModal
+        show={showOtpModal}
+        email={editableDetails.email}
+        onVerified={() => {
+          setShowOtpModal(false);
+          onConfirmOrder(pendingOrderData);  // final step
+        }}
+        onClose={() => {
+          setShowOtpModal(false);
+          setPendingOrderData(null);
+        }}
+      />
+
 
       <ErrorModal show={showErrorModal} message={errorMessage} onClose={() => setShowErrorModal(false)} />
     </>

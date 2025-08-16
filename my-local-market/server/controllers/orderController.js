@@ -85,6 +85,10 @@ exports.placeOrder = async (req, res) => {
       });
       await order.save();
       createdOrders.push(order);
+      const customerMobile = customerInfo.phone || customer.phone;
+      const message = `Hello ${customerInfo.name || 'Customer'},
+       your order ${order.orderNumber} has been placed successfully.
+        Total: ₹${order.totalAmount.toFixed(2)}.`;
     }
     res.status(201).json(createdOrders);
   } catch (err) {
