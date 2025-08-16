@@ -18,3 +18,13 @@
 - Cloudinary for product/shop/banner images.
 
 ## Folder Structure
+
+docs/
+│
+├── 01_Architecture
+├── 02_APIs
+├── 03_Workflows
+├── 04_TechnologyStack.md
+├── 05_Deployment.md
+├── 06_Security.md
+└── 07_TipsAndNextSteps.md
