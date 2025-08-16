@@ -21,8 +21,20 @@ body {
 
   background-color: var(--bs-body-bg, #fff);
   color: var(--bs-body-color, #212529);
-  font-family: system-ui, Avenir, Helvetica, Arial, sans-serif;
   line-height: 1.5;
+
+  font-family: "Exo 2", sans-serif;
+  font-optical-sizing: auto;
+  font-weight: 500;
+  font-style: normal;
+}
+
+h1,h2,h3,h4,h5{
+  font-weight: 700;
+}
+
+p{
+  font-weight: 500;
 }
 
 body.dark {
@@ -46,6 +58,7 @@ body.dark {
 body.dark .navbar {
   background-color: #296802 !important;
 }
+
 
 body.dark .dropdown-menu {
   background-color: #2b2b2b;

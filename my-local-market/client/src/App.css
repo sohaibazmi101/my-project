@@ -9,8 +9,16 @@
 }
 
 body {
-  padding-top: 700px; /* Adjust based on actual navbar height */
+  padding-top: 700px;
 }
+
+.dancing-script {
+  font-family: "Dancing Script", cursive;
+  font-optical-sizing: auto;
+  font-weight: 400; /* choose 400, 500, 600, or 700 depending on style */
+  font-style: normal;
+}
+
 
 body.dark {
   background-color: #121212;

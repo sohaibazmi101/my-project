@@ -50,7 +50,7 @@ export default function Home() {
   }, [banners]);
 
   return (
-    <div className="container-fluid pt-5 mt-4">
+    <div className="container-fluid pt-5 mt-4 dancing-script">
       {/* Blue Section with Heading, Paragraph, Search Bar, and Banners Carousel */}
       <div
         className="container-fluid"

@@ -73,14 +73,15 @@ export default function Categories() {
                 {products.length === 0 ? (
                     <p>No products found in this category.</p>
                 ) : (
-                    <div className="d-flex overflow-auto gap-1 pb-2">
+                    <div className="row g-2">
                         {products.map((product) => (
-                            <SmallProductCard
-                                key={product._id}
-                                product={product}
-                                quantity={1}
-                                showQuantity={false}
-                            />
+                            <div key={product._id} className="col">
+                                <SmallProductCard
+                                    product={product}
+                                    quantity={1}
+                                    showQuantity={false}
+                                />
+                            </div>
                         ))}
                     </div>
                 )}
@@ -88,77 +89,78 @@ export default function Categories() {
         );
     };
 
+
     return (
         <div className="container-fluid">
             <div className="row" style={{ height: '100vh', overflow: 'hidden' }}>
                 {/* Sidebar */}
-<div
-  className="col-auto"
-  style={{
-    width: '70px',
-    height: '100vh',         // Full viewport height
-    overflowY: 'auto',       // Sidebar can scroll internally if needed
-    backgroundColor: '#f8f9fa',
-    borderRight: '1px solid #dee2e6',
-    padding: '1rem 0.5rem',
-    position: 'fixed',       // Fix sidebar position
-    top: 0,
-    left: 0,
-    zIndex: 1000,
-  }}
->
-  <div
-    className="d-flex flex-column align-items-center w-100"
-    style={{ gap: '0.25rem' }}
-  >
-    {/* For You Category */}
-    <div
-      onClick={() => handleCategorySelect('foryou')}
-      style={{
-        backgroundColor: activeCategory === 'foryou' ? '#505cddff' : 'transparent',
-        transform: activeCategory === 'foryou' ? 'scale(1.1)' : 'scale(1)',
-        transition: 'all 0.2s ease',
-        borderRadius: '12px',
-        cursor: 'pointer',
-        padding: '1px',
-        display: 'flex',
-        justifyContent: 'center',
-      }}
-    >
-      <CategoryCard category={{ name: 'For You', icon: foryouIcon }} />
-    </div>
+                <div
+                    className="col-auto"
+                    style={{
+                        width: '70px',
+                        height: '92vh',
+                        overflowY: 'auto',
+                        backgroundColor: '#f8f9fa',
+                        borderRight: '1px solid #dee2e6',
+                        padding: '1rem 0.5rem',
+                        position: 'fixed',
+                        top: 0,
+                        left: 0,
+                        zIndex: 1000,
+                    }}
+                >
+                    <div
+                        className="d-flex flex-column align-items-center w-100"
+                        style={{ gap: '0.25rem' }}
+                    >
+                        {/* For You Category */}
+                        <div
+                            onClick={() => handleCategorySelect('foryou')}
+                            style={{
+                                backgroundColor: activeCategory === 'foryou' ? '#505cddff' : 'transparent',
+                                transform: activeCategory === 'foryou' ? 'scale(1.1)' : 'scale(1)',
+                                transition: 'all 0.2s ease',
+                                borderRadius: '12px',
+                                cursor: 'pointer',
+                                padding: '1px',
+                                display: 'flex',
+                                justifyContent: 'center',
+                            }}
+                        >
+                            <CategoryCard category={{ name: 'For You', icon: foryouIcon }} />
+                        </div>
 
-    <hr className="w-100 my-1" />
+                        <hr className="w-100 my-1" />
 
-    {/* Other Categories */}
-    {categories
-      .slice() // copy to avoid mutation
-      .sort((a, b) => a.rank - b.rank)
-      .map((cat, index) => (
-        <div
-          key={cat._id}
-          className="w-100 d-flex flex-column align-items-center"
-        >
-          <div
-            onClick={() => handleCategorySelect(cat._id)}
-            style={{
-              backgroundColor: activeCategory === cat._id ? '#505cddff' : 'transparent',
-              transform: activeCategory === cat._id ? 'scale(1.1)' : 'scale(1)',
-              transition: 'all 0.2s ease',
-              borderRadius: '12px',
-              cursor: 'pointer',
-              padding: '1px',
-              display: 'flex',
-              justifyContent: 'center',
-            }}
-          >
-            <CategoryCard category={cat} />
-          </div>
-          {index < categories.length - 1 && <hr className="w-100 my-1" />}
-        </div>
-      ))}
-  </div>
-</div>
+                        {/* Other Categories */}
+                        {categories
+                            .slice()
+                            .sort((a, b) => a.rank - b.rank)
+                            .map((cat, index) => (
+                                <div
+                                    key={cat._id}
+                                    className="w-100 d-flex flex-column align-items-center"
+                                >
+                                    <div
+                                        onClick={() => handleCategorySelect(cat._id)}
+                                        style={{
+                                            backgroundColor: activeCategory === cat._id ? '#505cddff' : 'transparent',
+                                            transform: activeCategory === cat._id ? 'scale(1.1)' : 'scale(1)',
+                                            transition: 'all 0.2s ease',
+                                            borderRadius: '12px',
+                                            cursor: 'pointer',
+                                            padding: '1px',
+                                            display: 'flex',
+                                            justifyContent: 'center',
+                                        }}
+                                    >
+                                        <CategoryCard category={cat} />
+                                    </div>
+                                    {index < categories.length - 1 && <hr className="w-100 my-1" />}
+                                </div>
+                            ))}
+                    </div>
+                </div>
 
 
                 {/* Main Content */}

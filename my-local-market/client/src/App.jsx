@@ -81,7 +81,6 @@ function AppContent() {
         <Route path="/refund" element={<CancellationAndRefund />} />
         <Route path="/shipping" element={<ShippingAndDelivery />} />
         <Route path="/deliveylogin" element={<DeliveryBoyLogin />} />
-        <Route path="/deliveyboy/login" element={<DeliveryBoyLogin />} />
         <Route path="/deliveryboy/dashboard" element={<DeliveryBoyDashboard />} />
         <Route path="/deliveryregister" element={<DeliveryBoyRegister />} />
 

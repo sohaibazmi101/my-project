@@ -233,6 +233,15 @@ export default function Account() {
                         </Link>
                     </li>
                     <li className="mb-2">
+                        <Link to="/deliveryboy/dashboard" className="d-flex justify-content-between align-items-center p-2 rounded" style={linkStyle}>
+                            <div className="d-flex align-items-center">
+                                <FaStore className="me-2 text-info" />
+                                Delivery Boy DashBoard
+                            </div>
+                            <FaChevronRight className="text-muted" />
+                        </Link>
+                    </li>
+                    <li className="mb-2">
                         <Link to="/deliveylogin" className="d-flex justify-content-between align-items-center p-2 rounded" style={linkStyle}>
                             <div className="d-flex align-items-center">
                                 <FaSignInAlt className="me-2 text-info" />

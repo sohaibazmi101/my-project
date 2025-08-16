@@ -28,7 +28,7 @@ export default function DeliveryBoyRegister() {
         password,
       });
       alert('Delivery boy registered successfully!');
-      navigate('/deliveryboy/login');
+      navigate('deliveylogin');
     } catch (err) {
       console.error('Registration failed:', err);
       setErrorMessage(err.response?.data?.message || 'Registration failed');

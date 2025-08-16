@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import api from '../../services/api';
 import PickedOrdersModal from './PickedOrdersModal';
 
@@ -10,6 +11,21 @@ export default function DeliveryBoyDashboard() {
   const [showPickedModal, setShowPickedModal] = useState(false);
 
   const token = localStorage.getItem('deliveryToken');
+  const navigate = useNavigate();
+
+  // If no token, don't fetch anything
+  useEffect(() => {
+    if (!token) return;
+
+    const init = async () => {
+      setLoading(true);
+      await fetchDeliveryBoy();
+      await fetchAvailableOrders();
+      await fetchPickedOrders();
+      setLoading(false);
+    };
+    init();
+  }, [token]);
 
   // Fetch delivery boy profile
   const fetchDeliveryBoy = async () => {
@@ -47,17 +63,6 @@ export default function DeliveryBoyDashboard() {
     }
   };
 
-  useEffect(() => {
-    const init = async () => {
-      setLoading(true);
-      await fetchDeliveryBoy();
-      await fetchAvailableOrders();
-      await fetchPickedOrders();
-      setLoading(false);
-    };
-    init();
-  }, []);
-
   // Pick order
   const handlePickOrder = async (order) => {
     try {
@@ -92,6 +97,20 @@ export default function DeliveryBoyDashboard() {
     const parts = [address.street, address.city, address.state, address.pincode].filter(Boolean);
     return parts.join(', ');
   };
+
+  if (!token) {
+    return (
+      <div className="container mt-5 text-center">
+        <h3>You need to login first to manage your orders</h3>
+        <button
+          className="btn btn-primary mt-3"
+          onClick={() => navigate('/deliveylogin')}
+        >
+          Go to Login
+        </button>
+      </div>
+    );
+  }
 
   if (loading) return <p>Loading...</p>;
 
