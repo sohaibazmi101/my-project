@@ -1,73 +1,41 @@
 # Har Cheez Now
 
-## 1️⃣ Project Overview
-
-**Goal:**  
-"Har Cheez Now" is an online local marketplace connecting customers with sellers, supporting multi-shop orders, delivery boy management, and location-based order restrictions within 15 km.
-
-**Special Features:**  
-- Google OAuth login for customers  
-- Multi-shop cart splitting  
-- Customer location verification using Google Maps  
-- Razorpay payment integration + webhook support  
-- Email OTP verification via Brevo  
-- Cloudinary for images (products, shop banners)  
-
-**Hosting:**  
-- Frontend: Netlify  
-- Backend: Render  
-- Database: MongoDB Atlas  
+**Har Cheez Now** is an **online local marketplace** connecting nearby sellers and customers.  
+It supports multi-shop orders, delivery boy tracking, OTP verification, and location-based shopping (15 km radius).  
 
 ---
 
-## 2️⃣ User Roles & Access
-
-| Role          | Access / Description                                                                 |
-|---------------|-------------------------------------------------------------------------------------|
-| Customer      | Browse shops/products, place orders, view order history, update profile             |
-| Seller        | Manage shop, products, delivery boys, view orders                                   |
-| Admin         | Manage categories, featured products, offers, top sellers, KYC, all orders          |
-| Delivery Boy  | Login, view assigned orders, update delivery status                                 |
-
-**Notes:**  
-- Customer orders restricted to ≤15 km radius.  
-- OTP verification for order placement prevents bots.  
-- JWT-based authentication and role-based route protection.  
+## 🚀 Features
+- **Customer Authentication** via Google OAuth  
+- **Seller Dashboard** with product & shop management  
+- **Delivery Boy Dashboard** with assigned orders & tracking  
+- **Location-based Orders**: Customers must allow location; orders restricted to 15km range  
+- **OTP Verification**: Brevo (formerly Sendinblue) used during checkout to prevent bot attacks  
+- **Payments** via Razorpay with Webhook handling  
+- **Image Uploads** via Cloudinary  
+- **Recently Viewed Products** tracking  
+- **Frontend**: React (deployed on **Netlify**)  
+- **Backend**: Node.js/Express (deployed on **Render**)  
+- **Database**: MongoDB Atlas  
 
 ---
 
-## 3️⃣ Architecture Diagrams
+# 🏗 Architecture Diagrams
 
-### **3.1 System Context**
-
+## 1. System Context Diagram
 ```mermaid
 flowchart LR
-  Customer[Customer 👤]
-  Seller[Seller 👤]
-  Admin[Admin 👤]
-  DeliveryBoy[Delivery Boy 👤]
+  Customer((Customer)) -->|Browse, Order, Pay| FE[Frontend: React App]
+  Seller((Seller)) -->|Manage Shop & Products| FE
+  DeliveryBoy((Delivery Boy)) -->|Update Delivery Status| FE
+  Admin((Admin)) -->|Manage Categories, Monitor| FE
 
-  subgraph System[Har Cheez Now]
-    FE[React + Bootstrap SPA]
-    BE[Node/Express API]
-    DB[(MongoDB Atlas)]
-  end
+  FE -->|API Calls| BE[Backend: Node/Express API]
 
-  Google[Google OAuth]
-  Pay[Razorpay]
-  Cloud[Cloudinary]
-  Brevo[Brevo Email OTP]
-
-  Customer --> FE
-  Seller --> FE
-  Admin --> FE
-  DeliveryBoy --> FE
-  FE <---> BE
-  BE <---> DB
-  BE <---> Pay
-  BE <---> Google
-  BE <---> Cloud
-  BE --> Brevo
+  BE -->|Data| DB[(MongoDB Atlas)]
+  BE -->|Store Images| Cloud[Cloudinary]
+  BE -->|Payment| Razorpay[Razorpay API]
+  BE -->|OTP Email| Brevo[Brevo API]
 
 
 flowchart TB
@@ -113,3 +81,76 @@ flowchart TB
   Auth <--> OAuth
   Order <--> Payment
   Order --> Email
+
+sequenceDiagram
+  participant C as Customer
+  participant FE as Frontend (React)
+  participant BE as Backend (Node/Express)
+  participant DB as MongoDB Atlas
+  participant P as Razorpay
+  participant E as Brevo OTP
+
+  C->>FE: Place Order (Cart Checkout)
+  FE->>BE: /placeOrder with cart, location
+  BE->>DB: Validate shop distance (<=15 km)
+  BE->>E: Send OTP Email
+  E-->>C: Deliver OTP
+  C->>FE: Enter OTP
+  FE->>BE: Verify OTP
+  BE->>P: Create Payment Order
+  P-->>BE: Payment Success Webhook
+  BE->>DB: Save Order (split by shop)
+  BE-->>FE: Order Confirmation
+  FE-->>C: Show Confirmation + Map Link
+
+
+erDiagram
+  CUSTOMER {
+    string id
+    string name
+    string email
+    string location
+  }
+  SELLER {
+    string id
+    string shopName
+    string bannerImage
+  }
+  SHOP {
+    string id
+    string name
+    string sellerId
+    string description
+  }
+  PRODUCT {
+    string id
+    string name
+    number price
+    string[] images
+    string shopId
+  }
+  ORDER {
+    string id
+    string customerId
+    string shopId
+    date date
+    string status
+  }
+  DELIVERY {
+    string id
+    string orderId
+    string deliveryBoyId
+    string status
+  }
+  DELIVERYBOY {
+    string id
+    string name
+    string phone
+  }
+
+  CUSTOMER ||--o{ ORDER : places
+  SELLER ||--o{ SHOP : owns
+  SHOP ||--o{ PRODUCT : contains
+  SHOP ||--o{ ORDER : receives
+  ORDER ||--o{ DELIVERY : assigned_to
+  DELIVERYBOY ||--o{ DELIVERY : handles
