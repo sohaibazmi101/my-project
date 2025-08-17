@@ -5,6 +5,8 @@ const Shop = require('../models/Shop');
 const DeliveryBoy = require('../models/DeliveryBoy');
 const crypto = require('crypto');
 const { calculateOrderSummary } = require('../utils/orderUtils');
+const sendOrderEmail = require('../utils/sendEmail');
+const sendShopOrderEmail = require('../utils/sendShopOrderEmail');
 
 exports.getCustomerOrders = async (req, res) => {
   try {
@@ -85,11 +87,33 @@ exports.placeOrder = async (req, res) => {
       });
       await order.save();
       createdOrders.push(order);
-      const customerMobile = customerInfo.phone || customer.phone;
-      const message = `Hello ${customerInfo.name || 'Customer'},
-       your order ${order.orderNumber} has been placed successfully.
-        Total: ₹${order.totalAmount.toFixed(2)}.`;
+
+      const populatedShopOrder = await Order.findById(order._id)
+        .populate({
+          path: "shop",
+          select: "name sellerId",
+          populate: { path: "sellerId", select: "sellerName email" }
+        })
+        .populate("products.product", "name price")
+        .populate("customer", "name email phone address");
+
+      await sendShopOrderEmail(populatedShopOrder);
     }
+
+    const populatedOrders = await Order.find({ _id: { $in: createdOrders.map(o => o._id) } })
+      .populate("shop", "name")
+      .populate("products.product", "name price");
+
+    // ✅ Send confirmation email
+    await sendOrderEmail(
+      customer.email,      // toEmail
+      populatedOrders,     // orders (with shop & product info)
+      customer,            // full customer object
+      shippingAddress,     // shipping details
+      customerInfo,        // { name, email, phone }
+      paymentMethod        // e.g., "COD" or "UPI"
+    );
+
     res.status(201).json(createdOrders);
   } catch (err) {
     console.error('Order placement failed:', err);
