@@ -11,6 +11,35 @@ export default function Footer() {
           <i className="bi bi-code-slash me-1"></i>
           Developed by Sadique Azmi & Sohaib Azmi
         </small>
+        <small className="d-block mt-1">
+          <a
+            href="https://www.instagram.com/soaidshams_d_z/"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-decoration-none"
+          >
+            <i className="bi bi-instagram me-1"></i>
+            Soaid Shams
+          </a>
+          <a
+            href="https://www.instagram.com/sadique__azmi/"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-decoration-none ms-3"
+          >
+            <i className="bi bi-instagram me-1"></i>
+            Sadique Azmi
+          </a>
+          <a
+            href="https://www.instagram.com/sohaib.azmi/"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-decoration-none ms-3"
+          >
+            <i className="bi bi-instagram me-1"></i>
+            Sohaib Azmi
+          </a>
+        </small>
       </div>
     </footer>
   );
