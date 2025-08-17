@@ -1,6 +1,6 @@
 # Container Diagram
 
-This diagram shows all major containers in **Har Cheez Now**, how they interact, and third-party integrations.
+This diagram shows all major containers in **Hurry Cart**, how they interact, and third-party integrations.
 
 ```mermaid
 flowchart TB

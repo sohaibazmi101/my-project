@@ -13,6 +13,7 @@ export default function Home() {
   const [currentBanner, setCurrentBanner] = useState(0);
   const [newArrivals, setNewArrivals] = useState([]);
   const [bestSellers, setBestSellers] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
   const [search, setSearch] = useState('');
   const navigate = useNavigate();
 
@@ -51,7 +52,6 @@ export default function Home() {
 
   return (
     <div className="container-fluid pt-5 mt-4 dancing-script">
-      {/* Blue Section with Heading, Paragraph, Search Bar, and Banners Carousel */}
       <div
         className="container-fluid"
         style={{
@@ -282,6 +282,21 @@ export default function Home() {
         .hide-scroll::-webkit-scrollbar {
           display: none;               /* Chrome, Safari, Opera */
         }
+
+        .loading-video-container {
+  position: fixed;
+  top: 0; left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: black; /* or white */
+  z-index: 9999;
+}
+
+.loading-video {
+  max-width: 100%;
+  max-height: 100%;
+}
+
       `}</style>
     </div>
   );

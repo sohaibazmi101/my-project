@@ -1,6 +1,6 @@
 # Sequence Diagram
 
-This diagram shows the sequence of interactions when a customer places an order in **Har Cheez Now**.
+This diagram shows the sequence of interactions when a customer places an order in **Hurry Cart**.
 
 ```mermaid
 sequenceDiagram

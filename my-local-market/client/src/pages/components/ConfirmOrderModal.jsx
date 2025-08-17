@@ -1,4 +1,3 @@
-// ConfirmOrderModal.js
 import React, { useState, useEffect } from 'react';
 import api from '../../services/api';
 import ErrorModal from '../../components/ErrorModal';
@@ -89,6 +88,24 @@ export default function ConfirmOrderModal({
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+
+    if (!customerCoords.lat || !customerCoords.lon) {
+      setErrorMessage("Please Enable Device location and allow access to place your order.");
+      setShowErrorModal(true);
+      if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(
+          (pos) => {
+            setCustomerCoords({ lat: pos.coords.latitude, lon: pos.coords.longitude });
+          },
+          () => {
+            setErrorMessage("Location Access is required to calculate delivery distance.");
+            setShowErrorModal(true);
+          }
+        );
+      }
+      return;
+    }
+
     if (orderSummary.length === 0) {
       setErrorMessage('Cannot place order: no valid order summary.');
       setShowErrorModal(true);
@@ -102,7 +119,6 @@ export default function ConfirmOrderModal({
     }
 
     try {
-      // Pass the orderSummary and totalAmount to the parent component
       const totalAmount = orderSummary.reduce((sum, shopOrder) => sum + shopOrder.totalAmount, 0);
 
       const orderData = {
@@ -116,8 +132,8 @@ export default function ConfirmOrderModal({
         paymentMethod,
         customerLat: customerCoords.lat,
         customerLon: customerCoords.lon,
-        orderSummary, // Pass the orderSummary here
-        totalAmount,  // Pass the calculated total amount
+        orderSummary,
+        totalAmount,
       };
 
       await api.post('/otp/send-otp', { email: editableDetails.email });
@@ -130,7 +146,6 @@ export default function ConfirmOrderModal({
   };
 
   return (
-    // ... the rest of your modal's JSX remains the same
     <>
       <div className="modal d-block bg-dark bg-opacity-50" tabIndex="-1" role="dialog">
         <div className="modal-dialog modal-dialog-centered" role="document">
@@ -143,13 +158,28 @@ export default function ConfirmOrderModal({
               <input type="email" className="form-control mb-2" placeholder="Email"
                 value={editableDetails?.email || ''} onChange={e => setEditableDetails({ ...editableDetails, email: e.target.value })} required />
               {!isCart && (
-                <>
-                  <label className="form-label mt-2">Quantity</label>
-                  <input type="number" className="form-control mb-2"
-                    value={quantity} min="1"
-                    onChange={e => setQuantity(Math.max(1, parseInt(e.target.value, 10) || 1))} required />
-                </>
+                <div className="mt-2">
+                  <label className="form-label d-block">Quantity</label>
+                  <div className="d-flex align-items-center">
+                    <button
+                      type="button"
+                      className="btn btn-outline-secondary"
+                      onClick={() => setQuantity(prev => Math.max(1, prev - 1))}
+                    >
+                      –
+                    </button>
+                    <span className="mx-3 fs-5">{quantity}</span>
+                    <button
+                      type="button"
+                      className="btn btn-outline-secondary"
+                      onClick={() => setQuantity(prev => prev + 1)}
+                    >
+                      +
+                    </button>
+                  </div>
+                </div>
               )}
+
               <input type="text" className="form-control mb-2" placeholder="Mobile"
                 value={editableDetails?.phone || ''} onChange={e => setEditableDetails({ ...editableDetails, phone: e.target.value })} required />
               <input type="text" className="form-control mb-2" placeholder="Street"
@@ -213,7 +243,6 @@ export default function ConfirmOrderModal({
                   <label className="form-check-label" htmlFor="codRadio">Cash on Delivery (COD)</label>
                 </div>
               </div>
-
               <div className="d-flex justify-content-between mt-3">
                 <button type="submit" className="btn btn-success">Confirm &amp; Buy</button>
                 <button type="button" className="btn btn-secondary" onClick={onClose}>Cancel</button>
@@ -227,7 +256,7 @@ export default function ConfirmOrderModal({
         email={editableDetails.email}
         onVerified={() => {
           setShowOtpModal(false);
-          onConfirmOrder(pendingOrderData);  // final step
+          onConfirmOrder(pendingOrderData);
         }}
         onClose={() => {
           setShowOtpModal(false);

@@ -1,6 +1,6 @@
 # ER Diagram
 
-This diagram shows the database structure and relationships for **Har Cheez Now**.
+This diagram shows the database structure and relationships for **Hurry Cart**.
 
 ```mermaid
 erDiagram
