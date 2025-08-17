@@ -11,6 +11,10 @@ export default function Footer() {
           <i className="bi bi-code-slash me-1"></i>
           Developed by Sohaib Azmi
         </small>
+        <small className="d-block mt-1">
+          <i className="bi bi-code-slash me-1"></i>
+          Developed by Sadique Azmi
+        </small>
       </div>
     </footer>
   );
