@@ -1,4 +1,3 @@
-// src/customer/OrderHistory.jsx
 import { useEffect, useState } from 'react';
 import { useCustomer } from '../../contexts/CustomerContext';
 import api from '../../services/api';
@@ -35,10 +34,8 @@ export default function OrderHistory() {
     return (
         <div className="container mt-4">
             <h3>Your Order History</h3>
-            {/* CORRECTED: Reverse the orders array before mapping over it */}
             {orders.slice().reverse().map((order) => (
                 <div key={order._id} className="mb-4 p-3 border rounded shadow-sm">
-                    {/* NEW: Add a line to display the order number */}
                     <p className="mb-1"><strong>Order Number:</strong> {order.orderNumber}</p>
                     <div className="row row-cols-1 row-cols-sm-2 row-cols-md-3 g-3">
                         {order.products.map((item, idx) => (
@@ -55,6 +52,24 @@ export default function OrderHistory() {
                     <p className="mb-1"><strong>Ordered At:</strong> {new Date(order.createdAt).toLocaleString()}</p>
                     <p className="mb-3"><strong>Status:</strong> {order.status}</p>
                     <p className="mb-3"><strong>Total:</strong> ₹{order.totalAmount}</p>
+
+                    {/* Delivery Boy Info if assigned */}
+                    {order.assignedDeliveryBoy && (
+                        <div className="mt-3 p-2 border-top">
+                            <h6>Delivery Partner</h6>
+                            <p className="mb-1"><strong>Name:</strong> {order.assignedDeliveryBoy.name}</p>
+                            <p className="mb-1"><strong>Email:</strong> {order.assignedDeliveryBoy.email}</p>
+                            <p className="mb-1">
+                                <strong>Phone:</strong>{' '}
+                                <a
+                                    href={`tel:${order.assignedDeliveryBoy.phone}`}
+                                    className="btn btn-sm btn-outline-primary ms-2"
+                                >
+                                    📞 Call
+                                </a>
+                            </p>
+                        </div>
+                    )}
                 </div>
             ))}
         </div>

@@ -7,13 +7,15 @@ const crypto = require('crypto');
 const { calculateOrderSummary } = require('../utils/orderUtils');
 const sendOrderEmail = require('../utils/sendEmail');
 const sendShopOrderEmail = require('../utils/sendShopOrderEmail');
+const sendDeliveryOrderEmail = require('../utils/sendDeliveryOrderEmail');
 
 exports.getCustomerOrders = async (req, res) => {
   try {
     const customerId = req.customer._id;
     const orders = await Order.find({ customer: customerId })
       .populate('shop', 'name')
-      .populate('products.product', 'name price');
+      .populate('products.product', 'name price')
+      .populate('assignedDeliveryBoy', 'name email phone');
     res.json(orders);
   } catch (err) {
     console.error('Failed to get orders:', err);
@@ -98,20 +100,31 @@ exports.placeOrder = async (req, res) => {
         .populate("customer", "name email phone address");
 
       await sendShopOrderEmail(populatedShopOrder);
+
+      const populatedDeliveryOrder = await Order.findById(order._id)
+        .populate({
+          path: "shop",
+          select: "name assignedDeliveryBoys",
+          populate: { path: "assignedDeliveryBoys", select: "name email" }
+        })
+        .populate("products.product", "name price")
+        .populate("customer", "name email phone address")
+        .select("orderNumber customerLocation products shop customer");
+
+      await sendDeliveryOrderEmail(populatedDeliveryOrder);
     }
 
     const populatedOrders = await Order.find({ _id: { $in: createdOrders.map(o => o._id) } })
       .populate("shop", "name")
       .populate("products.product", "name price");
 
-    // ✅ Send confirmation email
     await sendOrderEmail(
-      customer.email,      // toEmail
-      populatedOrders,     // orders (with shop & product info)
-      customer,            // full customer object
-      shippingAddress,     // shipping details
-      customerInfo,        // { name, email, phone }
-      paymentMethod        // e.g., "COD" or "UPI"
+      customer.email, 
+      populatedOrders,    
+      customer,         
+      shippingAddress,  
+      customerInfo,    
+      paymentMethod 
     );
 
     res.status(201).json(createdOrders);
@@ -141,7 +154,8 @@ exports.getSellerOrders = async (req, res) => {
     const shopIds = sellerShops.map(shop => shop._id);
     const orders = await Order.find({ shop: { $in: shopIds } })
       .populate('customer', 'name email')
-      .populate('products.product', 'name price shop');
+      .populate('products.product', 'name price shop')
+      .populate('assignedDeliveryBoy', 'name email');
     res.status(200).json(orders);
   } catch (err) {
     console.error('Get seller orders error:', err);
@@ -179,6 +193,7 @@ exports.getAvailableOrdersForDeliveryBoy = async (req, res) => {
       status: 'Pending',
       assignedDeliveryBoy: null
     })
+      .select("-secretCode")
       .populate('customer', 'name phone address')
       .populate('shop', 'name');
     res.json({ orders });
@@ -225,6 +240,7 @@ exports.getPickedOrders = async (req, res) => {
       assignedDeliveryBoy: deliveryBoyId,
       status: 'PickedUp'
     })
+      .select("-secretCode")
       .populate('shop', 'name')
       .populate('customer', 'name phone address');
 

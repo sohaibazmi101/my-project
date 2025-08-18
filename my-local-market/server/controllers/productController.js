@@ -157,14 +157,32 @@ exports.getNewArrivals = async (req, res) => {
 
 exports.searchProducts = async (req, res) => {
   const q = req.query.q;
-  const regex = new RegExp(q, 'i');
+
   try {
-    const products = await Product.find({ name: regex });
+    const products = await Product.aggregate([
+      {
+        $search: {
+          index: "default", // 👈 use the index name you set in Atlas
+          text: {
+            query: q,
+            path: "name",
+            fuzzy: {
+              maxEdits: 2,       // allow up to 2 typos
+              prefixLength: 2    // first 2 letters must match
+            }
+          }
+        }
+      },
+      { $limit: 20 } // optional: return max 20 results
+    ]);
+
     res.json(products);
   } catch (err) {
-    res.status(500).json({ message: 'Search failed' });
+    console.error("❌ Search failed:", err);
+    res.status(500).json({ message: "Search failed" });
   }
 };
+
 
 exports.getProductsByCategory = async (req, res) => {
   try {

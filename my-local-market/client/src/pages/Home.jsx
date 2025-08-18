@@ -12,8 +12,6 @@ export default function Home() {
   const [banners, setBanners] = useState([]);
   const [currentBanner, setCurrentBanner] = useState(0);
   const [newArrivals, setNewArrivals] = useState([]);
-  const [bestSellers, setBestSellers] = useState([]);
-  const [isLoading, setIsLoading] = useState(true);
   const [search, setSearch] = useState('');
   const navigate = useNavigate();
 

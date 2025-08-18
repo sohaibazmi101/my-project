@@ -13,7 +13,6 @@ export default function DeliveryBoyDashboard() {
   const token = localStorage.getItem('deliveryToken');
   const navigate = useNavigate();
 
-  // If no token, don't fetch anything
   useEffect(() => {
     if (!token) return;
 
@@ -27,7 +26,6 @@ export default function DeliveryBoyDashboard() {
     init();
   }, [token]);
 
-  // Fetch delivery boy profile
   const fetchDeliveryBoy = async () => {
     try {
       const res = await api.get('/delivery/db-profile', {
@@ -39,7 +37,6 @@ export default function DeliveryBoyDashboard() {
     }
   };
 
-  // Fetch available orders
   const fetchAvailableOrders = async () => {
     try {
       const res = await api.get('/delivery-boy/orders', {
@@ -51,7 +48,6 @@ export default function DeliveryBoyDashboard() {
     }
   };
 
-  // Fetch picked orders
   const fetchPickedOrders = async () => {
     try {
       const res = await api.get('/delivery-boy/orders/picked', {
@@ -63,7 +59,6 @@ export default function DeliveryBoyDashboard() {
     }
   };
 
-  // Pick order
   const handlePickOrder = async (order) => {
     try {
       await api.patch(
@@ -78,7 +73,6 @@ export default function DeliveryBoyDashboard() {
     }
   };
 
-  // Toggle availability
   const toggleAvailability = async () => {
     try {
       const res = await api.patch(
@@ -175,7 +169,6 @@ export default function DeliveryBoyDashboard() {
         </table>
       )}
 
-      {/* Picked Orders Modal */}
       {showPickedModal && (
         <PickedOrdersModal
           show={showPickedModal}

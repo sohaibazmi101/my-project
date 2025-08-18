@@ -12,8 +12,6 @@ const tranEmailApi = new SibApiV3Sdk.TransactionalEmailsApi();
  */
 async function sendShopOrderEmail(order) {
   try {
-    console.log("🛒 Preparing email for shop owner...");
-    console.log("Order received:", JSON.stringify(order, null, 2));
 
     if (!order.shop || !order.shop.sellerId) {
       console.error("❌ Shop or seller not populated in order.");
@@ -21,9 +19,6 @@ async function sendShopOrderEmail(order) {
     }
 
     const seller = order.shop.sellerId;
-    console.log("✅ Seller found:", seller);
-
-    // Prepare product details
     const productDetails = order.products
       .map(
         (p) =>
@@ -31,9 +26,6 @@ async function sendShopOrderEmail(order) {
           }</li>`
       )
       .join("");
-
-    console.log("📦 Products formatted for email:", productDetails);
-
     const lat = order.customerLocation?.lat;
     const lon = order.customerLocation?.lon;
     const mapsUrl = lat && lon ? `https://www.google.com/maps?q=${lat},${lon}` : "#";
@@ -78,12 +70,7 @@ async function sendShopOrderEmail(order) {
       subject: `🛒 New Order Received - ${order.orderNumber}`,
       htmlContent,
     };
-
-    console.log("📧 Email Data Prepared:", emailData);
-
     const response = await tranEmailApi.sendTransacEmail(emailData);
-
-    console.log("✅ Shop Owner Order Email Sent:", response.messageId || response);
   } catch (error) {
     console.error("❌ Error sending shop owner email:", error);
   }

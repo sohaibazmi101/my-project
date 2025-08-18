@@ -37,7 +37,7 @@ export default function PickedOrdersModal({ show, orders, onClose, refreshOrders
 
     const handleDirectionsClick = (order, e) => {
         if (!order.customerLocation?.lat || !order.customerLocation?.lon) {
-            e.preventDefault(); // prevent opening link
+            e.preventDefault();
             setShowLocationModal(true);
         }
     };
@@ -60,6 +60,7 @@ export default function PickedOrdersModal({ show, orders, onClose, refreshOrders
                                 <table className="table table-bordered table-striped">
                                     <thead>
                                         <tr>
+                                            <th>Order Number</th>
                                             <th>Shop</th>
                                             <th>Customer</th>
                                             <th>Phone</th>
@@ -73,6 +74,7 @@ export default function PickedOrdersModal({ show, orders, onClose, refreshOrders
                                     <tbody>
                                         {orders.map(order => (
                                             <tr key={order._id}>
+                                                <td>{order.orderNumber}</td>
                                                 <td>{order.shop?.name}</td>
                                                 <td>{order.customer?.name}</td>
                                                 <td>{order.customer?.phone || 'N/A'}</td>

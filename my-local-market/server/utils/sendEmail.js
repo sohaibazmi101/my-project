@@ -77,8 +77,6 @@ async function sendOrderEmail(toEmail, orders, customer, shippingAddress, custom
         },
       }
     );
-
-    console.log("✅ Order email sent to", toEmail);
   } catch (error) {
     console.error("❌ Error sending order email:", error.response?.data || error.message);
   }

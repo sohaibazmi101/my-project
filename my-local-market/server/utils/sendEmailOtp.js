@@ -18,7 +18,6 @@ async function sendEmailOtp(toEmail, otp) {
     };
 
     const response = await apiInstance.sendTransacEmail(sendSmtpEmail);
-    console.log("OTP Email sent successfully:", response.messageId || response);
     return true;
   } catch (err) {
     console.error("Error sending email OTP:", err);
