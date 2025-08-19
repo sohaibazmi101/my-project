@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { data, Link } from 'react-router-dom'; // Import Link
+import { data, Link } from 'react-router-dom';
 import api from '../services/api'; 
 import ShopCard from './ShopCard';
 
@@ -12,6 +12,7 @@ export default function TopSellersSection() {
       try {
         const res = await api.get('/shops/featured');
         setTopSellers(res.data);
+        console.log('Data:',res.data);
       } catch (error) {
         console.error('Failed to fetch top sellers:', error);
       } finally {

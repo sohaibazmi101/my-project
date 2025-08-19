@@ -18,6 +18,7 @@ export default function ShopCard({ shop }) {
           )}
           <div className="card-body p-2 d-flex flex-column">
             <h6 className="mb-1 text-truncate">{shop.name}</h6>
+            <p className=" text-truncate">{shop.sellerName}</p>
             <div
               className="btn btn-sm btn-outline-primary mt-auto w-100 text-center"
               style={{ fontSize: '0.50rem', pointerEvents: 'none' }}
