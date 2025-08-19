@@ -140,7 +140,7 @@ export default function Home() {
         )}
       </div>
 
-      {/* Top Sellers / Categories */}
+      {/* Categories */}
       <div className="mb-2" style={{ marginTop: '5px' }}>
         <h5 style={{ marginBottom: '6px' }}>Top Sellers</h5>
         {categories.length > 0 && (

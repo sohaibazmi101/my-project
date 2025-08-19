@@ -127,7 +127,7 @@ exports.getFeaturedShops = async (req, res) => {
       .sort({ featuredPosition: 1 });
     res.json(shops);
   } catch (err) {
-    console.error('❌ getFeaturedShops Error:', err.message);
+    console.error('getFeaturedShops Error:', err.message);
     res.status(500).json({ message: 'Server error' });
   }
 };

@@ -8,6 +8,9 @@
   font-weight: 400;
 
   color-scheme: light dark;
+  --bs-body-bg: #f0f0f0;
+  --bs-body-color: #222;
+
   font-synthesis: none;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
@@ -19,8 +22,8 @@ body {
   min-width: 320px;
   min-height: 100vh;
 
-  background-color: var(--bs-body-bg, #fff);
-  color: var(--bs-body-color, #212529);
+  background-color: #f0f0f0;
+  color: #222;
   line-height: 1.5;
 
   font-family: "Exo 2", sans-serif;
@@ -44,10 +47,9 @@ body.dark {
 }
 
 .shoplist-container {
-  background-color: #f8f9fa; /* A light grey background for the section */
+  background-color: #f8f9fa; 
 }
 
-/* Optional: Adds a subtle hover effect to the cards for better user experience */
 .card {
   transition: transform 0.2s ease-in-out;
 }

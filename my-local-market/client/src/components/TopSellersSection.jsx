@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Link } from 'react-router-dom'; // Import Link
+import { data, Link } from 'react-router-dom'; // Import Link
 import api from '../services/api'; 
 import ShopCard from './ShopCard';
 
@@ -41,7 +41,6 @@ export default function TopSellersSection() {
     >
       <h5 className="mb-2 d-flex justify-content-between align-items-center">
         <span>Top Sellers</span>
-        {/* The new "See all" link */}
         <Link 
           to="/shops" 
           className="btn btn-link text-decoration-none p-0 d-flex align-items-center"
